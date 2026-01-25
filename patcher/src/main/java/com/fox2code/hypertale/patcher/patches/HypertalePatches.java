@@ -50,6 +50,7 @@ public final class HypertalePatches {
 		addPatch(new PatchChunkStore());
 		addPatch(new PatchPacketIO());
 		addPatch(new PatchPlayerRef());
+		addPatch(new PatchPluginManager());
 		addPatch(new PatchRedirectToOptimisedGetPlayers());
 		addPatch(new PatchRedirectToOptimisedGetChunkIfInMemory());
 	}

@@ -44,8 +44,11 @@ public interface HypertaleASMConstants {
 	String Long2ObjectConcurrentHashMap = "com/hypixel/fastutil/longs/Long2ObjectConcurrentHashMap";
 	// Hytale ASM Constants
 	String BuilderToolsPlugin = "com/hypixel/hytale/builtin/buildertools/BuilderToolsPlugin";
+	String PluginIdentifier = "com/hypixel/hytale/common/plugin/PluginIdentifier";
 	String PacketIO = "com/hypixel/hytale/protocol/io/PacketIO";
 	String PluginClassLoader = "com/hypixel/hytale/server/core/plugin/PluginClassLoader";
+	String PluginManager = "com/hypixel/hytale/server/core/plugin/PluginManager";
+	String PendingLoadPlugin = "com/hypixel/hytale/server/core/plugin/pending/PendingLoadPlugin";
 	String PlayerRef = "com/hypixel/hytale/server/core/universe/PlayerRef";
 	String World = "com/hypixel/hytale/server/core/universe/world/World";
 	String FloodLightCalculation = "com/hypixel/hytale/server/core/universe/world/lighting/FloodLightCalculation";
