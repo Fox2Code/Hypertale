@@ -1,0 +1,58 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+dependencies {
+    api "org.ow2.asm:asm:${project['asm.version']}"
+    api "org.vineflower:vineflower:${project['vineflower.version']}"
+    // api "org.json:json:20251224" // https://mvnrepository.com/artifact/org.json/json
+    // Import spotless and errorprone
+    api "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:${project['spotless.version']}"
+    api "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin:${project['errorprone-plugin.version']}"
+    include(project(":patcher"))
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation gradleTestKit()
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+jar {
+    manifest {
+        attributes 'Hypertale-Version': project['hypertale.version']
+        attributes 'Premain-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
+        attributes 'Can-Set-Native-Method-Prefix': 'true'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+gradlePlugin {
+    plugins {
+        hypertale {
+            id = 'hypertale.dev'
+            implementationClass = 'com.fox2code.hypertale.dev.HypertaleGradlePlugin'
+        }
+    }
+}
+
+compileJava {
+    dependsOn(":patcher:jar")
+}

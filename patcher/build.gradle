@@ -1,0 +1,97 @@
+final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
+final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")
+
+final File getHytaleServerFile() {
+    final File hytaleServerRoot = new File(project.rootDir, "HytaleServer.jar")
+    if (hytaleServerRoot.exists()) {
+        return hytaleServerRoot
+    }
+    String name = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    if (name.startsWith("win")) {
+        return new File(System.getenv("APPDATA") +
+                "\\Hytale\\install\\release\\package\\game\\Server\\HytaleServer.jar")
+    } else if (name.startsWith("mac") ||
+            name.startsWith("darwin")) {
+        return new File(System.getProperty("user.home") +
+                "/Application Support/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+    } else if (name.contains("nix") || name.contains("nux") || name.contains("aix")) {
+        File flatpakPath = new File(System.getProperty("user.home") +
+                "/.var/app/com.hypixel.HytaleLauncher/data/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+        File fallbackPath = new File(System.getProperty("user.home") +
+                "/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+        return flatpakPath.exists() || !fallbackPath.exists() ? flatpakPath : fallbackPath;
+    } else {
+        throw new Error("Unsupported system")
+    }
+}
+
+final File hytaleServer = getHytaleServerFile()
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(files(hytaleServer))
+    final String ASM_VERSION = project['asm.version']
+    implementation "org.ow2.asm:asm-util:${ASM_VERSION}"
+    implementation "org.ow2.asm:asm-commons:${ASM_VERSION}"
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+jar {
+    manifest {
+        attributes 'Hypertale-Version': project['hypertale.version']
+        attributes 'Main-Class': 'com.fox2code.hypertale.launcher.Main'
+        attributes 'Launcher-Agent-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
+        attributes 'Premain-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
+        attributes 'Can-Set-Native-Method-Prefix': 'true'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+    from(project.rootProject.rootDir) {
+        include("LICENSE")
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    doFirst {
+        if (!hytaleServer.exists()) {
+            throw new RuntimeException("Cannot find the HytaleServer.jar")
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.register("patchHytale", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "com.fox2code.hypertale.patcher.PatcherMain"
+    args = ["--patch", hytaleServer.getAbsolutePath(), workInProgress.getAbsolutePath()]
+}
+
+tasks.register("checkPatchHytale", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "com.fox2code.hypertale.patcher.PatcherMain"
+    args = ["--check-patch", hytaleServer.getAbsolutePath(), workInProgress.getAbsolutePath()]
+    mustRunAfter(tasks.patchHytale)
+}
+tasks.clean.configure {
+    delete(workInProgress)
+}
+
+// Generated code is in another script to make code cleaner.
+apply from: "generate.gradle"

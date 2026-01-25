@@ -1,0 +1,19 @@
+{
+  "Group": "Hypertale",
+  "Name": "Hypertale",
+  "Version": "${version}",
+  "Description": "Optimization mod for the HytaleServer!",
+  "Authors": [
+    {
+      "Name": "Fox2Code",
+      "Email": "fox2code@gmail.com",
+      "Url": "https://discord.gg/MYcjAhgTKC"
+    }
+  ],
+  "Website": "https://github.com/Fox2Code/Hypertale",
+  "Main": "com.fox2code.hypertale.loader.HypertalePlugin",
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "DisabledByDefault": false
+}

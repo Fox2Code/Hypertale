@@ -1,0 +1,98 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2026 Fox2Code
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.fox2code.hypertale.loader;
+
+import com.fox2code.hypertale.launcher.EarlyLogger;
+import com.fox2code.hypertale.launcher.HypertaleAgent;
+import com.fox2code.hypertale.utils.JsonPropertyHelper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.hypixel.hytale.server.core.plugin.PluginManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.instrument.Instrumentation;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
+public final class ModLoader {
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private static final LinkedHashMap<File, JsonObject> loadedModsLate = new LinkedHashMap<>();
+
+	public static void loadHypertaleMods(ModGatherer modGatherer) throws IOException {
+		LinkedHashMap<File, JsonObject> loadedModsEarly = new LinkedHashMap<>();
+		for (File file : modGatherer.getHypertaleMods()) {
+			JarFile jarFile = new JarFile(file);
+			JarEntry hypertaleModInfo = jarFile.getJarEntry("manifest.json");
+			if (hypertaleModInfo == null) continue;
+			JsonObject jsonObject;
+			try (InputStreamReader inputStreamReader = new InputStreamReader(
+					jarFile.getInputStream(hypertaleModInfo), StandardCharsets.UTF_8)) {
+				jsonObject = gson.fromJson(inputStreamReader, JsonObject.class);
+			} catch (JsonParseException jsonParseException) {
+				EarlyLogger.log("Failed to load mod info of " + file.getName());
+				continue;
+			}
+			if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad")) {
+				HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(jarFile);
+				loadedModsEarly.put(file, jsonObject);
+			} else {
+				loadedModsLate.put(file, jsonObject);
+			}
+		}
+		loadMods(loadedModsEarly, true);
+	}
+
+	static void loadModsLate() {
+		loadMods(loadedModsLate, false);
+	}
+
+	private static void loadMods(LinkedHashMap<File, JsonObject> loadedMods, boolean early) {
+		for (Map.Entry<File, JsonObject> entry : loadedMods.entrySet()) {
+			JsonObject jsonObject = entry.getValue();
+			String javaAgent = JsonPropertyHelper.getString(jsonObject, "HypertaleJavaAgent");
+			if (javaAgent != null) {
+				try {
+					Class<?> agentClass;
+					agentClass = Class.forName(javaAgent, true, early ?
+							ModLoader.class.getClassLoader() :
+							PluginManager.get().getBridgeClassLoader());
+					agentClass.getDeclaredMethod(
+									early ? "premain" : "agentmain",
+									String.class, Instrumentation.class)
+							.invoke(null, "", HypertaleAgent.getInstrumentation());
+				} catch (Exception e) {
+					EarlyLogger.log("Failed to load java-agent " + javaAgent +
+							" from " + entry.getKey().getName());
+				}
+			}
+		}
+	}
+}

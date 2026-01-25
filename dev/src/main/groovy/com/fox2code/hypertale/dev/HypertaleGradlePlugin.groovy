@@ -1,0 +1,245 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2026 Fox2Code
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package com.fox2code.hypertale.dev
+
+import com.fox2code.hypertale.launcher.BuildConfig
+import org.gradle.api.Project
+import org.gradle.api.Plugin
+import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
+
+class HypertaleGradlePlugin implements Plugin<Project> {
+    @Override
+    void apply(Project project) {
+        project.pluginManager.apply('eclipse')
+        project.pluginManager.apply('java-library')
+        project.pluginManager.apply('net.ltgt.errorprone')
+        project.pluginManager.apply('com.diffplug.spotless')
+        project.extensions.create("hypertale", HypertaleDevConfig)
+        ((HypertaleDevConfig) project.extensions.getByName("hypertale"))
+                .localProperties = HypertaleDevLocalProperties.loadProperties(project)
+        HypertaleIntellijIDEASupport.scheduleTaskBeforeIDEASync(project, "checkHytale")
+        final File hypertaleGradleFolder = getHypertaleGradleDirectory(project)
+        if (!hypertaleGradleFolder.isDirectory() && !hypertaleGradleFolder.mkdirs()) {
+            throw new IOException("Failed to create Hypertale gradle folder!")
+        }
+        final File licenseFile = getLicenseFile(project.rootDir)
+
+        project.java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+
+            withSourcesJar()
+            withJavadocJar()
+        }
+
+        project.javadoc {
+            failOnError false
+        }
+        project.repositories {
+            maven {
+                url hypertaleGradleFolder.toURI().toString()
+                content {
+                    includeGroup 'com.hypixel'
+                }
+            }
+            maven {
+                url 'https://cdn.fox2code.com/maven'
+                content {
+                    includeGroup 'com.fox2code.Hypertale'
+                    includeGroup 'com.fox2code'
+                }
+            }
+            mavenCentral()
+
+        }
+        project.dependencies {
+            errorprone "com.google.errorprone:error_prone_core:${BuildConfig.ERRORPRONE_VERSION}"
+        }
+        project.tasks.register("checkHytale").configure {
+            group = "Hypertale"
+            description = "Check if Hytale is present, and download it if needed"
+        }
+        project.tasks.register("runServer", JavaExec).configure {
+            group = "Hypertale"
+            description = "Run Hypertale with your mod loaded"
+            dependsOn(project.tasks.assemble)
+        }
+        project.tasks.register("generateBuildConfig").configure {
+            group = "Hypertale"
+            description = "Regenerate build config"
+        }
+        project.afterEvaluate {
+            final JavaToolchainService toolchain = project.extensions.getByType(JavaToolchainService.class)
+            final File javaExec = toolchain.launcherFor {
+                it.languageVersion.set(JavaLanguageVersion.of(25))
+            }.get().executablePath.asFile
+            HypertaleDevConfig config = ((HypertaleDevConfig) project.extensions.getByName("hypertale"))
+            config.buildConfig("MOD_VERSION", project.version)
+            config.internalMakeImmutable()
+            HypertaleIntellijIDEASupport.installIdeaDictionaryOnIDEASync(project, config.customDictionary)
+            final File generatedSources = new File(project.layout.buildDirectory.getAsFile().get(),
+                    "generated/sources/hypertale")
+            sourceSets {
+                main {
+                    java {
+                        srcDir generatedSources.getPath()
+                    }
+                }
+            }
+            HypertaleBuildConfigHelper.makeBuildConfig(config, generatedSources, false)
+            if (config.useUnmodifiedHytale) {
+                project.dependencies {
+                    api "com.hypixel:hytale:${config.hytaleBranch}"
+                }
+            } else {
+                project.dependencies {
+                    api "com.hypixel:hytale:${config.hytaleBranch}${HypertaleDepMaker.HYPERTALE_VERSION_SUFFIX}"
+                    api "com.fox2code.Hypertale:launcher:${BuildConfig.HYPERTALE_VERSION}"
+                }
+            }
+            File hytaleAssets = HypertaleHytaleDownloader.getVanillaAssets(
+                    hypertaleGradleFolder, config)
+            if (hytaleAssets != null) {
+                project.dependencies {
+                    compileOnly(hytaleAssets)
+                }
+            }
+            project.tasks.checkHytale {
+                doLast {
+                    if (config.useUnmodifiedHytale) {
+                        HypertaleHytaleDownloader.downloadHytale(hypertaleGradleFolder, config, false)
+                    } else {
+                        HypertalePatcher.patch(javaExec, hypertaleGradleFolder, config,
+                                (Set<File>) (project.sourceSets.main.runtimeClasspath.getFiles()), false)
+                    }
+                }
+            }
+            project.tasks.generateBuildConfig {
+                doLast {
+                    HypertaleBuildConfigHelper.makeBuildConfig(config, generatedSources, true)
+                }
+            }
+            project.tasks.compileJava.dependsOn(project.tasks.checkHytale)
+            project.tasks.compileJava.dependsOn(project.tasks.generateBuildConfig)
+            if (project.pluginManager.hasPlugin("groovy")) {
+                project.tasks.compileGroovy.dependsOn(project.tasks.checkHytale)
+                project.tasks.compileGroovy.dependsOn(project.tasks.generateBuildConfig)
+            }
+            if (project.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                project.tasks.compileKotlin.dependsOn(project.tasks.checkHytale)
+                project.tasks.compileKotlin.dependsOn(project.tasks.generateBuildConfig)
+            }
+            project.tasks.runServer {
+                classpath = sourceSets.main.runtimeClasspath
+                dependsOn("assemble")
+            }
+            project.tasks.processResources {
+                filesMatching("manifest.json") {
+                    expand(version: project.version)
+                }
+            }
+            project.tasks.jar {
+                manifest {
+                    attributes 'Built-With-Hypertale': BuildConfig.HYPERTALE_VERSION
+                    attributes 'Hypertale-Repo': 'https://github.com/Fox2Code/Hypertale'
+                }
+                if (licenseFile != null) {
+                    from(project.rootDir) {
+                        include(licenseFile.getName())
+                    }
+                }
+            }
+            tasks.withType(Javadoc).configureEach {
+                options {
+                    addStringOption('Xdoclint:-missing', '-quiet')
+                }
+            }
+            tasks.withType(JavaCompile).configureEach {
+                options {
+                    errorprone {
+                        disableWarningsInGeneratedCode.set(true)
+                        allErrorsAsWarnings.set(true)
+                        disable("EmptyCatch", "ThreadPriorityCheck",
+                                "NonApiType", "MutablePublicArray",
+                                "StringSplitter", "FloggerFormatString",
+                                "FloggerLogString", "FloggerStringConcatenation")
+                    }
+                }
+            }
+            if (config.getUseSpotless()) {
+                final String processedLicenseHeader = !config.includeLicenseHeader ||
+                        licenseFile == null ? "" : '/*\n' + licenseFile.readLines()
+                                .collect { ' * ' + it }.join('\n') + '\n */\n'
+                project.spotless {
+                    enforceCheck false
+                    java {
+                        formatAnnotations()
+                        removeUnusedImports()
+                        licenseHeader(processedLicenseHeader)
+                    }
+                }
+                project.tasks.compileJava.dependsOn(project.tasks.spotlessApplyJava)
+
+                if (project.pluginManager.hasPlugin("groovy")) {
+                    project.spotless {
+                        groovy {
+                            licenseHeader(processedLicenseHeader)
+                        }
+                    }
+
+                    project.tasks.compileGroovy.dependsOn(project.tasks.spotlessApply)
+                }
+                if (project.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                    project.spotless {
+                        kotlin {
+                            licenseHeader(processedLicenseHeader)
+                        }
+                    }
+
+                    project.tasks.compileKotlin.dependsOn(project.tasks.spotlessApply)
+                }
+            }
+        }
+    }
+
+    File getHypertaleGradleDirectory(Project project) {
+        return new File(project.gradle.gradleUserHomeDir, "hypertale")
+    }
+
+    static File getLicenseFile(File rootDir) {
+        for (String possibleName : new String[]{"LICENSE", "LICENSE.md",
+                "License", "License.md", "license", "license.md", "COPYING"}) {
+            File licenseFile = new File(rootDir, possibleName)
+            if (licenseFile.isFile()) {
+                return licenseFile
+            }
+        }
+        return null
+    }
+}

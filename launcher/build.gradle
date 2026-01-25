@@ -1,0 +1,90 @@
+plugins {
+    id 'net.ltgt.errorprone'
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
+final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+configurations {
+    javaAgent {
+        transitive = false
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(files(workInProgress))
+    final String ASM_VERSION = project['asm.version']
+    api "org.ow2.asm:asm-util:${ASM_VERSION}"
+    api "org.ow2.asm:asm-commons:${ASM_VERSION}"
+    api "com.google.guava:guava:${project['guava.version']}"
+    api "com.google.guava:guava:${project['guava-failureaccess.version']}"
+    errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
+    include(project(":patcher"))
+
+    javaAgent("net.bytebuddy:byte-buddy-agent:${project['bytebuddy.version']}")
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+processResources {
+    filesMatching("manifest.json") {
+        expand(version: project.version)
+    }
+}
+
+jar {
+    archiveBaseName = "Hypertale"
+    manifest {
+        attributes 'Hypertale-Version': project['hypertale.version']
+        attributes 'Main-Class': 'com.fox2code.hypertale.launcher.Main'
+        attributes 'Launcher-Agent-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
+        attributes 'Premain-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
+        attributes 'Can-Set-Native-Method-Prefix': 'true'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+        disableWarningsInGeneratedCode.set(true)
+        allErrorsAsWarnings.set(true)
+        disable("EmptyCatch", "ThreadPriorityCheck", "NonApiType", "MutablePublicArray",
+                "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation")
+        warn("DefaultCharset")
+    }
+}
+
+tasks.register("runServer", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath + project(":patcher").sourceSets.main.output
+    workingDir(new File(rootProject.rootDir, "run"))
+    jvmArgs(configurations.javaAgent.collect { "-javaagent:" + it.path })
+    mainClass = "com.fox2code.hypertale.launcher.Main"
+    args("--launch-dev")
+}
+
+compileJava {
+    dependsOn(":patcher:jar")
+    dependsOn(":patcher:checkPatchHytale")
+    mustRunAfter(":patcher:patchHytale")
+}
+
+test {
+    useJUnitPlatform()
+}

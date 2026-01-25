@@ -1,0 +1,19 @@
+
+.gradle/
+build/
+bin/
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.DS_Store
+Thumbs.db
+
+# Hytale Server JAR (used as compile-only reference)
+HytaleServer.jar
+
+# Test Server
+run/
+run

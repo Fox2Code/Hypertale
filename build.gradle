@@ -1,0 +1,116 @@
+buildscript {
+    ext {
+        spotlessVersion = (project['spotless.version'] as String)
+        errorpronePluginVersion = (project['errorprone-plugin.version'] as String)
+    }
+}
+
+plugins {
+    id 'java-base'
+    id 'net.ltgt.errorprone' version "$errorpronePluginVersion" apply false
+    id 'com.diffplug.spotless' version "$spotlessVersion" apply false
+}
+
+final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
+if (!hypertaleGradleDirectory.isDirectory() && !hypertaleGradleDirectory.mkdirs()) {
+    // Fail if we cannot create the folder required for building Hypertale!
+    throw new IOException("Failed to create hypertale gradle directory")
+}
+final File runDirectory = new File(rootDir, "run")
+if (!runDirectory.isDirectory() && !runDirectory.mkdirs()) {
+    // Fail if we cannot create the folder required for building Hypertale!
+    throw new IOException("Failed to create run directory")
+}
+
+
+tasks.register('publishToMavenLocal', Task).configure {
+    shouldRunAfter("build")
+}
+tasks.register('spotlessApply', Task)
+tasks.register('buildAndPublishToMavenLocal', Task).configure {
+    group = "build"
+    description = "Build this project then publish it to maven local"
+    dependsOn("publishToMavenLocal")
+    dependsOn("build")
+}
+
+final String processedLicense = '/*\n' + file('LICENSE').readLines()
+        .collect { ' * ' + it }.join('\n') + '\n */\n'
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.diffplug.spotless'
+
+    version = project['hypertale.version']
+    group = 'com.fox2code.Hypertale'
+
+    configurations {
+        include { transitive = false }
+        compileOnly.extendsFrom(include)
+        testCompileOnly.extendsFrom(include)
+    }
+
+    spotless {
+        java {
+            cleanthat().excludeMutator('ModifierOrder')
+            licenseHeader(processedLicense)
+            removeUnusedImports()
+            formatAnnotations()
+        }
+    }
+
+    afterEvaluate {
+        jar {
+            from(configurations.include.collect { it.isDirectory() ? it : zipTree(it) }) {
+                exclude("module-info.class")
+            }
+        }
+
+        tasks.withType(Javadoc).configureEach {
+            options.addStringOption('Xdoclint:-missing', '-quiet')
+        }
+
+        // Always apply spotless on compile
+        spotlessJavaCheck.enabled = false
+        compileJava.dependsOn(spotlessApply)
+
+        if (project.pluginManager.hasPlugin("groovy")) {
+            spotless {
+                groovy {
+                    licenseHeader(processedLicense)
+                }
+            }
+
+            compileGroovy.dependsOn(spotlessApply)
+        }
+
+        rootProject.tasks.spotlessApply.dependsOn(spotlessApply)
+        rootProject.tasks.publishToMavenLocal.dependsOn(publishToMavenLocal)
+
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.java
+                    groupId = "com.github.Fox2Code.Hypertale"
+                    artifactId = project.name
+                    version = '1.0' // JitPack only work with "1.0" as version
+                    pom {
+                        url = 'https://github.com/Fox2Code/Hypertale'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.build.dependsOn(":patcher:patchHytale")
+tasks.register("fastBuild").configure {
+    group = "build"
+    description = "Build this project skipping testing and patching"
+    dependsOn("launcher:assemble")
+}
+tasks.register("runServer").configure {
+    dependsOn(tasks.build)
+    dependsOn("launcher:runServer")
+}
