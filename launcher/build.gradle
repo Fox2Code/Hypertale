@@ -1,8 +1,7 @@
 plugins {
+    id 'maven-publish'
     id 'net.ltgt.errorprone'
 }
-
-import org.apache.tools.ant.filters.ReplaceTokens
 
 final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
 final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")

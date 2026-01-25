@@ -69,6 +69,9 @@ public final class PatcherMain {
 		}
 		if (loadPlugins && PatcherMain.class.getClassLoader().getResource(
 				"com/hypixel/hytale/plugin/early/ClassTransformer.class") == null) {
+			if (logProgress) {
+				EarlyLogger.log("Hytale jar doesn't support transformers...");
+			}
 			loadPlugins = false; // Don't ever crash if the API get removed!
 		}
 		// progress is false shared... but only run every 1000ms

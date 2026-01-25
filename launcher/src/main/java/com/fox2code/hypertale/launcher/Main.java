@@ -75,9 +75,7 @@ public final class Main {
 				for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 					DependencyHelper.loadDependency(dependency);
 				}
-				boolean hasClassTransformer = Main.class.getClassLoader()
-						.getResource("com/hypixel/hytale/plugin/early/ClassTransformer.class") != null;
-				PatcherMain.patch(input, HypertalePaths.hypertaleCacheJar, hasClassTransformer, true);
+				PatcherMain.patch(input, HypertalePaths.hypertaleCacheJar, true, true);
 				EarlyLogger.log("HytaleServer patched successfully!");
 			} finally {
 				EarlyLogger.stop();
@@ -91,9 +89,7 @@ public final class Main {
 				DependencyHelper.loadDependency(dependency);
 			}
 			PatcherMain.devMode = dev;
-			boolean hasClassTransformer = Main.class.getClassLoader()
-					.getResource("com/hypixel/hytale/plugin/early/ClassTransformer.class") != null;
-			PatcherMain.patch(input, new File(args[2]), hasClassTransformer, true);
+			PatcherMain.patch(input, new File(args[2]), true, true);
 			return;
 		} else if (args.length == 1 && "--launch-dev".equals(args[0])) {
 			launchGame(EmptyArrays.EMPTY_STRING_ARRAY, true);
