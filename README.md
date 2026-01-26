@@ -29,5 +29,6 @@ Add new fields to `manifest.json` hypertale will read:
 - `HypertaleJavaAgent` class in your mod to add as a java agent.
 
 Add new APIs with the `.hypertale()` extension for:
+- `com.hypixel.hytale.server.core.plugin.PluginBase`
 - `com.hypixel.hytale.server.core.universe.PlayerRef`
 - `com.hypixel.hytale.server.core.universe.world.World`

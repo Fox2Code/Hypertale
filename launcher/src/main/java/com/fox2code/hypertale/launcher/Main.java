@@ -25,8 +25,8 @@ package com.fox2code.hypertale.launcher;
 
 import com.fox2code.hypertale.io.HypertaleData;
 import com.fox2code.hypertale.loader.HypertaleConfig;
-import com.fox2code.hypertale.loader.ModGatherer;
-import com.fox2code.hypertale.loader.ModLoader;
+import com.fox2code.hypertale.loader.HypertaleModGatherer;
+import com.fox2code.hypertale.loader.HypertaleModLoader;
 import com.fox2code.hypertale.patcher.Optimizer;
 import com.fox2code.hypertale.patcher.PatcherMain;
 import com.fox2code.hypertale.utils.*;
@@ -81,11 +81,14 @@ public final class Main {
 					throw new IOException("Failed to create hypertale folder!");
 				}
 				HypertaleConfig.load();
-				ModGatherer modGatherer = ModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
+				HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
 				for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 					DependencyHelper.loadDependency(dependency);
 				}
 				for (File mod : modGatherer.getMods()) {
+					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
+				}
+				for (File mod : modGatherer.getLibraries()) {
 					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
 				}
 				File input = HypertalePaths.getHytaleJar();
@@ -167,7 +170,7 @@ public final class Main {
 				EarlyLogger.log("Invalid cache, ignoring...");
 			}
 		}
-		ModGatherer modGatherer = ModGatherer.gatherMods(args);
+		HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(args);
 		HypertaleData actualData = new HypertaleData();
 		actualData.hypertaleJarSize = HypertalePaths.hypertaleJar.length();
 		actualData.originalJarSize = hytaleJar.length();
@@ -197,7 +200,7 @@ public final class Main {
 	}
 
 	private static void launchGame(String[] args, boolean dev) throws IOException {
-		ModGatherer modGatherer = ModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
+		HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
 		if (args.length == 0) {
 			if (HypertalePaths.hytaleAssets.exists()) {
 				args = new String[]{"--assets", "Assets.zip"};
@@ -218,7 +221,7 @@ public final class Main {
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
 		}
-		ModLoader.loadHypertaleMods(modGatherer);
+		HypertaleModLoader.loadHypertaleMods(modGatherer);
 		HypertaleAgent.getInstrumentation().addTransformer(Optimizer.classFileTransformer);
 		EarlyLogger.log("Launching Hytale...");
 		EarlyLogger.stop();

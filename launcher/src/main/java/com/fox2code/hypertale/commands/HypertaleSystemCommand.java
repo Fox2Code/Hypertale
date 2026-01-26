@@ -23,19 +23,26 @@
  */
 package com.fox2code.hypertale.commands;
 
-import com.fox2code.hypertale.launcher.BuildConfig;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
+import com.fox2code.hypertale.loader.HypertalePlugin;
+import com.fox2code.hypertale.utils.HypertaleSystemInfo;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.AbstractCommand;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import org.jspecify.annotations.NonNull;
 
-public final class HypertaleCommand extends AbstractCommandCollection {
-	public HypertaleCommand() {
-		super("hypertale", """
-		Hypertale is a mod for the HytaleServer software bringing extra APIs and optimizations!
-		
-		Current Hypertale version: %version%
-		Source code: https://github.com/Fox2Code/Hypertale
-		""".replace("%version%", BuildConfig.HYPERTALE_VERSION));
-		this.addSubCommand(new HypertaleVersionCommand());
-		this.addSubCommand(new HypertaleSystemCommand());
-		this.addAliases("hyper");
+import java.util.concurrent.CompletableFuture;
+
+final class HypertaleSystemCommand extends AbstractCommand {
+	private static final Message SYSTEM_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+			Message.raw(": System information -> " + HypertaleSystemInfo.SYSTEM));
+
+	HypertaleSystemCommand() {
+		super("system", "Show on which operating system the server is currently being run!");
+	}
+
+	@Override
+	protected @NonNull CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
+		commandContext.sendMessage(SYSTEM_MESSAGE);
+		return CompletableFuture.completedFuture(null);
 	}
 }

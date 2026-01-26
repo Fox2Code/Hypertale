@@ -35,14 +35,16 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public final class ModGatherer {
+public final class HypertaleModGatherer {
 	private final List<File> hypertaleMods;
 	private final List<File> mods;
+	private final List<File> libraries;
 	private final int modHash;
 
-	private ModGatherer(List<File> hypertaleMods, List<File> mods, int modHash) {
+	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries, int modHash) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
+		this.libraries = libraries;
 		this.modHash = modHash;
 	}
 
@@ -54,27 +56,33 @@ public final class ModGatherer {
 		return this.mods;
 	}
 
+	public List<File> getLibraries() {
+		return this.libraries;
+	}
+
 	public int getModHash() {
 		return this.modHash;
 	}
 
-	public static ModGatherer gatherMods(String[] args) {
+	public static HypertaleModGatherer gatherMods(String[] args) {
 		// TODO: Process launch arguments
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
+		ArrayList<File> libraries = new ArrayList<>();
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
 			appendEarlyLoaderMods(mods);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
-			appendMods(hypertaleMods, mods);
+			appendMods(hypertaleMods, mods, libraries);
 		}
 		long[] fileSizes = new long[mods.size()];
 		for (int i = 0; i < fileSizes.length; i++) {
 			fileSizes[i] = mods.get(i).length();
 		}
 		Arrays.sort(fileSizes);
-		return new ModGatherer(Collections.unmodifiableList(hypertaleMods),
-				Collections.unmodifiableList(mods), Arrays.hashCode(fileSizes));
+		return new HypertaleModGatherer(Collections.unmodifiableList(hypertaleMods),
+				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
+				Arrays.hashCode(fileSizes));
 	}
 
 	private static void appendEarlyLoaderMods(ArrayList<File> mods) {
@@ -85,14 +93,15 @@ public final class ModGatherer {
 		}
 	}
 
-	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods) {
+	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods, ArrayList<File> libraries) {
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleMods.listFiles())) {
-			if (file.isFile() && file.getName().endsWith(".jar")) {
+			if (file.isFile() && file.getName().endsWith(".jar") &&
+					!file.getName().equals(HypertalePaths.hypertaleJar.getName())) {
 				try (ZipFile zipFile = new ZipFile(file)) {
-					ZipEntry zipEntry;
-					if ((zipEntry = zipFile.getEntry("manifest.json")) != null) {
+					ZipEntry manifestEntry;
+					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
 						String modInfo;
-						try (InputStream inputStream = zipFile.getInputStream(zipEntry)) {
+						try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
 							modInfo = new String(IOUtils.readAllBytes(inputStream), StandardCharsets.UTF_8);
 						} catch (RuntimeException _) {
 							modInfo = "";
@@ -107,6 +116,10 @@ public final class ModGatherer {
 							"META-INF/services/com.hypixel.hytale.plugin.early.ClassTransformer") != null) {
 						EarlyLogger.log("Early plugin detected in mods -> " + file.getName());
 						mods.add(file);
+						continue;
+					}
+					if (manifestEntry != null && zipFile.getEntry("kotlin/KotlinVersion.class") != null) {
+						libraries.add(file);
 					}
 				} catch (IOException e) {
 					EarlyLogger.log("Failed to open " + file.getName() + " as a zip file!");

@@ -28,6 +28,7 @@ import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
+import com.fox2code.hypertale.utils.HypertaleSystemInfo;
 import com.fox2code.hypertale.utils.SourceUtil;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
@@ -45,11 +46,17 @@ public final class HypertalePlugin extends JavaPlugin {
 	private static final boolean INVALID_INSTALLATION =
 			HypertalePlugin.class.getClassLoader() != JavaPlugin.class.getClassLoader();
 	private static final String HYPERTALE_INIT = "init-" + BuildConfig.HYPERTALE_VERSION + ".jar";
-	public static final Message HYPERTALE = Message.join(
-			Message.raw("Hypertale").color(Color.MAGENTA));
+	public static final Message HYPERTALE = Message.join(Message.raw("Hypertale").color(Color.MAGENTA));
+	// Use 16, 256, and true color ANSI codes for color, if it is not supported, it us usually ignored!
+	private static final String ANSI_MAGENTA = "\u001B[35;95m\u001B[38;5;201m\u001B[38;2;255;0;255m";
+	private static final String ANSI_RESET = "\u001B[0m";
 
 	public HypertalePlugin(@NonNull JavaPluginInit init) {
 		super(init);
+		if (!INVALID_INSTALLATION) {
+			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale" + ANSI_RESET);
+		}
+		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);
 		if (INVALID_INSTALLATION) {
 			try {
@@ -58,6 +65,8 @@ public final class HypertalePlugin extends JavaPlugin {
 				this.getLogger().atSevere().withCause(e).log("Failed to setup Hypertale properly!");
 			}
 			HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
+		} else {
+			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale" + ANSI_RESET);
 		}
 	}
 
@@ -70,7 +79,8 @@ public final class HypertalePlugin extends JavaPlugin {
 	@Override
 	protected void start() {
 		if (INVALID_INSTALLATION) return;
-		ModLoader.loadModsLate();
+		HypertaleModLoader.loadModsLate();
+		this.getLogger().atFine().log("Successfully loaded!");
 	}
 
 	private void tryInstallHypertaleFromModFolder() throws IOException {

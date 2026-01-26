@@ -40,11 +40,8 @@ final class PatchPluginManager extends HypertalePatch {
 		injection.add(new VarInsnNode(ALOAD, 1));
 		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PendingLoadPlugin,
 				"getIdentifier", "()L" + PluginIdentifier + ";"));
-		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PluginIdentifier,
-				"toString", "()L" + ASMString + ";"));
-		injection.add(new LdcInsnNode("Hypertale:Hypertale"));
-		injection.add(new MethodInsnNode(INVOKEVIRTUAL, ASMString,
-				"equals", "(L" + ASMObject + ";)Z"));
+		injection.add(new MethodInsnNode(INVOKESTATIC, HypertaleModLoader,
+				"isPreloadedPlugin", "(L" + PluginIdentifier + ";)Z"));
 		LabelNode labelNode = new LabelNode();
 		injection.add(new JumpInsnNode(IFEQ, labelNode));
 		injection.add(new InsnNode(RETURN));

@@ -35,10 +35,10 @@ import java.util.concurrent.CompletableFuture;
 
 final class HypertaleVersionCommand extends AbstractCommand {
 	private static final Message VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
-			Message.raw(" version " + BuildConfig.HYPERTALE_VERSION));
+			Message.raw(": Hypertale version -> " + BuildConfig.HYPERTALE_VERSION));
 
 	HypertaleVersionCommand() {
-		super("version", "Show Hypertale version number!");
+		super("version", "Show Hypertale version!");
 		this.setPermissionGroup(GameMode.Adventure);
 	}
 

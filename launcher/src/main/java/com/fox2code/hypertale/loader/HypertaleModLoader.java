@@ -30,6 +30,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
 
 import java.io.File;
@@ -37,18 +38,32 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public final class ModLoader {
+public final class HypertaleModLoader {
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	private static final LinkedHashMap<File, JsonObject> loadedModsLate = new LinkedHashMap<>();
+	private static final HashSet<String> preloadedPlugins = new HashSet<>();
 
-	public static void loadHypertaleMods(ModGatherer modGatherer) throws IOException {
+	static {
+		preloadedPlugins.add("Hypertale:Hypertale");
+	}
+
+	public static void loadHypertaleMods(HypertaleModGatherer modGatherer) throws IOException {
 		LinkedHashMap<File, JsonObject> loadedModsEarly = new LinkedHashMap<>();
-		for (File file : modGatherer.getHypertaleMods()) {
+		loadHypertaleMods(modGatherer, false, loadedModsEarly);
+		loadHypertaleMods(modGatherer, true, loadedModsEarly);
+		loadMods(loadedModsEarly, true);
+	}
+
+	public static void loadHypertaleMods(
+			HypertaleModGatherer modGatherer, boolean libraries,
+			LinkedHashMap<File, JsonObject> loadedModsEarly) throws IOException {
+		for (File file : (libraries ? modGatherer.getLibraries() : modGatherer.getHypertaleMods())) {
 			JarFile jarFile = new JarFile(file);
 			JarEntry hypertaleModInfo = jarFile.getJarEntry("manifest.json");
 			if (hypertaleModInfo == null) continue;
@@ -60,14 +75,20 @@ public final class ModLoader {
 				EarlyLogger.log("Failed to load mod info of " + file.getName());
 				continue;
 			}
-			if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad")) {
+			String id = JsonPropertyHelper.getBoolean(jsonObject, "Group") + ":" +
+					JsonPropertyHelper.getBoolean(jsonObject, "Name");
+			boolean preLoadByDefault = libraries ||
+					jarFile.getEntry("kotlin/KotlinVersion.class") != null;
+			if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad", preLoadByDefault)) {
 				HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(jarFile);
 				loadedModsEarly.put(file, jsonObject);
+				if (!preloadedPlugins.add(id)) {
+					throw new IllegalArgumentException("Tried to pre-load duplicate plugin");
+				}
 			} else {
 				loadedModsLate.put(file, jsonObject);
 			}
 		}
-		loadMods(loadedModsEarly, true);
 	}
 
 	static void loadModsLate() {
@@ -82,7 +103,7 @@ public final class ModLoader {
 				try {
 					Class<?> agentClass;
 					agentClass = Class.forName(javaAgent, true, early ?
-							ModLoader.class.getClassLoader() :
+							HypertaleModLoader.class.getClassLoader() :
 							PluginManager.get().getBridgeClassLoader());
 					agentClass.getDeclaredMethod(
 									early ? "premain" : "agentmain",
@@ -94,5 +115,9 @@ public final class ModLoader {
 				}
 			}
 		}
+	}
+
+	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
+		return preloadedPlugins.contains(pluginIdentifier.toString());
 	}
 }
