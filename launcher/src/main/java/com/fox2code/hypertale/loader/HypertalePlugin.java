@@ -54,7 +54,7 @@ public final class HypertalePlugin extends JavaPlugin {
 			try {
 				this.tryInstallHypertaleFromModFolder();
 			} catch (Exception e) {
-				this.getLogger().atSevere().log("Failed to setup Hypertale properly!", e);
+				this.getLogger().atSevere().withCause(e).log("Failed to setup Hypertale properly!");
 			}
 			HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
 		}
