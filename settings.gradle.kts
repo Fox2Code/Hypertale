@@ -6,3 +6,4 @@ rootProject.name = "Hypertale"
 include("launcher")
 include("dev")
 include("patcher")
+include("init")

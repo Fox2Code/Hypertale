@@ -21,47 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.launcher;
-
-import com.fox2code.hypertale.init.Agent;
+package com.fox2code.hypertale.init;
 
 import java.lang.instrument.Instrumentation;
 
-public final class HypertaleAgent {
-	private static Instrumentation instrumentation;
+public final class Agent {
+	static Instrumentation instrumentation;
 
-	private HypertaleAgent() {}
+	private Agent() {}
 
 	public static void premain(final String agentArgs, final Instrumentation instrumentation) {
-		if (HypertaleAgent.instrumentation == null && instrumentation != null) {
-			HypertaleAgent.instrumentation = instrumentation;
+		if (Agent.instrumentation == null && instrumentation != null) {
+			Agent.instrumentation = instrumentation;
 		}
 	}
 
 	public static void agentmain(final String agentArgs, final Instrumentation instrumentation) {
-		if (HypertaleAgent.instrumentation == null && instrumentation != null) {
-			HypertaleAgent.instrumentation = instrumentation;
+		if (Agent.instrumentation == null && instrumentation != null) {
+			Agent.instrumentation = instrumentation;
 		}
 	}
 
 	public static Instrumentation getInstrumentation() {
-		return instrumentation;
-	}
-
-	static void tryLoadEarlyAgent() {
-		if (instrumentation == null) {
-			try {
-				// Can fail with NoSuchMethodError
-				instrumentation = Agent.getInstrumentation();
-			} catch (Throwable _) {}
-		}
-		if (instrumentation == null) {
-			// Try to get ByteBuddy agent for development environment
-			try {
-				instrumentation = (Instrumentation)
-						Class.forName("net.bytebuddy.agent.ByteBuddyAgent")
-								.getMethod("getInstrumentation").invoke(null);
-			} catch (Exception _) {}
-		}
+		return Agent.instrumentation;
 	}
 }

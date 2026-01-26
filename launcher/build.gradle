@@ -5,6 +5,13 @@ plugins {
 
 final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
 final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")
+final File hypertaleInitJar = project(":init").layout.buildDirectory
+        .file("libs/init-${project['hypertale.version']}.jar").get().asFile
+// Improve compatibility with IntellijIDEA
+if (!hypertaleInitJar.getParentFile().isDirectory() &&
+        !hypertaleInitJar.getParentFile().mkdirs()) {
+    throw new RuntimeException("Failed to create init \"build/libs\" folder!")
+}
 
 java {
     toolchain {
@@ -34,6 +41,8 @@ dependencies {
     api "com.google.guava:guava:${project['guava-failureaccess.version']}"
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
     include(project(":patcher"))
+    // We may not have init at runtime!
+    compileOnly(project(":init"))
 
     javaAgent("net.bytebuddy:byte-buddy-agent:${project['bytebuddy.version']}")
     testImplementation platform('org.junit:junit-bom:5.10.0')
@@ -51,6 +60,7 @@ jar {
     archiveBaseName = "Hypertale"
     manifest {
         attributes 'Hypertale-Version': project['hypertale.version']
+        attributes 'Hypertale-Init': project['hypertale.init']
         attributes 'Main-Class': 'com.fox2code.hypertale.launcher.Main'
         attributes 'Launcher-Agent-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
         attributes 'Premain-Class': 'com.fox2code.hypertale.launcher.HypertaleAgent'
@@ -58,16 +68,7 @@ jar {
         attributes 'Can-Retransform-Classes': 'true'
         attributes 'Can-Redefine-Classes': 'true'
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.errorprone {
-        disableWarningsInGeneratedCode.set(true)
-        allErrorsAsWarnings.set(true)
-        disable("EmptyCatch", "ThreadPriorityCheck", "NonApiType", "MutablePublicArray",
-                "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation")
-        warn("DefaultCharset")
-    }
+    from(hypertaleInitJar)
 }
 
 tasks.register("runServer", JavaExec) {
@@ -79,6 +80,7 @@ tasks.register("runServer", JavaExec) {
 }
 
 compileJava {
+    dependsOn(":init:jar")
     dependsOn(":patcher:jar")
     dependsOn(":patcher:checkPatchHytale")
     mustRunAfter(":patcher:patchHytale")

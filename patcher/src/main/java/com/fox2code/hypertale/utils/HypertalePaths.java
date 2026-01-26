@@ -40,21 +40,45 @@ public final class HypertalePaths {
 	public static final File hytaleJar = new File("HytaleServer.jar").getAbsoluteFile();
 	public static final File hytaleMods = new File("mods").getAbsoluteFile();
 	public static final File hytaleEarlyPlugins = new File("earlyplugins").getAbsoluteFile();
+	private static File hypertaleInitJar = null;
+
+	private static boolean allowFileAsHytaleJar(File file) {
+		File hypertaleInitJar = getHypertaleInitJar();
+		return !HypertalePaths.hypertaleJar.getName().equals(file.getName()) && file.exists() &&
+				(hypertaleInitJar == null || !hypertaleInitJar.getName().equals(file.getName()));
+	}
 
 	public static File getHytaleJar() {
-		if (!HypertalePaths.hypertaleJar.getName().equals(HypertalePaths.hytaleJar.getName()) &&
-				HypertalePaths.hytaleJar.exists()) {
+		if (allowFileAsHytaleJar(HypertalePaths.hytaleJar)) {
 			return HypertalePaths.hytaleJar;
 		}
 		File secondaryHytaleFileName = new File(
 				HypertaleConfig.secondaryJarName).getAbsoluteFile();
-		if (!HypertalePaths.hypertaleJar.getName().equals(secondaryHytaleFileName.getName()) &&
-				secondaryHytaleFileName.exists()) {
+		if (allowFileAsHytaleJar(secondaryHytaleFileName)) {
 			return secondaryHytaleFileName;
 		}
 		return new File(
 				HypertalePlatform.getPlatform().getLatestFolder(
 						HypertaleConfig.hytaleBranch),
 				"Server" + File.separator + "HytaleServer.jar");
+	}
+
+	public static File getHypertaleInitJar() {
+		if (hypertaleInitJar != null) {
+			return hypertaleInitJar;
+		}
+		if (Boolean.getBoolean("hypertale.useInitWrapper")) {
+			try {
+				hypertaleInitJar = SourceUtil.getSourceFile(
+						Class.forName("com.fox2code.hypertale.init.Main"));
+				return hypertaleInitJar;
+			} catch (ClassNotFoundException _) {}
+		}
+		return null;
+	}
+
+	public static File getHypertaleExecJar() {
+		File hypertaleInitJar = getHypertaleInitJar();
+		return hypertaleInitJar == null ? hypertaleJar : hypertaleInitJar;
 	}
 }

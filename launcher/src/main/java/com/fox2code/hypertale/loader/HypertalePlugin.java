@@ -24,6 +24,7 @@
 package com.fox2code.hypertale.loader;
 
 import com.fox2code.hypertale.commands.HypertaleCommand;
+import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
@@ -36,14 +37,14 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.file.Files;
+import java.util.Objects;
 
 public final class HypertalePlugin extends JavaPlugin {
 	private static final boolean INVALID_INSTALLATION =
 			HypertalePlugin.class.getClassLoader() != JavaPlugin.class.getClassLoader();
+	private static final String HYPERTALE_INIT = "init-" + BuildConfig.HYPERTALE_VERSION + ".jar";
 	public static final Message HYPERTALE = Message.join(
 			Message.raw("Hypertale").color(Color.MAGENTA));
 
@@ -91,26 +92,42 @@ public final class HypertalePlugin extends JavaPlugin {
 			this.getLogger().atWarning().log(HypertalePaths.hypertaleJar.getName() +
 					" was installed incorrectly! Installing Hypertale properly...");
 			File hytaleServer = SourceUtil.getSourceFile(JavaPlugin.class);
+			File hypertaleInit = HypertalePaths.getHypertaleInitJar();
 			File hypertaleFile = HypertalePaths.hypertaleJar;
-			File hytaleServerDestination = new File(
-					hytaleServer.getParentFile(), HypertaleConfig.secondaryJarName);
-			if (hytaleServer.getName().equals(hytaleServerDestination.getName())) {
-				if (HypertalePaths.hypertaleCache.isDirectory() || HypertalePaths.hypertaleCache.mkdirs()) {
-					HypertaleConfig.save();
+			if (hypertaleInit == null) {
+				File hytaleServerDestination = new File(
+						hytaleServer.getParentFile(), HypertaleConfig.secondaryJarName);
+				if (hytaleServer.getName().equals(hytaleServerDestination.getName())) {
+					if (HypertalePaths.hypertaleCache.isDirectory() || HypertalePaths.hypertaleCache.mkdirs()) {
+						HypertaleConfig.save();
+					}
+					throw new IOException("Secondary server name is the current server name," +
+							"please set secondaryJarName to another jar name in .hypertale/hypertale.properties");
 				}
-				throw new IOException("Secondary server name is the current server name," +
-						"please set secondaryJarName to another jar name in .hypertale/hypertale.properties");
+
+				if (hytaleServerDestination.exists() && !hytaleServerDestination.delete()) {
+					hytaleServerDestination.deleteOnExit();
+					throw new IOException("Failed to delete " + hytaleServerDestination.getName());
+				}
+				Files.copy(hytaleServer.toPath(), hytaleServerDestination.toPath());
+				if (hytaleServer.exists() && !hytaleServer.delete()) {
+					hytaleServerDestination.deleteOnExit();
+					throw new IOException("Failed to delete " + hytaleServer.getName());
+				}
+			} else {
+				// Set HypertaleInit as the target of the copy!
+				hytaleServer = hypertaleInit;
 			}
-			if (hytaleServerDestination.exists() && !hytaleServerDestination.delete()) {
-				hytaleServerDestination.deleteOnExit();
-				throw new IOException("Failed to delete " + hytaleServerDestination.getName());
+			if (HypertalePlugin.class.getClassLoader().getResource(HYPERTALE_INIT) == null) {
+				// Pretend the lack of init.jar isn't an issue!
+				Files.copy(hypertaleFile.toPath(), hytaleServer.toPath());
+			} else try (InputStream inputStream = new BufferedInputStream(
+					Objects.requireNonNull(HypertalePlugin.class.getClassLoader()
+									.getResourceAsStream(HYPERTALE_INIT),
+							"Failed to load " + HYPERTALE_INIT + " from " +
+									HypertalePaths.hypertaleJar.getName()))) {
+				Files.copy(inputStream, hytaleServer.toPath());
 			}
-			Files.copy(hytaleServer.toPath(), hytaleServerDestination.toPath());
-			if (hytaleServer.exists() && !hytaleServer.delete()) {
-				hytaleServerDestination.deleteOnExit();
-				throw new IOException("Failed to delete " + hytaleServer.getName());
-			}
-			Files.copy(hypertaleFile.toPath(), hytaleServer.toPath());
 			this.getLogger().atInfo().log("Hypertale installed successfully!");
 			this.getLogger().atInfo().log("The server will be stopped and Hypertale will be active on restart!");
 		}

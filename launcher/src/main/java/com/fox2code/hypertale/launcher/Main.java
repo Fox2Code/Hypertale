@@ -32,6 +32,7 @@ import com.fox2code.hypertale.patcher.PatcherMain;
 import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -45,14 +46,26 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
 public final class Main {
+	public static void hypertaleInitV1Main(String[] args) throws Throwable {
+		main(args);
+	}
+
 	static void main(String[] args) throws IOException, InterruptedException {
 		Locale.setDefault(Locale.ENGLISH);
 		System.setProperty("java.awt.headless", "true");
 		System.setProperty("file.encoding", "UTF-8");
-		HypertaleAgent.tryLoadByteBuddyAgent();
+		HypertaleAgent.tryLoadEarlyAgent();
 		System.setProperty("rellatsnI.tnega.yddubetyb.ten", HypertaleAgent.class.getName());
+		if (args.length == 0 && !isRunningFromTerminal()) {
+			// Avoid running a server from a double click.
+			System.out.println("[Hypertale] File double click detected! Skipping running!");
+			System.out.println("[Hypertale] Append \"--\" as an argument to skip this check!");
+			return;
+		}
 		boolean dev;
-		if (args.length >= 1 && "--version".equals(args[0])) {
+		if (args.length == 1 && "--".equals(args[0])) {
+			args = EmptyArrays.EMPTY_STRING_ARRAY;
+		} else if (args.length >= 1 && "--version".equals(args[0])) {
 			System.out.println("Hypertale version " + BuildConfig.HYPERTALE_VERSION);
 			return;
 		} else if (args.length == 1 && "--download-libraries".equals(args[0])) {
@@ -172,7 +185,15 @@ public final class Main {
 		if (args.length == 1 && "--noop".equals(args[0])) {
 			return;
 		}
-		launchGame(args, false);
+		try {
+			launchGame(args, false);
+		} catch (LinkageError e) {
+			if (HypertalePaths.hypertaleCacheData.exists() &&
+					!HypertalePaths.hypertaleCacheData.delete()) {
+				HypertalePaths.hypertaleCacheData.deleteOnExit();
+			}
+			throw e;
+		}
 	}
 
 	private static void launchGame(String[] args, boolean dev) throws IOException {
@@ -215,7 +236,7 @@ public final class Main {
 			command.add(new File(System.getProperty("java.home") + "/bin/java").getAbsolutePath());
 		}
 		command.add("-jar");
-		command.add(SourceUtil.getSourceFile(Main.class).getAbsolutePath());
+		command.add(HypertalePaths.getHypertaleExecJar().getAbsolutePath());
 		command.add("--run-patcher");
 		int returnCode = new ProcessBuilder(command).inheritIO().start().waitFor();
 		if (returnCode != 0 || !HypertalePaths.hypertaleCacheJar.exists()) {
@@ -224,5 +245,12 @@ public final class Main {
 		EarlyLogger.start(true);
 		actualData.modifiedJarSize = HypertalePaths.hypertaleCacheJar.length();
 		actualData.writeTo(HypertalePaths.hypertaleCacheData);
+	}
+
+	// https://errorprone.info/bugpattern/SystemConsoleNull
+	@SuppressWarnings("SystemConsoleNull")
+	private static boolean isRunningFromTerminal() {
+		Console console = System.console();
+		return console != null && console.isTerminal();
 	}
 }

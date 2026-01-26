@@ -84,7 +84,9 @@ public final class EarlyLogger {
 	public static void installLoggerFunction(Consumer<String> loggerFunction) {
 		synchronized (logFileLock) {
 			if (EarlyLogger.loggerFunction == null) {
-				log("Switching to Hytale logging!");
+				if (printStream != null) {
+					log("Switching to Hytale logging!");
+				}
 				stopLocked();
 				EarlyLogger.loggerFunction = loggerFunction;
 			}

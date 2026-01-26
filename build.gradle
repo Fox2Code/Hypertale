@@ -39,7 +39,6 @@ final String processedLicense = '/*\n' + file('LICENSE').readLines()
 
 subprojects {
     apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
     apply plugin: 'com.diffplug.spotless'
 
     version = project['hypertale.version']
@@ -71,6 +70,18 @@ subprojects {
             options.addStringOption('Xdoclint:-missing', '-quiet')
         }
 
+        if (project.pluginManager.hasPlugin("net.ltgt.errorprone")) {
+            tasks.withType(JavaCompile).configureEach {
+                options.errorprone {
+                    disableWarningsInGeneratedCode.set(true)
+                    allErrorsAsWarnings.set(true)
+                    disable("EmptyCatch", "ThreadPriorityCheck", "NonApiType", "MutablePublicArray",
+                            "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation")
+                    warn("DefaultCharset")
+                }
+            }
+        }
+
         // Always apply spotless on compile
         spotlessJavaCheck.enabled = false
         compileJava.dependsOn(spotlessApply)
@@ -86,14 +97,17 @@ subprojects {
         }
 
         rootProject.tasks.spotlessApply.dependsOn(spotlessApply)
-        rootProject.tasks.publishToMavenLocal.dependsOn(publishToMavenLocal)
 
-        publishing {
-            publications {
-                release(MavenPublication) {
-                    from components.java
-                    pom {
-                        url = 'https://github.com/Fox2Code/Hypertale'
+        if (project.pluginManager.hasPlugin("maven-publish")) {
+            rootProject.tasks.publishToMavenLocal.dependsOn(publishToMavenLocal)
+
+            publishing {
+                publications {
+                    release(MavenPublication) {
+                        from components.java
+                        pom {
+                            url = 'https://github.com/Fox2Code/Hypertale'
+                        }
                     }
                 }
             }

@@ -1,3 +1,7 @@
+plugins {
+    id 'net.ltgt.errorprone'
+}
+
 final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
 final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")
 
@@ -44,6 +48,7 @@ dependencies {
     final String ASM_VERSION = project['asm.version']
     implementation "org.ow2.asm:asm-util:${ASM_VERSION}"
     implementation "org.ow2.asm:asm-commons:${ASM_VERSION}"
+    errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

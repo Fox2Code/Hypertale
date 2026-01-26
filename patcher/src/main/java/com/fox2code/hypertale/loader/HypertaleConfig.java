@@ -78,14 +78,19 @@ public final class HypertaleConfig {
 				throw new IOException("Failed to create config file!");
 			}
 			properties = new Properties(defaultProperties);
-			properties.load(new InputStreamReader(new BufferedInputStream(
-					new FileInputStream(HypertalePaths.hypertaleConfig)),
-					StandardCharsets.UTF_8));
+			try (InputStreamReader inputStreamReader = new InputStreamReader(
+					new BufferedInputStream(new FileInputStream(
+							HypertalePaths.hypertaleConfig)), StandardCharsets.UTF_8)) {
+				properties.load(inputStreamReader);
+			}
 		} else {
 			properties = defaultProperties;
-			properties.store(new OutputStreamWriter(new BufferedOutputStream(
+			try (OutputStreamWriter outputStreamWriter =
+						 new OutputStreamWriter(new BufferedOutputStream(
 					new FileOutputStream(HypertalePaths.hypertaleConfig)),
-							StandardCharsets.UTF_8), HYPERTALE_CONFIG_COMMENT);
+					StandardCharsets.UTF_8)) {
+				properties.store(outputStreamWriter, HYPERTALE_CONFIG_COMMENT);
+			}
 		}
 
 		for (Field field : HypertaleConfig.class.getFields()) {
@@ -123,9 +128,12 @@ public final class HypertaleConfig {
 				} catch (IllegalAccessException ignored) {}
 			}
 		}
-		properties.store(new OutputStreamWriter(new BufferedOutputStream(
-						new FileOutputStream(HypertalePaths.hypertaleConfig)),
-						StandardCharsets.UTF_8), HYPERTALE_CONFIG_COMMENT);
+		try (OutputStreamWriter outputStreamWriter =
+					 new OutputStreamWriter(new BufferedOutputStream(
+							 new FileOutputStream(HypertalePaths.hypertaleConfig)),
+							 StandardCharsets.UTF_8)) {
+			properties.store(outputStreamWriter, HYPERTALE_CONFIG_COMMENT);
+		}
 	}
 
 	public static int patchConfigFlags() {

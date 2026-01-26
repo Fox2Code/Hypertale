@@ -1,0 +1,39 @@
+plugins {
+    id 'net.ltgt.errorprone'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+jar {
+    manifest {
+        attributes 'HypertaleInit-Version': project['hypertale.init']
+        attributes 'Main-Class': 'com.fox2code.hypertale.init.Main'
+        attributes 'Launcher-Agent-Class': 'com.fox2code.hypertale.init.Agent'
+        attributes 'Premain-Class': 'com.fox2code.hypertale.init.Agent'
+        attributes 'Can-Set-Native-Method-Prefix': 'true'
+        attributes 'Can-Retransform-Classes': 'true'
+        attributes 'Can-Redefine-Classes': 'true'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
