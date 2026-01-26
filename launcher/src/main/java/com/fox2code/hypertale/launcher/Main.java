@@ -29,18 +29,20 @@ import com.fox2code.hypertale.loader.ModGatherer;
 import com.fox2code.hypertale.loader.ModLoader;
 import com.fox2code.hypertale.patcher.Optimizer;
 import com.fox2code.hypertale.patcher.PatcherMain;
-import com.fox2code.hypertale.utils.EmptyArrays;
-import com.fox2code.hypertale.utils.HypertalePaths;
-import com.fox2code.hypertale.utils.HypertalePlatform;
-import com.fox2code.hypertale.utils.SourceUtil;
+import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
 
 public final class Main {
 	static void main(String[] args) throws IOException, InterruptedException {
@@ -67,15 +69,55 @@ public final class Main {
 				}
 				HypertaleConfig.load();
 				ModGatherer modGatherer = ModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
-				for (File mod : modGatherer.getMods()) {
-					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
-				}
-				final File input = HypertalePaths.getHytaleJar();
-				HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(input));
 				for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 					DependencyHelper.loadDependency(dependency);
 				}
+				for (File mod : modGatherer.getMods()) {
+					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
+				}
+				File input = HypertalePaths.getHytaleJar();
+				if (HypertalePaths.hypertalePrePatcher.isFile()) {
+					JarFile prePatcher = new JarFile(HypertalePaths.hypertalePrePatcher);
+					String mainClass = prePatcher.getManifest().getMainAttributes().getValue("Main-Class");
+					if (mainClass == null) {
+						mainClass = StreamSupport.stream(((Iterable<JarEntry>)() ->
+								prePatcher.entries().asIterator()).spliterator(), false)
+								.map(ZipEntry::getName).filter(path -> path.endsWith("Patcher.class"))
+								.findFirst().orElse(null);
+						if (mainClass != null) {
+							mainClass = mainClass.substring(0, mainClass.length() - 6).replace('/', '.');
+						}
+					}
+					if (mainClass != null) {
+						HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(prePatcher);
+						try {
+							Method method = Class.forName(mainClass).getDeclaredMethod("main", String[].class);
+							if (!Modifier.isPublic(method.getModifiers())) {
+								method.setAccessible(true);
+							}
+							try {
+								EarlyLogger.log("Pre-patching the game with " + mainClass);
+								method.invoke(null, (Object) new String[]{input.getAbsolutePath(),
+										HypertalePaths.hypertalePrePatched.getAbsolutePath()});
+								if (HypertalePaths.hypertalePrePatched.isFile()) {
+									input = HypertalePaths.hypertalePrePatched;
+								}
+							} catch (Exception e) {
+								throw new Error("Failed to pre-patch from " + mainClass, e);
+							}
+						} catch (Exception e) {
+							EarlyLogger.log("Failed to initialize pre-patcher:\n" +
+									StackTraceStringifier.stringifyStackTrace(e));
+						}
+					} else {
+						EarlyLogger.log("Found pre-patcher but failed to find patching class!");
+					}
+				}
+				HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(input));
 				PatcherMain.patch(input, HypertalePaths.hypertaleCacheJar, true, true);
+				if (HypertalePaths.hypertalePrePatched.exists() && !HypertalePaths.hypertalePrePatched.delete()) {
+					HypertalePaths.hypertalePrePatched.deleteOnExit();
+				}
 				EarlyLogger.log("HytaleServer patched successfully!");
 			} finally {
 				EarlyLogger.stop();
@@ -119,6 +161,8 @@ public final class Main {
 		actualData.modifiedJarSize = HypertalePaths.hypertaleCacheJar.length();
 		actualData.patchConfigFlags = HypertaleConfig.patchConfigFlags();
 		actualData.modHash = modGatherer.getModHash();
+		actualData.prePatcherSize = HypertalePaths.hypertalePrePatcher.isFile() ?
+				HypertalePaths.hypertalePrePatcher.length() : 0;
 		if (args.length == 1 && "--dry".equals(args[0])) {
 			return;
 		}

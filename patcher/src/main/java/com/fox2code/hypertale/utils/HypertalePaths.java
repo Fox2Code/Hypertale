@@ -33,6 +33,8 @@ public final class HypertalePaths {
 	public static final File hypertaleCacheLog = new File(hypertaleCache, "hypertale.log").getAbsoluteFile();
 	public static final File hypertaleCacheData = new File(hypertaleCache, "cache.dat");
 	public static final File hypertaleCacheJar = new File(hypertaleCache, "HytaleServer.jar");
+	public static final File hypertalePrePatcher = new File(hypertaleCache, "PrePatcher.jar");
+	public static final File hypertalePrePatched = new File(hypertaleCache, "PrePatched.jar");
 	public static final File hypertaleConfig = new File(hypertaleCache, "hypertale.ini");
 	public static final File hytaleAssets = new File("Assets.zip").getAbsoluteFile();
 	public static final File hytaleJar = new File("HytaleServer.jar").getAbsoluteFile();
