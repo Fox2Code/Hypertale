@@ -112,6 +112,7 @@ public final class HypertalePlugin extends JavaPlugin {
 			}
 			Files.copy(hypertaleFile.toPath(), hytaleServer.toPath());
 			this.getLogger().atInfo().log("Hypertale installed successfully!");
+			this.getLogger().atInfo().log("The server will be stopped and Hypertale will be active on restart!");
 		}
 	}
 }
