@@ -65,8 +65,6 @@ public final class HypertalePlugin extends JavaPlugin {
 				this.getLogger().atSevere().withCause(e).log("Failed to setup Hypertale properly!");
 			}
 			HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
-		} else {
-			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale" + ANSI_RESET);
 		}
 	}
 
@@ -80,7 +78,7 @@ public final class HypertalePlugin extends JavaPlugin {
 	protected void start() {
 		if (INVALID_INSTALLATION) return;
 		HypertaleModLoader.loadModsLate();
-		this.getLogger().atFine().log("Successfully loaded!");
+		this.getLogger().atInfo().log("Successfully loaded!");
 	}
 
 	private void tryInstallHypertaleFromModFolder() throws IOException {

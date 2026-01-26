@@ -31,6 +31,7 @@ import com.fox2code.hypertale.patcher.Optimizer;
 import com.fox2code.hypertale.patcher.PatcherMain;
 import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
+import com.hypixel.hytale.logger.backend.HytaleConsole;
 
 import java.io.Console;
 import java.io.File;
@@ -226,6 +227,9 @@ public final class Main {
 		EarlyLogger.log("Launching Hytale...");
 		EarlyLogger.stop();
 		// We load Hytale is the same classloader! So we can do that!
+		if (HypertalePlatform.getPlatform() != HypertalePlatform.WINDOWS && isRunningFromTerminal()) {
+			HytaleConsole.INSTANCE.setTerminal("ansi");
+		}
 		LateMain.lateMain(args);
 	}
 

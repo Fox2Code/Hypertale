@@ -46,6 +46,7 @@ public interface HypertaleASMConstants {
 	String BuilderToolsPlugin = "com/hypixel/hytale/builtin/buildertools/BuilderToolsPlugin";
 	String PluginIdentifier = "com/hypixel/hytale/common/plugin/PluginIdentifier";
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
+	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
 	String PacketIO = "com/hypixel/hytale/protocol/io/PacketIO";
 	String PluginBase = "com/hypixel/hytale/server/core/plugin/PluginBase";
 	String PluginClassLoader = "com/hypixel/hytale/server/core/plugin/PluginClassLoader";

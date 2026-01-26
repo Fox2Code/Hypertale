@@ -30,7 +30,6 @@ import com.hypixel.hytale.server.core.plugin.PluginBase;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.logging.Level;
 
 public final class HypertaleBasePlugin {
 	private final boolean preLoaded;
@@ -53,7 +52,15 @@ public final class HypertaleBasePlugin {
 
 	@Nonnull
 	public HytaleLogger getLogger() {
-		return this.logger;
+		final HytaleLogger logger = this.logger;
+		final HytaleLogger originalLogger = this.originalLogger;
+		if (logger != originalLogger &&
+				logger.getLevel().intValue() >
+						originalLogger.getLevel().intValue()) {
+			System.out.println("HypertaleFix: " + logger.getLevel().getName());
+			logger.setLevel(originalLogger.getLevel());
+		}
+		return logger;
 	}
 
 	@Nonnull
@@ -64,9 +71,6 @@ public final class HypertaleBasePlugin {
 	public void setLogger(@Nullable HytaleLogger logger) {
 		if (logger != null && logger != this.originalLogger) {
 			logger.setPropagatesSentryToParent(false);
-			if (logger.getLevel().intValue() > Level.INFO.intValue()) {
-				logger.setLevel(Level.INFO);
-			}
 			this.logger = logger;
 		} else {
 			this.logger = this.originalLogger;

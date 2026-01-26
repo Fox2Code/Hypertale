@@ -52,6 +52,7 @@ public final class HypertalePatches {
 		addPatch(new PatchPlayerRef());
 		addPatch(new PatchPluginManager());
 		addPatch(new PatchPluginBase());
+		addPatch(new PatchHytaleLogFormatter());
 		addPatch(new PatchRedirectToOptimisedGetPlayers());
 		addPatch(new PatchRedirectToOptimisedGetChunkIfInMemory());
 	}
