@@ -73,6 +73,9 @@ public final class HypertalePlugin extends JavaPlugin {
 	}
 
 	private void tryInstallHypertaleFromModFolder() throws IOException {
+		if (!HypertalePaths.hypertaleCache.isDirectory() && !HypertalePaths.hypertaleCache.mkdirs()) {
+			this.getLogger().atSevere().log("Failed to create the \".hypertale\" directory!");
+		}
 		if (HypertalePlatform.getPlatform() == HypertalePlatform.WINDOWS) {
 			// Windows file locking prevent in place upgrading, let's assume
 			// the user has Hytale installed if Windows is detected!
