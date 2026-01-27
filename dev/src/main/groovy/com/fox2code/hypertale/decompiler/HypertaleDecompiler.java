@@ -30,7 +30,6 @@ import org.jetbrains.java.decompiler.main.decompiler.SingleFileSaver;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,7 +91,7 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 				fixUpContent(qualifiedName.replace('/', '.'), content), mapping);
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		if (args.length != 2) {
 			System.out.println("Expecting 2 arguments: [INPUT] [OUTPUT]");
 			System.exit(-1);
@@ -106,6 +105,8 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 			return;
 		}
 		try (HypertaleDecompiler decompiler = new HypertaleDecompiler(input, output)) {
+			System.gc();
+			Thread.sleep(10);
 			decompiler.decompile();
 		}
 	}

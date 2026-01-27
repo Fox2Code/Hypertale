@@ -22,6 +22,9 @@ if (!runDirectory.isDirectory() && !runDirectory.mkdirs()) {
     throw new IOException("Failed to create run directory")
 }
 
+final File mavenLocalFile = new File(System.getProperty("user.home") +
+        File.separator + ".m2" + File.separator + "repository")
+final File destLocation = new File(project.layout.buildDirectory.get().asFile, "repository")
 
 tasks.register('publishToMavenLocal', Task).configure {
     shouldRunAfter("build")
@@ -124,4 +127,19 @@ tasks.register("fastBuild").configure {
 tasks.register("runServer").configure {
     dependsOn(tasks.build)
     dependsOn("launcher:runServer")
+}
+tasks.register("cleanRelease", Delete) {
+    delete destLocation
+}
+tasks.register("makeRelease", Copy) {
+    group = "build"
+    description = "Make release for maven uploading!"
+    dependsOn("cleanRelease")
+    dependsOn("buildAndPublishToMavenLocal")
+    from(mavenLocalFile) {
+        include "com/fox2code/Hypertale/dev/${project['hypertale.version']}/*"
+        include "com/fox2code/Hypertale/launcher/${project['hypertale.version']}/*"
+        include "hypertale/dev/hypertale.dev.gradle.plugin/${project['hypertale.version']}/*"
+    }
+    into destLocation
 }

@@ -23,10 +23,7 @@
  */
 package com.fox2code.hypertale.dev;
 
-import org.gradle.StartParameter;
-import org.gradle.TaskExecutionRequest;
 import org.gradle.api.Project;
-import org.gradle.internal.DefaultTaskExecutionRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,10 +38,6 @@ final class HypertaleIntellijIDEASupport {
 
 	static void installIdeaDictionaryOnIDEASync(Project target, Iterable<String> words) throws IOException {
 		if (isIdeaSync()) installIdeaDictionary(target, words);
-	}
-
-	static void scheduleTaskBeforeIDEASync(Project target, String taskName) {
-		if (isIdeaSync()) modifyGradleStartParameters(target, taskName);
 	}
 
 	private static void installIdeaDictionary(Project target, Iterable<String> words) throws IOException {
@@ -88,15 +81,7 @@ final class HypertaleIntellijIDEASupport {
 				stringBuilder.toString(), StandardCharsets.UTF_8);
 	}
 
-	private static void modifyGradleStartParameters(Project target, String taskName) {
-		final StartParameter startParameter = target.getGradle().getStartParameter();
-		System.out.println(startParameter);
-		final ArrayList<TaskExecutionRequest> taskRequests = new ArrayList<>(startParameter.getTaskRequests());
-		taskRequests.addFirst(new DefaultTaskExecutionRequest(List.of(taskName)));
-		startParameter.setTaskRequests(taskRequests);
-	}
-
-	private static boolean isIdeaSync() {
-		return Boolean.parseBoolean(System.getProperty("idea.sync.active", "false"));
+	public static boolean isIdeaSync() {
+		return Boolean.getBoolean("idea.sync.active");
 	}
 }

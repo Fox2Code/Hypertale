@@ -32,7 +32,7 @@ import java.nio.file.Files;
 
 public final class HypertaleDepMaker {
 	public static final String HYTALE_CACHE_PATH_ROOT = "com/hypixel/hytale/";
-	public static final String HYPERTALE_VERSION_SUFFIX = "+hypertale" + BuildConfig.HYPERTALE_VERSION;
+	public static final String HYPERTALE_VERSION_SUFFIX = "+hypertale-" + BuildConfig.HYPERTALE_VERSION;
 	public static final String HYPERTALE_CACHE_PATH_ROOT =
 			"com/hypixel/hytale/hypertale-" + BuildConfig.HYPERTALE_VERSION + "/";
 	public static final String HYPERTALE_DEPENDENCY =
@@ -40,14 +40,14 @@ public final class HypertaleDepMaker {
 
 	public static void setupHytaleFromJar(File hypertaleGradleCache, File file, String version) throws IOException {
 		File folderBase = new File(hypertaleGradleCache, HYTALE_CACHE_PATH_ROOT + version);
-		injectPom(new File(folderBase, "pom.xml"), version);
+		injectPom(new File(folderBase, "hytale-" + version + ".pom"), version);
 		createLinkReplace(new File(folderBase, "hytale-" + version + ".jar"), file);
 	}
 
 	public static void setupHypertale(File hypertaleGradleCache, String baseVersion) throws IOException {
 		final String version = baseVersion + HYPERTALE_VERSION_SUFFIX;
 		File folderBase = new File(hypertaleGradleCache, HYTALE_CACHE_PATH_ROOT + version);
-		injectPom(new File(folderBase, "pom.xml"), version);
+		injectPom(new File(folderBase, "hytale-" + version + ".pom"), version);
 	}
 
 	public static File getHypertaleFolderBase(File hypertaleGradleCache, String baseVersion) {

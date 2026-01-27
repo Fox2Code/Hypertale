@@ -28,6 +28,7 @@ import java.util.*;
 
 // Cannot be final due to being a Gradle extension
 public class HypertaleDevConfig {
+	private static final boolean DECOMPILE_SUPPORTED = false;
 	private boolean configImmutable = false;
 	private String hytaleBranch = "release";
 	private boolean useUnmodifiedHytale = false; // To use unmodified HytaleServer.jar file
@@ -71,7 +72,7 @@ public class HypertaleDevConfig {
 	}
 
 	public boolean getDecompileHytale() {
-		return this.decompileHypertale;
+		return this.decompileHypertale && HypertaleDevConfig.DECOMPILE_SUPPORTED;
 	}
 
 	public void setDecompileHytale(boolean decompileHypertale) {

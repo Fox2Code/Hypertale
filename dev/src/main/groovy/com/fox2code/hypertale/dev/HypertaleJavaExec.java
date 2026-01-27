@@ -23,10 +23,14 @@
  */
 package com.fox2code.hypertale.dev;
 
+import com.fox2code.hypertale.utils.HypertalePaths;
+
 import java.io.*;
 import java.util.StringJoiner;
 
 public final class HypertaleJavaExec {
+	private static final String HYPERTALE_AGENT = "-javaagent:" +
+			HypertalePaths.hypertaleJar.getAbsolutePath();
 	private static final boolean DEBUG = false;
 	private final File javaExec;
 	private final StringJoiner classpath;
@@ -46,17 +50,18 @@ public final class HypertaleJavaExec {
 	}
 
 	public void execRunPatcher(File libraryRoot, File input, File output) throws IOException, InterruptedException {
-		this.exec(this.javaExec.getAbsolutePath(),
+		this.exec(this.javaExec.getAbsolutePath(), HYPERTALE_AGENT,
 				"-Xmx2048m", "-XX:-UseGCOverheadLimit", "-Dfile.encoding=UTF-8",
-				"-D=hypertale.librariesDir=" + libraryRoot.getAbsolutePath(),
-				"-cp", this.classpath.toString(), mainClass,
+				"-Dhypertale.librariesDir=" + libraryRoot.getAbsolutePath(),
+				"-cp", this.classpath.toString(), this.mainClass,
 				"--run-patcher", input.getAbsolutePath(), output.getAbsolutePath());
 	}
 
-	public void execDecompile(File input, File output) throws IOException, InterruptedException {
+	public void execDecompile(File libraryRoot, File input, File output) throws IOException, InterruptedException {
 		this.exec(this.javaExec.getAbsolutePath(),
-				"-Xmx2048m", "-XX:-UseGCOverheadLimit", "-Dfile.encoding=UTF-8",
-				"-cp", this.classpath.toString(), mainClass,
+				"-Xmx4G", "-XX:-UseGCOverheadLimit", "-Dfile.encoding=UTF-8",
+				"-Dhypertale.librariesDir=" + libraryRoot.getAbsolutePath(),
+				"-cp", this.classpath.toString(), this.mainClass,
 				input.getAbsolutePath(), output.getAbsolutePath());
 	}
 
@@ -68,10 +73,18 @@ public final class HypertaleJavaExec {
 			}
 			System.out.println(stringJoiner);
 		}
-		Process process = new ProcessBuilder(command).start();
+		final Process process = new ProcessBuilder(command).start();
 		new ThreadCopyStream(process.getInputStream(), System.out).start();
 		new ThreadCopyStream(process.getErrorStream(), System.out).start();
-		int exitCode = process.waitFor();
+		int exitCode;
+		try {
+			exitCode = process.waitFor();
+		} finally {
+			if (process.isAlive()) {
+				process.destroy();
+				process.destroyForcibly();
+			}
+		}
 		if (exitCode != 0) {
 			throw new IOException("Process exited with error code: " + exitCode);
 		}

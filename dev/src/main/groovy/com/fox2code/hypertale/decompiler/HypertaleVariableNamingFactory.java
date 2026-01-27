@@ -52,6 +52,7 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 	}
 
 	public static boolean isVarOrParam(String name) {
+		if (name == null || name.isEmpty()) return true;
 		boolean isVar = name.length() >= 4 && name.startsWith("var") && Character.isDigit(name.charAt(3));
 		boolean isParam = name.length() >= 6 && name.startsWith("param") && Character.isDigit(name.charAt(5));
 		return isVar || isParam;

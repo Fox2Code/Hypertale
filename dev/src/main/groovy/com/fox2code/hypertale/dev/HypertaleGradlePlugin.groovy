@@ -42,7 +42,6 @@ class HypertaleGradlePlugin implements Plugin<Project> {
         project.extensions.create("hypertale", HypertaleDevConfig)
         ((HypertaleDevConfig) project.extensions.getByName("hypertale"))
                 .localProperties = HypertaleDevLocalProperties.loadProperties(project)
-        HypertaleIntellijIDEASupport.scheduleTaskBeforeIDEASync(project, "checkHytale")
         final File hypertaleGradleFolder = getHypertaleGradleDirectory(project)
         if (!hypertaleGradleFolder.isDirectory() && !hypertaleGradleFolder.mkdirs()) {
             throw new IOException("Failed to create Hypertale gradle folder!")
@@ -57,26 +56,34 @@ class HypertaleGradlePlugin implements Plugin<Project> {
             withSourcesJar()
             withJavadocJar()
         }
+        project.configurations {
+            javaAgent {
+                transitive = false
+                canBeConsumed = false
+            }
+        }
 
         project.javadoc {
-            failOnError false
+            failOnError = false
         }
         project.repositories {
             maven {
-                url hypertaleGradleFolder.toURI().toString()
+                url = hypertaleGradleFolder.toURI().toString()
                 content {
                     includeGroup 'com.hypixel'
                 }
             }
             maven {
-                url 'https://cdn.fox2code.com/maven'
+                url = 'https://cdn.fox2code.com/maven'
                 content {
                     includeGroup 'com.fox2code.Hypertale'
                     includeGroup 'com.fox2code'
                 }
             }
             mavenCentral()
-
+        }
+        if (BuildConfig.HYPERTALE_VERSION.endsWith("-dev")) {
+            project.repositories.mavenLocal()
         }
         project.dependencies {
             errorprone "com.google.errorprone:error_prone_core:${BuildConfig.ERRORPRONE_VERSION}"
@@ -105,7 +112,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
             HypertaleIntellijIDEASupport.installIdeaDictionaryOnIDEASync(project, config.customDictionary)
             final File generatedSources = new File(project.layout.buildDirectory.getAsFile().get(),
                     "generated/sources/hypertale")
-            sourceSets {
+            project.sourceSets {
                 main {
                     java {
                         srcDir generatedSources.getPath()
@@ -121,13 +128,14 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 project.dependencies {
                     api "com.hypixel:hytale:${config.hytaleBranch}${HypertaleDepMaker.HYPERTALE_VERSION_SUFFIX}"
                     api "com.fox2code.Hypertale:launcher:${BuildConfig.HYPERTALE_VERSION}"
+                    javaAgent "com.fox2code.Hypertale:launcher:${BuildConfig.HYPERTALE_VERSION}"
                 }
             }
             File hytaleAssets = HypertaleHytaleDownloader.getVanillaAssets(
                     hypertaleGradleFolder, config)
             if (hytaleAssets != null) {
                 project.dependencies {
-                    compileOnly(hytaleAssets)
+                    compileOnly(project.files(hytaleAssets))
                 }
             }
             project.tasks.checkHytale {
@@ -135,9 +143,15 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                     if (config.useUnmodifiedHytale) {
                         HypertaleHytaleDownloader.downloadHytale(hypertaleGradleFolder, config, false)
                     } else {
-                        HypertalePatcher.patch(javaExec, hypertaleGradleFolder, config,
-                                (Set<File>) (project.sourceSets.main.runtimeClasspath.getFiles()), false)
+                        HypertalePatcher.patch(javaExec, hypertaleGradleFolder, config, false)
                     }
+                }
+            }
+            if (HypertaleIntellijIDEASupport.ideaSync) {
+                if (config.useUnmodifiedHytale) {
+                    HypertaleHytaleDownloader.downloadHytale(hypertaleGradleFolder, config, false)
+                } else {
+                    HypertalePatcher.patch(javaExec, hypertaleGradleFolder, config, false)
                 }
             }
             project.tasks.generateBuildConfig {
@@ -155,13 +169,20 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 project.tasks.compileKotlin.dependsOn(project.tasks.checkHytale)
                 project.tasks.compileKotlin.dependsOn(project.tasks.generateBuildConfig)
             }
-            project.tasks.runServer {
-                classpath = sourceSets.main.runtimeClasspath
+            project.tasks.runServer.configure {
+                classpath = project.sourceSets.main.runtimeClasspath
+                workingDir(new File(project.rootDir, "run"))
+                jvmArgs(project.configurations.javaAgent.collect { "-javaagent:" + it.path })
+                mainClass = "com.fox2code.hypertale.launcher.Main"
+                args("--launch-dev")
                 dependsOn("assemble")
             }
-            project.tasks.processResources {
-                filesMatching("manifest.json") {
-                    expand(version: project.version)
+            // Using filesMatching in processResources during import confuse IntellijIDEA
+            if (!HypertaleIntellijIDEASupport.ideaSync) {
+                project.tasks.processResources {
+                    filesMatching("manifest.json") {
+                        expand(version: project.version)
+                    }
                 }
             }
             project.tasks.jar {
@@ -175,21 +196,19 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                     }
                 }
             }
-            tasks.withType(Javadoc).configureEach {
-                options {
+            project.tasks.withType(Javadoc).configureEach {
+                ((Javadoc) it).options {
                     addStringOption('Xdoclint:-missing', '-quiet')
                 }
             }
-            tasks.withType(JavaCompile).configureEach {
-                options {
-                    errorprone {
+            project.tasks.withType(JavaCompile).configureEach {
+                ((JavaCompile) it).options.errorprone {
                         disableWarningsInGeneratedCode.set(true)
                         allErrorsAsWarnings.set(true)
                         disable("EmptyCatch", "ThreadPriorityCheck",
                                 "NonApiType", "MutablePublicArray",
                                 "StringSplitter", "FloggerFormatString",
                                 "FloggerLogString", "FloggerStringConcatenation")
-                    }
                 }
             }
             if (config.getUseSpotless()) {
@@ -197,14 +216,14 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                         licenseFile == null ? "" : '/*\n' + licenseFile.readLines()
                                 .collect { ' * ' + it }.join('\n') + '\n */\n'
                 project.spotless {
-                    enforceCheck false
+                    enforceCheck = false
                     java {
                         formatAnnotations()
                         removeUnusedImports()
                         licenseHeader(processedLicenseHeader)
                     }
                 }
-                project.tasks.compileJava.dependsOn(project.tasks.spotlessApplyJava)
+                project.tasks.compileJava.dependsOn(project.tasks.spotlessApply)
 
                 if (project.pluginManager.hasPlugin("groovy")) {
                     project.spotless {

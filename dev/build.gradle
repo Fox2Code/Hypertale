@@ -18,13 +18,17 @@ repositories {
 }
 
 dependencies {
-    api "org.ow2.asm:asm:${project['asm.version']}"
+    api "org.ow2.asm:asm-commons:${project['asm.version']}"
+    api "org.ow2.asm:asm-util:${project['asm.version']}"
     api "org.vineflower:vineflower:${project['vineflower.version']}"
     // api "org.json:json:20251224" // https://mvnrepository.com/artifact/org.json/json
     // Import spotless and errorprone
     api "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:${project['spotless.version']}"
     api "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin:${project['errorprone-plugin.version']}"
-    include(project(":patcher"))
+    // Import Hypertale itself!
+    compileOnly(project(":patcher"))
+    api(project(":launcher"))
+
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation gradleTestKit()
