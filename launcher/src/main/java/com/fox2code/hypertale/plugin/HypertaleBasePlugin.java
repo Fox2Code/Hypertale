@@ -52,15 +52,7 @@ public final class HypertaleBasePlugin {
 
 	@Nonnull
 	public HytaleLogger getLogger() {
-		final HytaleLogger logger = this.logger;
-		final HytaleLogger originalLogger = this.originalLogger;
-		if (logger != originalLogger &&
-				logger.getLevel().intValue() >
-						originalLogger.getLevel().intValue()) {
-			System.out.println("HypertaleFix: " + logger.getLevel().getName());
-			logger.setLevel(originalLogger.getLevel());
-		}
-		return logger;
+		return this.logger;
 	}
 
 	@Nonnull
