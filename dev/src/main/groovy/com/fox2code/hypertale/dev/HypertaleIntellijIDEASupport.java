@@ -49,7 +49,7 @@ final class HypertaleIntellijIDEASupport {
 		if (!dictionaries.isDirectory() && !dictionaries.mkdirs()) {
 			return;
 		}
-		File projectDictionary = new File(dotIdea, "project.xml");
+		File projectDictionary = new File(dictionaries, "project.xml");
 		LinkedHashSet<String> wordsUnique = new LinkedHashSet<>();
 		if (projectDictionary.exists()) {
 			String originalDictionary = Files.readString(
