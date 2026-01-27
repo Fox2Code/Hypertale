@@ -169,13 +169,21 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 project.tasks.compileKotlin.dependsOn(project.tasks.checkHytale)
                 project.tasks.compileKotlin.dependsOn(project.tasks.generateBuildConfig)
             }
-            project.tasks.runServer.configure {
-                classpath = project.sourceSets.main.runtimeClasspath
-                workingDir(new File(project.rootDir, "run"))
-                jvmArgs(project.configurations.javaAgent.collect { "-javaagent:" + it.path })
-                mainClass = "com.fox2code.hypertale.launcher.Main"
-                args("--launch-dev")
-                dependsOn("assemble")
+            File runDirectory = new File(project.rootDir, "run")
+            File runDirectoryHypertale = new File(runDirectory, ".hypertale")
+            File runDirectoryMods = new File(runDirectory, "mods")
+            if ((config.useUnmodifiedHytale || // Don't require ".hypertale" folder if using unmodified Hytale.
+                    runDirectoryHypertale.isDirectory() || runDirectoryHypertale.mkdirs()) &&
+                    (runDirectoryMods.isDirectory() || runDirectoryMods.mkdirs())) {
+                project.tasks.runServer.configure {
+                    classpath = project.sourceSets.main.runtimeClasspath
+                    workingDir(runDirectory)
+                    jvmArgs(project.configurations.javaAgent.collect { "-javaagent:" + it.path })
+                    mainClass = "com.fox2code.hypertale.launcher.Main"
+                    standardInput = System.in
+                    args("--launch-dev")
+                    dependsOn("assemble")
+                }
             }
             // Using filesMatching in processResources during import confuse IntellijIDEA
             if (!HypertaleIntellijIDEASupport.ideaSync) {
