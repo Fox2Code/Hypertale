@@ -34,7 +34,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.concurrent.CompletableFuture;
 
 final class HypertaleVersionCommand extends AbstractCommand {
-	private static final Message VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+	static final Message VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
 			Message.raw(": Hypertale version -> " + BuildConfig.HYPERTALE_VERSION));
 
 	HypertaleVersionCommand() {

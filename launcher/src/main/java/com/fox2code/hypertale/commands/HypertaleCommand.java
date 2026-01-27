@@ -36,6 +36,7 @@ public final class HypertaleCommand extends AbstractCommandCollection {
 		""".replace("%version%", BuildConfig.HYPERTALE_VERSION));
 		this.addSubCommand(new HypertaleVersionCommand());
 		this.addSubCommand(new HypertaleSystemCommand());
+		this.addSubCommand(new HypertaleStatusCommand());
 		this.addAliases("hyper");
 	}
 }

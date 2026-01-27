@@ -33,7 +33,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.concurrent.CompletableFuture;
 
 final class HypertaleSystemCommand extends AbstractCommand {
-	private static final Message SYSTEM_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+	static final Message SYSTEM_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
 			Message.raw(": System information -> " + HypertaleSystemInfo.SYSTEM));
 
 	HypertaleSystemCommand() {
