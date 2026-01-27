@@ -56,11 +56,15 @@ public final class HypertaleSystemInfo {
 					}
 				}
 			}
-		}
-		if (os == null) {
-			os = System.getProperty("os.name") + " " + System.getProperty("os.version");
+			if (os == null) {
+				os = System.getProperty("os.name") + " " + System.getProperty("os.version");
+			} else {
+				os = os + " (Using: " + System.getProperty("os.name") + " " + System.getProperty("os.version") + ")";
+			}
+		} else if (HypertalePlatform.getPlatform() == HypertalePlatform.WINDOWS) {
+			os = System.getProperty("os.name") + " (Using: NT " + System.getProperty("os.version") + ")";
 		} else {
-			os = os + " (Using: " + System.getProperty("os.name") + " " + System.getProperty("os.version") + ")";
+			os = System.getProperty("os.name") + " " + System.getProperty("os.version");
 		}
 		SYSTEM = os;
 	}
