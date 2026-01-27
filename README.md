@@ -4,6 +4,8 @@ Optimization mod and API extender for Hytale
 
 Note: This is early development, bugs might happen.
 
+An example mod is available at: https://github.com/Fox2Code/HypertaleExampleMod
+
 ## About
 
 This mod improve performance and reduce memory pressure on Hytale server!
