@@ -106,7 +106,7 @@ public class HypertaleDevConfig {
 		this.checkConfigMutable();
 		if (buildConfigPackage != null && (buildConfigPackage.isEmpty() ||
 				buildConfigPackage.startsWith(".") || buildConfigPackage.endsWith(".") ||
-				!buildConfigPackage.matches("[a-zA-Z0-9.]+"))) {
+				!buildConfigPackage.matches("[a-zA-Z0-9_.]+"))) {
 			throw new IllegalArgumentException(
 					"Invalid package name \"" + buildConfigPackage + "\"");
 		}

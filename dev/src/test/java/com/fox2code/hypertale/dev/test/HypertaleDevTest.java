@@ -43,6 +43,7 @@ public final class HypertaleDevTest {
 		Assertions.assertEquals(branchType, hypertaleDevConfig.getHytaleBranch(),
 				"Setting an invalid Hytale branch should not change the actual config branch");
 		hypertaleDevConfig.setBuildConfigPackage("com.fox2code.test");
+		hypertaleDevConfig.setBuildConfigPackage("com.fox2code.hypertale_example");
 		hypertaleDevConfig.setBuildConfigPackage(null);
 		hypertaleDevConfig.setHytaleBranch(branchType);
 		hypertaleDevConfig.internalMakeImmutableForTesting();
