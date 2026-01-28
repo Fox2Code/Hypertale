@@ -122,11 +122,13 @@ tasks.build.dependsOn(":patcher:patchHytale")
 tasks.register("fastBuild").configure {
     group = "build"
     description = "Build this project skipping testing and patching"
-    dependsOn("launcher:assemble")
+    dependsOn(":launcher:assemble")
+    dependsOn(":launcher:test")
+    dependsOn(":dev:test")
 }
 tasks.register("runServer").configure {
     dependsOn(tasks.build)
-    dependsOn("launcher:runServer")
+    dependsOn(":launcher:runServer")
 }
 tasks.register("cleanRelease", Delete) {
     delete destLocation

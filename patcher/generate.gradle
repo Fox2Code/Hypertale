@@ -19,6 +19,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
     final String HYPERTALE_VERSION = project['hypertale.version']
     final String ERRORPRONE_VERSION = project['errorprone.version']
     final String ASM_VERSION = project['asm.version']
+    final String FASTUTIL_VERSION = project['fastutil.version']
     final String GUAVA_VERSION = project['guava.version']
     final String GUAVA_FAILURE_ACCESS_VERSION = project['guava-failureaccess.version']
     final String VINEFLOWER_VERSION = project['vineflower.version']
@@ -34,6 +35,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
         appendField(printStream, 'HYPERTALE_VERSION', HYPERTALE_VERSION)
         appendField(printStream, 'ERRORPRONE_VERSION', ERRORPRONE_VERSION)
         appendField(printStream, 'ASM_VERSION', ASM_VERSION)
+        appendField(printStream, 'FASTUTIL_VERSION', FASTUTIL_VERSION)
         appendField(printStream, 'GUAVA_VERSION', GUAVA_VERSION)
         appendField(printStream, 'GUAVA_FAILURE_ACCESS_VERSION', GUAVA_FAILURE_ACCESS_VERSION)
         appendField(printStream, 'VINEFLOWER_VERSION', VINEFLOWER_VERSION)

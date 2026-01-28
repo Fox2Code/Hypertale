@@ -93,7 +93,8 @@ public final class PatcherMain {
 			ZipEntry zipEntry;
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(131072);
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-				if (zipEntry.isDirectory() && zipEntry.getSize() == 0) {
+				if ((zipEntry.isDirectory() && zipEntry.getSize() <= 0) ||
+						zipEntry.getName().startsWith("it/unimi/dsi/fastutil/")) {
 					zipInputStream.closeEntry();
 					continue;
 				}
