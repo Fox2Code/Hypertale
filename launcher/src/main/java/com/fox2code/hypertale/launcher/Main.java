@@ -161,6 +161,7 @@ public final class Main {
 			EarlyLogger.log("Cannot find original HytaleServer.jar");
 			return;
 		}
+		// TODO: Detect singleplayer mode
 		HypertaleConfig.load();
 		HypertaleData cachedData = null;
 		if (HypertalePaths.hypertaleCacheJar.exists() &&

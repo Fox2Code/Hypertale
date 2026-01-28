@@ -27,13 +27,24 @@ import com.fox2code.hypertale.patcher.TransformerUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-final class PatchPluginBase extends HypertalePatch {
-	PatchPluginBase() {
-		super(PluginBase);
+import java.awt.*;
+
+final class PatchPlugins extends HypertalePatch {
+	PatchPlugins() {
+		super(PluginBase, JavaPlugin);
 	}
 
 	@Override
 	public ClassNode transform(ClassNode classNode) {
+		if (classNode.name.equals(PluginBase)) {
+			transformPluginBase(classNode);
+		} else if (classNode.name.equals(JavaPlugin)) {
+			transformJavaPlugin(classNode);
+		}
+		return classNode;
+	}
+
+	private static void transformPluginBase(ClassNode classNode) {
 		classNode.access |= TransformerUtils.ACC_COMPUTE_FRAMES;
 		final FieldNode logger = TransformerUtils.getField(classNode, "logger");
 		final FieldNode hypertalePlugin = new FieldNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
@@ -78,6 +89,9 @@ final class PatchPluginBase extends HypertalePatch {
 				classNode.name, hypertalePlugin.name, hypertalePlugin.desc));
 		hypertale.instructions.add(new InsnNode(Opcodes.ARETURN));
 		classNode.methods.add(hypertale);
-		return classNode;
+	}
+
+	private static void transformJavaPlugin(ClassNode classNode) {
+		classNode.interfaces.add(HypertaleJavaPlugin);
 	}
 }

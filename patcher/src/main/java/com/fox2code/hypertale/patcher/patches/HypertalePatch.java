@@ -48,6 +48,13 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 		this.checkAccess();
 	}
 
+	HypertalePatch(String target, String... targets) {
+		String[] newTargets = new String[targets.length + 1];
+		newTargets[0] = target;
+		System.arraycopy(targets, 0, newTargets, 1, targets.length);
+		this(newTargets);
+	}
+
 	private void checkAccess() {
 		if (this.getClass().getModifiers() != Modifier.FINAL) {
 			throw new RuntimeException("GamePatch \"" + this.getClass().getName() + "\" has an invalid modifier");

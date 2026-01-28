@@ -23,7 +23,9 @@
  */
 package com.fox2code.hypertale.dev
 
+import com.diffplug.gradle.spotless.SpotlessApply
 import com.fox2code.hypertale.launcher.BuildConfig
+import com.fox2code.hypertale.utils.HypertalePaths
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.tasks.JavaExec
@@ -130,6 +132,18 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                     api "com.fox2code.Hypertale:launcher:${BuildConfig.HYPERTALE_VERSION}"
                     javaAgent "com.fox2code.Hypertale:launcher:${BuildConfig.HYPERTALE_VERSION}"
                 }
+                if (config.useBundling) {
+                    project.tasks.compileJava {
+                        doLast {
+                            HypertaleBundlerPatcher.patch(project)
+                        }
+                    }
+                    project.tasks.jar {
+                        from(project.zipTree(HypertalePaths.hypertaleJar)) {
+                            include("META-INF/bundled/*")
+                        }
+                    }
+                }
             }
             File hytaleAssets = HypertaleHytaleDownloader.getVanillaAssets(
                     hypertaleGradleFolder, config)
@@ -220,18 +234,29 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 }
             }
             if (config.getUseSpotless()) {
+                project.tasks.register("safeSpotlessApply") {
+                    doLast {
+                        try {
+                            project.tasks.withType(SpotlessApply.class).forEach {
+                                it.performAction()
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
                 final String processedLicenseHeader = !config.includeLicenseHeader ||
                         licenseFile == null ? "" : '/*\n' + licenseFile.readLines()
                                 .collect { ' * ' + it }.join('\n') + '\n */\n'
                 project.spotless {
                     enforceCheck = false
                     java {
+                        targetExclude "build/generated/**/*.java"
                         formatAnnotations()
                         removeUnusedImports()
                         licenseHeader(processedLicenseHeader)
                     }
                 }
-                project.tasks.compileJava.dependsOn(project.tasks.spotlessApply)
+                project.tasks.compileJava.dependsOn(project.tasks.safeSpotlessApply)
+                project.tasks.spotlessJavaCheck.enabled = false
 
                 if (project.pluginManager.hasPlugin("groovy")) {
                     project.spotless {
@@ -240,7 +265,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                         }
                     }
 
-                    project.tasks.compileGroovy.dependsOn(project.tasks.spotlessApply)
+                    project.tasks.compileGroovy.dependsOn(project.tasks.safeSpotlessApply)
                 }
                 if (project.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
                     project.spotless {
@@ -249,7 +274,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                         }
                     }
 
-                    project.tasks.compileKotlin.dependsOn(project.tasks.spotlessApply)
+                    project.tasks.compileKotlin.dependsOn(project.tasks.safeSpotlessApply)
                 }
             }
         }

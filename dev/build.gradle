@@ -4,6 +4,14 @@ plugins {
     id 'groovy'
 }
 
+final File patchedSources = new File(layout.buildDirectory.get().asFile,
+        "generated" + File.separator + "patchedSources")
+final String patchedPath = "com" + File.separator + "fox2code" +
+        File.separator + "hypertale" + File.separator + "plugin" +
+        File.separator + "HypertaleJavaPlugin"
+final File patchSource = new File(projectDir, "src" + File.separator + "main" + "")
+
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))

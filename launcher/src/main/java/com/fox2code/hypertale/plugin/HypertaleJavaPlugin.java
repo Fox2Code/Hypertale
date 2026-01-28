@@ -21,33 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.patcher.patches;
+package com.fox2code.hypertale.plugin;
 
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 
-final class PatchRedirectToOptimisedGetPlayers extends HypertalePatch {
-	PatchRedirectToOptimisedGetPlayers() {
-		super(BuilderToolsPlugin, WorldMapManager, DumpUtil);
-	}
+public interface HypertaleJavaPlugin {
+	// The hypertale field will be bundled into your mod!
+	boolean hasHypertale = hasHypertale();
 
-	@Override
-	public ClassNode transform(ClassNode classNode) {
-		for (MethodNode methodNode : classNode.methods) {
-			for (AbstractInsnNode abstractInsnNode : methodNode.instructions) {
-				abstractInsnNode = abstractInsnNode.getPrevious();
-				if (abstractInsnNode != null && abstractInsnNode.getOpcode() == INVOKEVIRTUAL &&
-						abstractInsnNode instanceof MethodInsnNode methodInsnNode &&
-						World.equals(methodInsnNode.owner) &&
-						"getPlayers".equals(methodInsnNode.name)) {
-					methodNode.instructions.insertBefore(methodInsnNode, new MethodInsnNode(INVOKEVIRTUAL,
-							methodInsnNode.owner, "hypertale", "()L" + HypertaleWorld + ";"));
-					methodInsnNode.owner = HypertaleWorld;
-				}
-			}
-		}
-		return classNode;
+	static boolean hasHypertale() {
+		return HypertaleJavaPlugin.class.getClassLoader() == JavaPlugin.class.getClassLoader() &&
+				JavaPlugin.class.getClassLoader().getResource( // Check plugin existence!
+						"com/fox2code/hypertale/plugin/HypertaleJavaPlugin.class") != null;
 	}
 }

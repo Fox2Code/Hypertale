@@ -43,14 +43,14 @@ public final class HypertaleBuildConfigHelper {
 		if (!destinationFolder.isDirectory() && !destinationFolder.mkdirs()) {
 			throw new IOException("Failed to create build config destination directory!");
 		}
-		File destinationFile = new File(destinationFolder, "Buildconfig.java");
+		File destinationFile = new File(destinationFolder, "BuildConfig.java");
 		if (!destinationFile.isFile() && !destinationFile.createNewFile()) {
 			throw new IOException("Failed to create build config destination file!");
 		}
 		try (FileOutputStream fileOutputStream = new FileOutputStream(destinationFile)) {
 			PrintStream printStream = new PrintStream(new BufferedOutputStream(fileOutputStream));
 			printStream.println("// Auto generated class, do not modify.");
-			printStream.println("package com.fox2code.hypertale.launcher;");
+			printStream.println("package " + buildConfigPackage + ";");
 			printStream.println();
 			printStream.println("public final class BuildConfig {");
 			printStream.println("    private BuildConfig() {}");

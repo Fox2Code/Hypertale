@@ -27,7 +27,7 @@ import org.objectweb.asm.tree.*;
 
 final class PatchRedirectToOptimisedGetChunkIfInMemory extends HypertalePatch {
 	PatchRedirectToOptimisedGetChunkIfInMemory() {
-		super(new String[]{FloodLightCalculation, FullBrightLightCalculation});
+		super(FloodLightCalculation, FullBrightLightCalculation);
 	}
 
 	@Override

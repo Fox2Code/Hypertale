@@ -1,3 +1,16 @@
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.SimpleRemapper
+import org.objectweb.asm.tree.ClassNode
+
+buildscript {
+    dependencies {
+        classpath "org.ow2.asm:asm-commons:${project['asm.version']}"
+    }
+}
+
 plugins {
     id 'maven-publish'
     id 'net.ltgt.errorprone'
@@ -12,6 +25,16 @@ if (!hypertaleInitJar.getParentFile().isDirectory() &&
         !hypertaleInitJar.getParentFile().mkdirs()) {
     throw new RuntimeException("Failed to create init \"build/libs\" folder!")
 }
+// Hypertale JavaPlugin support
+final File classesFolder = new File(layout.buildDirectory.asFile.get(),
+        "classes" + File.separator + "java" + File.separator + "main").getAbsoluteFile()
+println(classesFolder.getPath())
+final File hypertaleJavaPlugin = new File(classesFolder, "com" + File.separator + "fox2code" +
+        File.separator + "hypertale" + File.separator + "plugin" + File.separator + "HypertaleJavaPlugin.class")
+final File metaInfHypertaleJavaPlugin = new File(classesFolder,
+        "META-INF" + File.separator + "bundled" + File.separator + "#HypertaleJavaPlugin.class")
+println(hypertaleJavaPlugin.getPath() + " " + hypertaleJavaPlugin.exists())
+println(metaInfHypertaleJavaPlugin.getPath() + " " + metaInfHypertaleJavaPlugin.exists())
 
 java {
     toolchain {
@@ -90,6 +113,38 @@ compileJava {
     dependsOn(":patcher:jar")
     dependsOn(":patcher:checkPatchHytale")
     mustRunAfter(":patcher:patchHytale")
+    doLast {
+        if (!hypertaleJavaPlugin.exists()) {
+            throw new RuntimeException("Compilation failed! -> " + hypertaleJavaPlugin.getPath())
+        }
+        File bundled = metaInfHypertaleJavaPlugin.getParentFile()
+        if (!bundled.isDirectory() && !bundled.mkdirs()) {
+            throw new RuntimeException("Failed to create inline destination directory!")
+        }
+        ClassNode classNode = new ClassNode()
+        ClassReader classReader = new ClassReader(hypertaleJavaPlugin.bytes)
+        classReader.accept(classNode, 0)
+        classNode.visitPermittedSubclass("com/hypixel/hytale/server/core/plugin/JavaPlugin")
+        ClassWriter classWriter = new ClassWriter(0)
+        classNode.accept(classWriter)
+        hypertaleJavaPlugin.bytes = classWriter.toByteArray()
+        classNode.permittedSubclasses.clear()
+        classNode.access |= Opcodes.ACC_SYNTHETIC // Set synthetic to exclude it from IDE results
+        classNode.fields.forEach { it.access |= Opcodes.ACC_SYNTHETIC }
+        classNode.methods.forEach { it.access |= Opcodes.ACC_SYNTHETIC }
+        ClassWriter classWriterMetaInf = new ClassWriter(0)
+        classNode.accept(new ClassRemapper(classWriterMetaInf,
+                new SimpleRemapper(Opcodes.ASM9,
+                        "com/fox2code/hypertale/plugin/HypertaleJavaPlugin",
+                        "META-INF/bundled/#HypertaleJavaPlugin")))
+        metaInfHypertaleJavaPlugin.bytes = classWriterMetaInf.toByteArray()
+    }
+}
+
+afterEvaluate {
+    tasks.sourcesJar {
+        from(project(":patcher").tasks.sourcesJar.inputs.files) {}
+    }
 }
 
 test {

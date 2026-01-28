@@ -67,6 +67,7 @@ public interface HypertaleASMConstants {
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";
 	String HypertaleBasePlugin = "com/fox2code/hypertale/plugin/HypertaleBasePlugin";
+	String HypertaleJavaPlugin = "com/fox2code/hypertale/plugin/HypertaleJavaPlugin";
 	String HypertalePlayerRef = "com/fox2code/hypertale/universe/HypertalePlayerRef";
 	String HypertaleWorld = "com/fox2code/hypertale/universe/HypertaleWorld";
 	String EmptyArrays = "com/fox2code/hypertale/utils/EmptyArrays";

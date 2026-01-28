@@ -36,6 +36,7 @@ public class HypertaleDevConfig {
 			System.getenv("CI") == null && System.getenv("JITPACK") == null;
 	private boolean useSpotless = true;
 	private boolean includeLicenseHeader = true;
+	private boolean useBundling = true;
 	private String buildConfigPackage = null;
 	private final LinkedHashMap<String, String> buildConfig = new LinkedHashMap<>();
 	final LinkedHashSet<String> customDictionary = new LinkedHashSet<>();
@@ -98,6 +99,15 @@ public class HypertaleDevConfig {
 		this.includeLicenseHeader = includeLicenseHeader;
 	}
 
+	public boolean getUseBundling() {
+		return this.useBundling;
+	}
+
+	public void setUseBundling(boolean useBundling) {
+		this.checkConfigMutable();
+		this.useBundling = useBundling;
+	}
+
 	public String getBuildConfigPackage() {
 		return this.buildConfigPackage;
 	}
@@ -106,12 +116,14 @@ public class HypertaleDevConfig {
 		this.checkConfigMutable();
 		if (buildConfigPackage != null && (buildConfigPackage.isEmpty() ||
 				buildConfigPackage.startsWith(".") || buildConfigPackage.endsWith(".") ||
-				!buildConfigPackage.matches("[a-zA-Z0-9_.]+"))) {
+				!buildConfigPackage.matches("[a-zA-Z0-9_.]+")) ||
+				"com.fox2code.hypertale.launcher".equals(buildConfigPackage)) {
 			throw new IllegalArgumentException(
 					"Invalid package name \"" + buildConfigPackage + "\"");
 		}
 		this.buildConfigPackage = buildConfigPackage;
 	}
+
 	public Map<String, String> getBuildConfig() {
 		return this.configImmutable ?
 				Collections.unmodifiableMap(this.buildConfig) :
