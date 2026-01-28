@@ -39,12 +39,15 @@ public final class HypertaleModGatherer {
 	private final List<File> hypertaleMods;
 	private final List<File> mods;
 	private final List<File> libraries;
+	private final File modSyncBootstrap;
 	private final int modHash;
 
-	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries, int modHash) {
+	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries,
+								 File modSyncBootstrap, int modHash) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
 		this.libraries = libraries;
+		this.modSyncBootstrap = modSyncBootstrap;
 		this.modHash = modHash;
 	}
 
@@ -60,6 +63,10 @@ public final class HypertaleModGatherer {
 		return this.libraries;
 	}
 
+	public File getModSyncBootstrap() {
+		return this.modSyncBootstrap;
+	}
+
 	public int getModHash() {
 		return this.modHash;
 	}
@@ -69,8 +76,9 @@ public final class HypertaleModGatherer {
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
 		ArrayList<File> libraries = new ArrayList<>();
+		File modSyncBootstrap = null;
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
-			appendEarlyLoaderMods(mods);
+			modSyncBootstrap = appendEarlyLoaderMods(mods);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
 			appendMods(hypertaleMods, mods, libraries);
@@ -82,15 +90,24 @@ public final class HypertaleModGatherer {
 		Arrays.sort(fileSizes);
 		return new HypertaleModGatherer(Collections.unmodifiableList(hypertaleMods),
 				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
-				Arrays.hashCode(fileSizes));
+				modSyncBootstrap, Arrays.hashCode(fileSizes));
 	}
 
-	private static void appendEarlyLoaderMods(ArrayList<File> mods) {
+	private static File appendEarlyLoaderMods(ArrayList<File> mods) {
+		File modSyncBootstrap = null;
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleEarlyPlugins.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar")) {
-				mods.add(file);
+				try(ZipFile zipFile = new ZipFile(file)) {
+					if (zipFile.getEntry(HypertaleCompatibility.entryModSyncBootstrap) != null) {
+						modSyncBootstrap = file; // Mod sync bootstrap need special handling
+					} else {
+						mods.add(file);
+					}
+				} catch (Exception _) {}
+
 			}
 		}
+		return modSyncBootstrap;
 	}
 
 	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods, ArrayList<File> libraries) {

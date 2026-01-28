@@ -23,22 +23,43 @@
  */
 package com.fox2code.hypertale.commands;
 
+import com.fox2code.hypertale.loader.HypertalePlugin;
+import com.hypixel.hytale.protocol.GameMode;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.CommandSender;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 
-final class HypertaleStatusCommand extends AbstractCommand {
-	HypertaleStatusCommand() {
-		super("status", "Show hypertale status information!");
+final class HypertalePyroCommand extends AbstractCommand {
+	static final Message PYRO_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+			Message.raw(": Pyro has Hytale game servers -> "),
+			Message.raw("https://pyro.host/").link("https://pyro.host/?ref=QAIPYBDW")
+					.color(new Color(127, 127, 255)));
+	static final Message PYRO_MESSAGE_ALT = Message.join(HypertalePlugin.HYPERTALE,
+			Message.raw(": Pyro has Hytale game servers -> "),
+			Message.raw("https://pyro.host/?ref=QAIPYBDW").link("https://pyro.host/?ref=QAIPYBDW")
+					.color(new Color(127, 127, 255)));
+
+	HypertalePyroCommand() {
+		super("pyro", "Pyro beans are cool!\n\nExecute the command for clickable link to https://pyro.host/ :3");
+		this.setPermissionGroups("Default", GameMode.Adventure.toString());
 	}
 
 	@Override
 	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
-		commandContext.sendMessage(HypertaleVersionCommand.VERSION_MESSAGE);
-		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
+		if (commandContext.isPlayer()) {
+			commandContext.sendMessage(PYRO_MESSAGE);
+		}
 		return null;
+	}
+
+	@Override
+	public boolean hasPermission(@NonNull CommandSender sender) {
+		return true;
 	}
 }

@@ -15,5 +15,6 @@
   "ServerVersion": "*",
   "Dependencies": {},
   "OptionalDependencies": {},
-  "DisabledByDefault": false
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true
 }

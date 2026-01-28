@@ -24,6 +24,7 @@ dependencies {
 
 jar {
     manifest {
+        attributes 'From-Hypertale-Version': project['hypertale.version']
         attributes 'HypertaleInit-Version': project['hypertale.init']
         attributes 'Main-Class': 'com.fox2code.hypertale.init.Main'
         attributes 'Launcher-Agent-Class': 'com.fox2code.hypertale.init.Agent'

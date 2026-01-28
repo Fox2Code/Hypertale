@@ -24,7 +24,9 @@
 package com.fox2code.hypertale.commands;
 
 import com.fox2code.hypertale.launcher.BuildConfig;
+import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
+import org.jspecify.annotations.NonNull;
 
 public final class HypertaleCommand extends AbstractCommandCollection {
 	public HypertaleCommand() {
@@ -37,6 +39,12 @@ public final class HypertaleCommand extends AbstractCommandCollection {
 		this.addSubCommand(new HypertaleVersionCommand());
 		this.addSubCommand(new HypertaleSystemCommand());
 		this.addSubCommand(new HypertaleStatusCommand());
+		this.addSubCommand(new HypertalePyroCommand());
 		this.addAliases("hyper");
+	}
+
+	@Override
+	public boolean hasPermission(@NonNull CommandSender sender) {
+		return true;
 	}
 }

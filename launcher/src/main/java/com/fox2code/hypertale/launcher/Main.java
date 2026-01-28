@@ -24,6 +24,7 @@
 package com.fox2code.hypertale.launcher;
 
 import com.fox2code.hypertale.io.HypertaleData;
+import com.fox2code.hypertale.loader.HypertaleCompatibility;
 import com.fox2code.hypertale.loader.HypertaleConfig;
 import com.fox2code.hypertale.loader.HypertaleModGatherer;
 import com.fox2code.hypertale.loader.HypertaleModLoader;
@@ -39,6 +40,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.jar.JarEntry;
@@ -222,6 +225,14 @@ public final class Main {
 		}
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
+		}
+		if (modGatherer.getModSyncBootstrap() != null &&
+				// Don't run modSyncBootstrap twice if init already called it!
+				!Boolean.getBoolean("hypertale.modSyncBootstrapInit")) {
+			try (URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{
+					modGatherer.getModSyncBootstrap().toURI().toURL()})) {
+				Class.forName(HypertaleCompatibility.classModSyncBootstrap, true, urlClassLoader);
+			} catch (LinkageError | ClassNotFoundException _) {}
 		}
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
 		HypertaleAgent.getInstrumentation().addTransformer(Optimizer.classFileTransformer);

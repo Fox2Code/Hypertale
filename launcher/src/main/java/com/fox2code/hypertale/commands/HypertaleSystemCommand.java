@@ -29,6 +29,7 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -41,8 +42,8 @@ final class HypertaleSystemCommand extends AbstractCommand {
 	}
 
 	@Override
-	protected @NonNull CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
+	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
 		commandContext.sendMessage(SYSTEM_MESSAGE);
-		return CompletableFuture.completedFuture(null);
+		return null;
 	}
 }

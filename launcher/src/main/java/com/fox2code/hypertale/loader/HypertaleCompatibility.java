@@ -21,24 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.commands;
+package com.fox2code.hypertale.loader;
 
-import com.hypixel.hytale.server.core.command.system.AbstractCommand;
-import com.hypixel.hytale.server.core.command.system.CommandContext;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
-import java.util.concurrent.CompletableFuture;
-
-final class HypertaleStatusCommand extends AbstractCommand {
-	HypertaleStatusCommand() {
-		super("status", "Show hypertale status information!");
-	}
-
-	@Override
-	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
-		commandContext.sendMessage(HypertaleVersionCommand.VERSION_MESSAGE);
-		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
-		return null;
-	}
+public final class HypertaleCompatibility {
+	public static final String entryModSyncBootstrap = "de/onyxmoon/modsync/bootstrap/ModSyncBootstrap.class";
+	public static final String classModSyncBootstrap = "de.onyxmoon.modsync.bootstrap.ModSyncBootstrap";
 }

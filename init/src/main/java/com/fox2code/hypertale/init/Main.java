@@ -29,17 +29,23 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.zip.ZipFile;
 
 public final class Main {
+	private static final String entryModSyncBootstrap = "de/onyxmoon/modsync/bootstrap/ModSyncBootstrap.class";
+	private static final String classModSyncBootstrap = "de.onyxmoon.modsync.bootstrap.ModSyncBootstrap";
 	private static final File hytaleServerJar;
 	private static final File hypertaleConfig;
 	private static final File hypertaleInit;
 	private static final File mods;
+	private static final File earlyplugins;
 	private static final File assets;
 	private static final Attributes.Name hypertaleInitAttribute;
 
@@ -57,6 +63,7 @@ public final class Main {
 			throw new RuntimeException(e);
 		}
 		mods = new File("mods").getAbsoluteFile();
+		earlyplugins = new File("earlyplugins").getAbsoluteFile();
 		assets = new File("Assets.zip").getAbsoluteFile();
 		hypertaleInitAttribute = new Attributes.Name("Hypertale-Init");
 	}
@@ -72,9 +79,33 @@ public final class Main {
 			runSelfSameJVMArgs(args);
 			return;
 		}
+		// ModSync: Boostrap support
+		if (earlyplugins.isDirectory()) {
+			for (File file : Objects.requireNonNull(earlyplugins.listFiles())) {
+				if (file.getName().endsWith(".jar")) {
+					boolean valid = false;
+					try (ZipFile zipFile = new ZipFile(file)) {
+						valid = zipFile.getEntry(entryModSyncBootstrap) != null;
+					} catch (Exception _) {}
+					if (valid) {
+						System.setProperty("hypertale.modSyncBootstrapInit", "true");
+						File hytaleJar = getHytaleLaunchServerJar();
+						if (hytaleJar != null) {
+							try (URLClassLoader urlClassLoader = new URLClassLoader(
+									new URL[]{hytaleJar.toURI().toURL(), file.toURI().toURL()},
+									Main.class.getClassLoader())) {
+								// true means the static constructor is called!
+								Class.forName(classModSyncBootstrap, true, urlClassLoader);
+							} catch (Throwable _) {}
+						}
+						break;
+					}
+				}
+			}
+		}
 		File launchJar = null;
 		int hypertaleInitVer = 0;
-		if (mods.exists()) {
+		if (mods.isDirectory()) {
 			for (File file : Objects.requireNonNull(mods.listFiles())) {
 				if (file.getName().endsWith(".jar")) {
 					try (JarFile jarFile = new JarFile(file)) {

@@ -24,6 +24,14 @@ with a fallback to `./HypertaleServer.jar` if you do not have Hytale installed o
 
 Running `./gradlew build` should then provide a file in `launcher/build/libs` for you to grab!
 
+## Mod support
+
+Hypertale should not cause any compatibility issues with any mod!
+
+Hypertale currently have custom support code the following mods:
+- Mod List Mods -> add icon (Icon by ColdLavenderSun aka. Fluttershy)
+- ModSync -> Support bootstrap ([ModTale](https://modtale.net/mod/modsync-8329f904-978d-4138-bc37-0d1ef7749dc4) | [CurseForge](https://www.curseforge.com/hytale/bootstrap/modsync-bootstrap))
+
 ## New APIs and changes:
 
 Add new fields to `manifest.json` hypertale will read:

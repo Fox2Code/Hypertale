@@ -25,11 +25,12 @@ package com.fox2code.hypertale.commands;
 
 import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.loader.HypertalePlugin;
-import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.CommandSender;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -39,12 +40,16 @@ final class HypertaleVersionCommand extends AbstractCommand {
 
 	HypertaleVersionCommand() {
 		super("version", "Show Hypertale version!");
-		this.setPermissionGroup(GameMode.Adventure);
 	}
 
 	@Override
-	protected @NonNull CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
+	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
 		commandContext.sendMessage(VERSION_MESSAGE);
-		return CompletableFuture.completedFuture(null);
+		return null;
+	}
+
+	@Override
+	public boolean hasPermission(@NonNull CommandSender sender) {
+		return true;
 	}
 }
