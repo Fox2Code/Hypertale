@@ -48,6 +48,7 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 		this.checkAccess();
 	}
 
+	@SuppressWarnings("ChainingConstructorIgnoresParameter")
 	HypertalePatch(String target, String... targets) {
 		String[] newTargets = new String[targets.length + 1];
 		newTargets[0] = target;

@@ -28,13 +28,10 @@ if (!hypertaleInitJar.getParentFile().isDirectory() &&
 // Hypertale JavaPlugin support
 final File classesFolder = new File(layout.buildDirectory.asFile.get(),
         "classes" + File.separator + "java" + File.separator + "main").getAbsoluteFile()
-println(classesFolder.getPath())
 final File hypertaleJavaPlugin = new File(classesFolder, "com" + File.separator + "fox2code" +
         File.separator + "hypertale" + File.separator + "plugin" + File.separator + "HypertaleJavaPlugin.class")
 final File metaInfHypertaleJavaPlugin = new File(classesFolder,
         "META-INF" + File.separator + "bundled" + File.separator + "#HypertaleJavaPlugin.class")
-println(hypertaleJavaPlugin.getPath() + " " + hypertaleJavaPlugin.exists())
-println(metaInfHypertaleJavaPlugin.getPath() + " " + metaInfHypertaleJavaPlugin.exists())
 
 java {
     toolchain {
