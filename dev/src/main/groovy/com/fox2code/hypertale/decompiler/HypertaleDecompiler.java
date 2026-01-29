@@ -225,7 +225,7 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 
 	private static void appendEscapedChar(StringBuilder stringBuilder, char c) {
 		switch (c) {
-			case '\0': stringBuilder.append("\0"); break;
+			case '\0': stringBuilder.append("\\0"); break;
 			case '\b': stringBuilder.append("\\b"); break;
 			case '\t': stringBuilder.append("\\t"); break;
 			case '\n': stringBuilder.append("\\n"); break;
