@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.universe;
 
+import com.fox2code.hypertale.auth.HypertalePlayerAuthentication;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -38,16 +39,23 @@ import java.util.concurrent.CompletableFuture;
 
 public final class HypertalePlayerRef {
 	private final PlayerRef playerRef;
+	private final HypertalePlayerAuthentication auth;
 	private final Object playerRefLock;
 	private volatile WeakReference<Player> player;
 
 	public HypertalePlayerRef(PlayerRef playerRef) {
 		this.playerRef = playerRef;
+		this.auth = (HypertalePlayerAuthentication)
+				playerRef.getPacketHandler().getAuth();
 		this.playerRefLock = new Object();
 	}
 
 	public @Nonnull PlayerRef getPlayerRef() {
 		return this.playerRef;
+	}
+
+	public @Nullable HypertalePlayerAuthentication getAuth() {
+		return this.auth;
 	}
 
 	public void invalidateEntity() {

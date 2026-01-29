@@ -37,6 +37,8 @@ public interface HypertaleASMConstants {
 	String ASMSet = "java/util/Set";
 	// Netty
 	String Unpooled = "io/netty/buffer/Unpooled";
+	String Channel = "io/netty/channel/Channel";
+	String ChannelOption = "io/netty/channel/ChannelOption";
 	// FastUtil ASM Constants
 	String ObjectArrayList = "it/unimi/dsi/fastutil/objects/ObjectArrayList";
 	String ObjectList = "it/unimi/dsi/fastutil/objects/ObjectList";
@@ -48,7 +50,12 @@ public interface HypertaleASMConstants {
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
 	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
 	String PacketIO = "com/hypixel/hytale/protocol/io/PacketIO";
+	String IdentityTokenClaims = "com/hypixel/hytale/server/core/auth/JWTValidator$IdentityTokenClaims";
+	String PlayerAuthentication = "com/hypixel/hytale/server/core/auth/PlayerAuthentication";
 	String Entity = "com/hypixel/hytale/server/core/entity/Entity";
+	String AuthenticationPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/AuthenticationPacketHandler";
+	String HandshakeHandler = "com/hypixel/hytale/server/core/io/handlers/login/HandshakeHandler";
+	String PasswordPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/PasswordPacketHandler";
 	String JavaPlugin = "com/hypixel/hytale/server/core/plugin/JavaPlugin";
 	String PluginBase = "com/hypixel/hytale/server/core/plugin/PluginBase";
 	String PluginClassLoader = "com/hypixel/hytale/server/core/plugin/PluginClassLoader";
@@ -64,6 +71,7 @@ public interface HypertaleASMConstants {
 	String WorldMapManager = "com/hypixel/hytale/server/core/universe/world/worldmap/WorldMapManager";
 	String DumpUtil = "com/hypixel/hytale/server/core/util/DumpUtil";
 	// Hypertale ASM Constants
+	String HypertalePlayerAuthentication = "com/fox2code/hypertale/auth/HypertalePlayerAuthentication";
 	String HypertaleRecyclableByteBuf = "com/fox2code/hypertale/io/HypertaleRecyclableByteBuf";
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";
