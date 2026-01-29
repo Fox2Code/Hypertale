@@ -1,0 +1,2 @@
+-<clinit> com/hypixel/hytale/server/npc/movement/controllers/MotionController
+-assert com/hypixel/hytale/server/npc/movement/controllers/MotionController

@@ -25,16 +25,37 @@ package com.fox2code.hypertale.dev;
 
 import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.DependencyHelper;
+import com.fox2code.hypertale.unpick.HypertaleUnpicker;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.SourceUtil;
 import org.jetbrains.java.decompiler.main.Fernflower;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.objectweb.asm.Type;
 
 public final class HypertalePatcher {
+	private static final String hypertalePatchLockProperty =
+			"com.fox2code.hypertale.dev.HypertalePatcher.hypertalePatchLock";
+	private static final ReentrantLock hypertalePatchLock;
+
+	static {
+		// Ensure hypertale has a JVM wide lock even if loaded multiple times in different class loaders
+		final ReentrantLock hypertalePatchLockTmp;
+		synchronized (System.getProperties()) {
+			Object propertyLock = System.getProperties().get(hypertalePatchLockProperty);
+			if (propertyLock instanceof ReentrantLock reentrantLock) {
+				hypertalePatchLockTmp = reentrantLock;
+			} else {
+				hypertalePatchLockTmp = new ReentrantLock();
+				System.getProperties().put(hypertalePatchLockProperty, hypertalePatchLockTmp);
+			}
+		}
+		hypertalePatchLock = hypertalePatchLockTmp;
+	}
+
 	private static File getPatchedHypretaleFile(File hypertaleGradleFolder, String versionBase) {
 		File folderBase = HypertaleDepMaker.getHypertaleFolderBase(hypertaleGradleFolder, versionBase);
 		return new File(folderBase, "hytale-" + versionBase + HypertaleDepMaker.HYPERTALE_VERSION_SUFFIX + ".jar");
@@ -53,6 +74,8 @@ public final class HypertalePatcher {
 				hypertaleJar.getName().replace(".jar", ".dat"));
 		File hypertalePom = new File(hypertaleJar.getParentFile(),
 				hypertaleJar.getName().replace(".jar", ".pom"));
+		File hypertaleUnpicked = new File(hypertaleJar.getParentFile(),
+				hypertaleJar.getName().replace(".jar", "-unpick.jar"));
 		File hypertaleSources = new File(hypertaleJar.getParentFile(),
 				hypertaleJar.getName().replace(".jar", "-sources.jar"));
 		File hytaleJar = HypertaleHytaleDownloader.getVanillaServer(hypertaleGradleFolder, config);
@@ -69,7 +92,8 @@ public final class HypertalePatcher {
 			try {
 				if (hypertaleDevDataActual.equals(new HypertaleDevData(hypertaleCache))) {
 					if (config.getDecompileHytale() && !hypertaleSources.exists()) {
-						decompile(hypertaleGradleFolder, javaExec, hypertaleJar, hypertaleSources);
+						decompile(hypertaleGradleFolder, javaExec,
+								hypertaleJar, hypertaleUnpicked, hypertaleSources);
 					}
 					return; // Skip patching if not needed
 				}
@@ -77,6 +101,9 @@ public final class HypertalePatcher {
 		}
 		if (hypertaleJar.exists() && !hypertaleJar.delete()) {
 			throw new IOException("Failed to delete old hypertale jar!");
+		}
+		if (hypertaleUnpicked.exists() && !hypertaleUnpicked.delete()) {
+			throw new IOException("Failed to delete old hypertale unpick jar!");
 		}
 		if (hypertaleSources.exists() && !hypertaleSources.delete()) {
 			throw new IOException("Failed to delete old hypertale sources jar!");
@@ -91,22 +118,44 @@ public final class HypertalePatcher {
 		}
 		hypertaleJavaExec.addFile(SourceUtil.getSourceFile(HypertalePlatform.class));
 		hypertaleJavaExec.setMainClass("com.fox2code.hypertale.launcher.Main");
-		hypertaleJavaExec.execRunPatcher(hypertaleGradleFolder, hytaleJar, hypertaleJar);
+		hypertalePatchLock.lock();
+		try {
+			hypertaleJavaExec.execRunPatcher(hypertaleGradleFolder, hytaleJar, hypertaleJar);
+		} finally {
+			hypertalePatchLock.unlock();
+		}
 		hypertaleDevDataActual.modifiedJarSize = hypertaleJar.length();
 		hypertaleDevDataActual.writeTo(hypertaleCache);
 		if (config.getDecompileHytale()) {
-			decompile(hypertaleGradleFolder, javaExec, hypertaleJar, hypertaleSources);
+			decompile(hypertaleGradleFolder, javaExec, hypertaleJar, hypertaleUnpicked, hypertaleSources);
 		}
 	}
 
-	private static void decompile(File hypertaleGradleFolder, File javaExec, File hypertaleJar, File hypertaleSources)
+	private static void decompile(File hypertaleGradleFolder, File javaExec,
+								  File hypertaleJar, File hypertaleUnpicked, File hypertaleSources)
 			throws IOException, InterruptedException {
+		if (!hypertaleUnpicked.exists()) {
+			hypertalePatchLock.lock();
+			try {
+				HypertaleUnpicker.patch(hypertaleJar, hypertaleUnpicked);
+			} finally {
+				hypertalePatchLock.unlock();
+			}
+		}
 		HypertaleJavaExec hypertaleJavaExec = new HypertaleJavaExec(javaExec);
 		hypertaleJavaExec.addFile(SourceUtil.getSourceFile(HypertalePlatform.class));
 		hypertaleJavaExec.addFile(SourceUtil.getSourceFile(HypertalePatcher.class));
 		hypertaleJavaExec.addFile(SourceUtil.getSourceFile(Fernflower.class));
 		hypertaleJavaExec.addFile(SourceUtil.getSourceFile(Type.class));
 		hypertaleJavaExec.setMainClass("com.fox2code.hypertale.decompiler.HypertaleDecompiler");
-		hypertaleJavaExec.execDecompile(hypertaleGradleFolder, hypertaleJar, hypertaleSources);
+		hypertalePatchLock.lock();
+		try {
+			if (!hypertaleSources.exists()) {
+				hypertaleJavaExec.execDecompile(hypertaleGradleFolder,
+						hypertaleUnpicked, hypertaleSources);
+			}
+		} finally {
+			hypertalePatchLock.unlock();
+		}
 	}
 }

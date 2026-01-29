@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.patcher;
+package com.fox2code.hypertale.unpick;
 
 import com.fox2code.hypertale.launcher.EarlyLogger;
-import com.fox2code.hypertale.patcher.patches.HypertalePatches;
+import com.fox2code.hypertale.patcher.*;
 import com.fox2code.hypertale.utils.IOUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -36,79 +36,49 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public final class PatcherMain {
-	public static boolean devMode = false;
-
-	private PatcherMain() {}
-
-	public static void main(String... args) throws IOException {
-		if (args.length != 3) return;
-		PatcherMain.devMode = true;
-		File in = new File(args[1]);
-		File out = new File(args[2]);
-		try {
-			if ("--patch".equals(args[0])) {
-				patch(in, out, false, true);
-			} else if ("--check-patch".equals(args[0])) {
-				if (!out.exists()) {
-					patch(in, out, false, true);
-				}
-			}
-		} catch (Exception e) {
-			if (out.exists() && !out.delete()) {
-				out.deleteOnExit();
-			}
-			throw e;
-		}
-	}
-
+public final class HypertaleUnpicker {
 	public static void patch(
-			File in, File out, boolean loadPlugins, boolean logProgress) throws IOException {
+			File in, File out) throws IOException {
 		if (!out.exists() && !out.createNewFile()) {
 			throw new IOException("Failed to create output file!");
 		}
-		if (loadPlugins && PatcherMain.class.getClassLoader().getResource(
-				"com/hypixel/hytale/plugin/early/ClassTransformer.class") == null) {
-			if (logProgress) {
-				EarlyLogger.log("Hytale jar doesn't support transformers...");
-			}
-			loadPlugins = false; // Don't ever crash if the API get removed!
-		}
-		// progress is false shared... but only run every 1000ms
-		final long[] progress = new long[]{0, 0};
 		try (JarFile jarFile = new JarFile(in)) {
-			progress[1] = jarFile.stream().count();
-		}
-		if (loadPlugins) {
-			HytalePatcherHelper.init(logProgress);
-		}
-		if (logProgress) {
+			// progress is false shared... but only run every 1000ms
+			final long[] progress = new long[]{0, 0};
+			progress[1] = jarFile.stream().filter(HypertaleUnpicker::canUnpick).count();
+			HypertaleUnpickConstants hypertaleUnpickConstants =
+					HypertaleUnpickConstants.fromPatchedJar(jarFile);
 			runLogProgress(progress);
-		}
-		try(ZipInputStream zipInputStream = new ZipInputStream(
-				new BufferedInputStream(new FileInputStream(in)));
-			ZipOutputStream zipOutputStream = new ZipOutputStream(
-					new BufferedOutputStream(new FileOutputStream(out)))) {
-			zipOutputStream.setLevel(9);
-			ZipEntry zipEntry;
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(131072);
-			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-				final String entryName = zipEntry.getName();
-				if ((zipEntry.isDirectory() && zipEntry.getSize() <= 0) || skipPatch(entryName)) {
+			// Do patch
+			try (ZipInputStream zipInputStream = new ZipInputStream(
+					new BufferedInputStream(new FileInputStream(in)));
+				 ZipOutputStream zipOutputStream = new ZipOutputStream(
+						 new BufferedOutputStream(new FileOutputStream(out)))) {
+				zipOutputStream.setLevel(9);
+				ZipEntry zipEntry;
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(131072);
+				while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+					final String entryName = zipEntry.getName();
+					if (canUnpick(zipEntry)) {
+						patchAndInsert(jarFile, byteArrayOutputStream,
+								zipOutputStream, zipInputStream,
+								entryName, hypertaleUnpickConstants);
+						progress[0]++;
+					}
 					zipInputStream.closeEntry();
-					progress[0]++;
-					continue;
 				}
-				patchAndInsert(byteArrayOutputStream,
-						zipOutputStream, zipInputStream,
-						entryName, loadPlugins);
-				progress[0]++;
-			}
-			if (logProgress) {
+				// Finalize
 				EarlyLogger.log("Patching at " + progress[0] + "/" + progress[1]);
+				zipOutputStream.finish();
 			}
-			zipOutputStream.finish();
 		}
+	}
+
+	private static boolean canUnpick(ZipEntry zipEntry) {
+		final String entryName = zipEntry.getName();
+		return !((zipEntry.isDirectory() && zipEntry.getSize() <= 0) ||
+				!entryName.startsWith("com/hypixel/") ||
+				!entryName.endsWith(".class"));
 	}
 
 	private static void runLogProgress(final long[] progress) {
@@ -116,7 +86,7 @@ public final class PatcherMain {
 			try {
 				int loop = 0;
 				while (progress[0] != progress[1]) {
-					EarlyLogger.log("Patching at " + progress[0] + "/" + progress[1]);
+					EarlyLogger.log("Unpicking at " + progress[0] + "/" + progress[1]);
 					//noinspection BusyWait
 					Thread.sleep(loop++ > 4 ? 1000 : 500);
 				}
@@ -128,9 +98,9 @@ public final class PatcherMain {
 	}
 
 	private static void patchAndInsert(
-			ByteArrayOutputStream byteArrayOutputStream,
+			JarFile jarFile, ByteArrayOutputStream byteArrayOutputStream,
 			ZipOutputStream zipOutputStream, InputStream inputStream,
-			String path, boolean loadPlugins) throws IOException {
+			String path, HypertaleUnpickConstants hypertaleUnpickConstants) throws IOException {
 		if (path.endsWith(".class")) {
 			byteArrayOutputStream.reset();
 			IOUtils.copy(inputStream, byteArrayOutputStream);
@@ -138,8 +108,8 @@ public final class PatcherMain {
 			ClassNode classNode = new ClassNode();
 			classReader.accept(classNode, 0);
 			try {
-				classNode = HypertalePatches.patchClassNode(classNode);
-				Optimizer.patchClass(classNode);
+				classNode = HypertaleUnpickFixes.fix(jarFile, classNode);
+				HypertaleUnpickData.patchForDev(hypertaleUnpickConstants, classNode);
 			} catch (Exception e) {
 				throw new RuntimeException("Failed to patch " + classNode.name.replace('/', '.'), e);
 			}
@@ -154,9 +124,6 @@ public final class PatcherMain {
 			try {
 				classNode.accept(classWriter);
 				byte[] compiled = classWriter.toByteArray();
-				if (loadPlugins) {
-					compiled = HytalePatcherHelper.patchClass(compiled, classNode.name);
-				}
 				zipOutputStream.write(compiled);
 				zipOutputStream.closeEntry();
 			} catch (Exception e) {
@@ -167,12 +134,5 @@ public final class PatcherMain {
 			IOUtils.copy(inputStream, zipOutputStream);
 			zipOutputStream.closeEntry();
 		}
-	}
-
-	static boolean skipPatch(String entryName) {
-		return entryName.startsWith("com/google/gson/") ||
-				entryName.startsWith("google/protobuf") ||
-				entryName.startsWith("it/unimi/dsi/fastutil/") ||
-				entryName.startsWith("org/objectweb/asm/");
 	}
 }

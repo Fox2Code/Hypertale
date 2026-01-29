@@ -24,15 +24,14 @@
 package com.fox2code.hypertale.decompiler;
 
 import com.fox2code.hypertale.watchdog.HypertaleWatchdogTimer;
+import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.Fernflower;
 import org.jetbrains.java.decompiler.main.decompiler.PrintStreamLogger;
 import org.jetbrains.java.decompiler.main.decompiler.SingleFileSaver;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public final class HypertaleDecompiler extends SingleFileSaver implements IResultSaver {
@@ -45,6 +44,9 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 	static {
 		options.put("asc", "1");
 		options.put("bsm", "1");
+		options.put("dec", "0");
+		options.put("dee", "1");
+		options.put("das", "1");
 		options.put("sef", "1");
 		options.put("jrt", "current");
 		options.put("ega", "1"); // Explicit Generic Arguments
@@ -52,28 +54,49 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 		options.put("nls", "0"); // New Line Separator
 		options.put("vvm", "1"); // Verify Variable Merges
 		options.put("pll", "125"); // Preferred line length
-		options.put("ind", "    "); // Indent String
+		options.put("ind", "\t"); // Indent String
 		options.put(HypertaleJavadocProvider.PROPERTY_NAME,
 				HypertaleJavadocProvider.INSTANCE);
 	}
 
 	private final Fernflower engine;
 	private final HypertaleWatchdogTimer watchdogTimer;
+	private final DecompilerContext decompilerContext;
 
 	private HypertaleDecompiler(File source, File destination) {
 		super(destination);
-		engine = new Fernflower(this, options, new PrintStreamLogger(System.out));
-		engine.addSource(source);
-		watchdogTimer = new HypertaleWatchdogTimer(true);
-		watchdogTimer.setEnabled(false);
+		this.engine = new Fernflower(this, options, new PrintStreamLogger(System.out) {
+			@Override
+			public void writeMessage(String message, Severity severity) {
+				// Unable to simplify switch on enum: is not an error
+				// In fact the method it complains about,
+				// the switch-enum is decompiled perfectly!
+				if (severity == Severity.ERROR && message.startsWith(
+						"Unable to simplify switch on enum:")) {
+					severity = Severity.WARN;
+				}
+				super.writeMessage(message, severity);
+			}
+		});
+		this.engine.addSource(source);
+		this.decompilerContext = Objects.requireNonNull(DecompilerContext.getCurrentContext());
+		this.decompilerContext.classProcessor.addWhitelist("com/hypixel/");
+		this.decompilerContext.classProcessor.addWhitelist("java/");
+		this.watchdogTimer = new HypertaleWatchdogTimer(true);
+		this.watchdogTimer.setEnabled(false);
 	}
 
 	public void decompile() {
-		watchdogTimer.setEnabled(false);
+		this.watchdogTimer.setEnabled(false);
 		try {
-			engine.decompileContext();
+			DecompilerContext.setCurrentContext(this.decompilerContext);
+			HypertaleVariableNamingFactory.ownClasses =
+					this.decompilerContext.structContext.getOwnClasses();
+			this.engine.decompileContext();
 		} finally {
-			watchdogTimer.setEnabled(false);
+			HypertaleVariableNamingFactory.ownClasses = Collections.emptyList();
+			this.engine.clearContext();
+			this.watchdogTimer.setEnabled(false);
 		}
 	}
 
@@ -88,7 +111,7 @@ public final class HypertaleDecompiler extends SingleFileSaver implements IResul
 	@Override
 	public void saveClassFile(String path, String qualifiedName, String entryName, String content, int[] mapping) {
 		super.saveClassFile(path, qualifiedName, entryName,
-				fixUpContent(qualifiedName.replace('/', '.'), content), mapping);
+				fixUpContent(qualifiedName, content), mapping);
 	}
 
 	public static void main(String[] args) throws Exception {

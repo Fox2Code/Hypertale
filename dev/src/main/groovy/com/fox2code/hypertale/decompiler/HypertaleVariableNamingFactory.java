@@ -38,11 +38,13 @@ import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.Pair;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 final class HypertaleVariableNamingFactory implements IVariableNamingFactory, CodeConstants {
 	private static final boolean DEBUG = false;
 	static final HypertaleVariableNamingFactory INSTANCE = new HypertaleVariableNamingFactory();
+	static List<StructClass> ownClasses = Collections.emptyList();
 
 	private HypertaleVariableNamingFactory() {}
 
@@ -170,7 +172,7 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 
 		public NamingStructMethod getNamingStructMethod() {
 			if (this.namingStructMethod == null) {
-				this.namingStructMethod = new NamingStructMethod(this.structMethod);
+				this.namingStructMethod = NamingStructMethod.fromStructMethod(this.structMethod);
 			}
 			return this.namingStructMethod;
 		}
@@ -185,7 +187,7 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 				}
 				ArrayList<StructClass> candidates = new ArrayList<>();
 				if ((structClass.getAccessFlags() & ACC_INTERFACE) != 0) {
-					for (StructClass anyStructClass : DecompilerContext.getStructContext().getOwnClasses()) {
+					for (StructClass anyStructClass : ownClasses) {
 						for (String interfaceName : anyStructClass.getInterfaceNames()) {
 							if (qualifiedName.equals(interfaceName)) {
 								candidates.add(anyStructClass);
@@ -194,7 +196,7 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 						}
 					}
 				} else {
-					for (StructClass anyStructClass : DecompilerContext.getStructContext().getOwnClasses()) {
+					for (StructClass anyStructClass : ownClasses) {
 						if (anyStructClass.superClass != null) {
 							if (qualifiedName.equals(anyStructClass.superClass.getString())) {
 								candidates.add(anyStructClass);
@@ -215,7 +217,7 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 				for (StructClass candidate : candidates) {
 					StructMethod candidateMethod = candidate.getMethod(methodName, methodDesc);
 					if (candidateMethod != null && (candidateMethod.getAccessFlags() & ACC_ABSTRACT) == 0) {
-						this.directExtenders.add(new NamingStructMethod(candidateMethod));
+						this.directExtenders.add(NamingStructMethod.fromStructMethod(candidateMethod));
 					}
 				}
 			}
@@ -228,7 +230,30 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 		private final ArrayList<String> paramNames = new ArrayList<>();
 		private final HashSet<String> reservedNames = new HashSet<>();
 
-		public NamingStructMethod(StructMethod structMethod) {
+		static NamingStructMethod fromStructMethod(StructMethod structMethod) {
+			NamingStructMethod[] namingStructMethodRef = new NamingStructMethod[1];
+			try {
+				return new NamingStructMethod(structMethod, namingStructMethodRef);
+			} catch (RuntimeException e) {
+				System.out.println("For " + structMethod.getClassQualifiedName() + "." +
+						structMethod.getName() + structMethod.getDescriptor());
+				System.out.println("NamingStructMethod -> " + namingStructMethodRef[0]);
+				StructMethodParametersAttribute structMethodParametersAttribute =
+						structMethod.getAttribute(StructGeneralAttribute.ATTRIBUTE_METHOD_PARAMETERS);
+				if (structMethodParametersAttribute != null) {
+					for (StructMethodParametersAttribute.Entry entry : structMethodParametersAttribute.getEntries()) {
+						System.out.println("StructMethodParametersAttribute.Entry -> " +
+								Modifier.toString(entry.myAccessFlags) + " " + entry.myName );
+					}
+				}
+				e.printStackTrace();
+				System.exit(1);
+				throw e;
+			}
+		}
+
+		private NamingStructMethod(StructMethod structMethod, NamingStructMethod[] namingStructMethodRef) {
+			namingStructMethodRef[0] = this;
 			classQualifiedName = structMethod.getClassQualifiedName();
 			StructMethodParametersAttribute structMethodParametersAttribute =
 					structMethod.getAttribute(StructGeneralAttribute.ATTRIBUTE_METHOD_PARAMETERS);
@@ -247,14 +272,16 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 				paramNames.set(0, "this");
 			}
 			if (structMethodParametersAttribute != null) {
-				int typeIndex = 0, argIndex = 0;
+				int typeIndex = 0, argIndex = argIndexInitial;
 				for (StructMethodParametersAttribute.Entry entry : structMethodParametersAttribute.getEntries()) {
-					typeIndex++;
-					argIndex += arguments[typeIndex].getSize();
-					paramNames.set(argIndex, entry.myName);
-					if (!isVarOrParam(entry.myName)) {
-						reservedNames.add(entry.myName);
+					String name = entry.myName;
+					if (name == null) name = "";
+					paramNames.set(argIndex, name);
+					if (!isVarOrParam(name)) {
+						reservedNames.add(name);
 					}
+					argIndex += arguments[typeIndex].getSize();
+					typeIndex++;
 				}
 			}
 			if (structLocalVariableTableAttribute != null) {

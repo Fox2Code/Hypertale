@@ -63,7 +63,7 @@ public final class HypertaleJavadocProvider implements IFabricJavadocProvider {
 				addJavadoc(key, stringBuilder);
 			}
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			throw new RuntimeException("Failed to read javadocs.txt", e);
 		}
 	}
 

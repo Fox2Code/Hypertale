@@ -123,6 +123,7 @@ public final class Optimizer implements Opcodes {
 
 	private static void tryOptimiseInvokeStatic(MethodNode methodNode, MethodInsnNode methodInsnNode) {
 		if (methodInsnNode.name.equals("values") && canOptimize(methodInsnNode.owner) &&
+				!PatcherMain.skipPatch(methodInsnNode.owner) &&
 				methodInsnNode.desc.equals("()[L" + methodInsnNode.owner + ";")) {
 			AbstractInsnNode next = methodInsnNode.getNext();
 			AbstractInsnNode next2 = next.getNext();

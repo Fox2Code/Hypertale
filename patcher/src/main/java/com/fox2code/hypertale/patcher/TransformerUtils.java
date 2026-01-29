@@ -24,12 +24,16 @@
 package com.fox2code.hypertale.patcher;
 
 import com.hypixel.hytale.common.util.ArrayUtil;
+import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
 
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.*;
-
 
 public final class TransformerUtils {
 	public static final int ACC_COMPUTE_FRAMES = 0x80000;
@@ -165,6 +169,49 @@ public final class TransformerUtils {
 			throw new NoSuchElementException(classNode.name + ".* " + fieldDesc);
 		}
 		return null;
+	}
+
+	public static AbstractInsnNode getBooleanInsn(boolean bool) {
+		return new InsnNode(bool ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
+	}
+
+	public static AbstractInsnNode getNumberInsn(int number) {
+		if (number >= -1 && number <= 5)
+			return new InsnNode(number + 3);
+		else if (number >= -128 && number <= 127)
+			return new IntInsnNode(Opcodes.BIPUSH, number);
+		else if (number >= -32768 && number <= 32767)
+			return new IntInsnNode(Opcodes.SIPUSH, number);
+		else
+			return new LdcInsnNode(number);
+	}
+
+
+	public static String printInsnList(InsnList insnList) {
+		final StringBuilder stringBuilder = new StringBuilder();
+		printInsnList(insnList, stringBuilder);
+		return stringBuilder.toString();
+	}
+
+	public static void printInsnList(final InsnList insnList,final StringBuilder stringBuilder) {
+		Textifier textifier = new Textifier();
+		MethodNode methodNode = new MethodNode(0, "insns", "()V", null, null);
+		methodNode.instructions = insnList;
+		methodNode.accept(new TraceMethodVisitor(textifier));
+		textifier.print(new PrintWriter(new Writer() {
+			@Override
+			public void write(@NonNullDecl String str, int off, int len) {
+				stringBuilder.append(str, off, len);
+			}
+
+			@Override
+			public void write(@NonNullDecl char[] cbuf, int off, int len) {
+				stringBuilder.append(cbuf, off, len);
+			}
+
+			@Override public void flush() {}
+			@Override public void close() {}
+		}));
 	}
 
 	public static AbstractInsnNode nextCodeInsn(AbstractInsnNode abstractInsnNode) {
@@ -410,5 +457,34 @@ public final class TransformerUtils {
 			}
 		}
 		return replaceMethod;
+	}
+
+	public static InsnList compileStringAppendChain(Collection<AbstractInsnNode> stringConstants) {
+		// This is to trick the decompiler to use + sign when concatenating strings or constants.
+		InsnList insnList = new InsnList();
+		if (stringConstants.isEmpty()) {
+			insnList.add(new LdcInsnNode(""));
+			return insnList;
+		} else if (stringConstants.size() == 1) {
+			insnList.add(stringConstants.iterator().next());
+			return insnList;
+		}
+		insnList.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
+		insnList.add(new InsnNode(Opcodes.DUP));
+		insnList.add(new MethodInsnNode(Opcodes.INVOKESPECIAL,
+				"java/lang/StringBuilder", "<init>", "()V", false));
+		appendStringsInAppendChain(insnList, stringConstants);
+		insnList.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,
+				"java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false));
+		return insnList;
+	}
+
+	public static void appendStringsInAppendChain(InsnList insnList, Iterable<AbstractInsnNode> stringConstants) {
+		for (AbstractInsnNode abstractInsnNode : stringConstants) {
+			insnList.add(abstractInsnNode);
+			insnList.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,
+					"java/lang/StringBuilder", "append",
+					"(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+		}
 	}
 }

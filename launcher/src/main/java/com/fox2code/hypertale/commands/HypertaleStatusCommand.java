@@ -23,6 +23,9 @@
  */
 package com.fox2code.hypertale.commands;
 
+import com.fox2code.hypertale.loader.HypertalePlugin;
+import com.fox2code.hypertale.utils.HytaleVersion;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import org.jspecify.annotations.NonNull;
@@ -31,12 +34,16 @@ import org.jspecify.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 final class HypertaleStatusCommand extends AbstractCommand {
+	static final Message HYTALE_VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+			Message.raw(": Hytale version -> " + HytaleVersion.HYTALE_VERSION));
+
 	HypertaleStatusCommand() {
 		super("status", "Show hypertale status information!");
 	}
 
 	@Override
 	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
+		commandContext.sendMessage(HypertaleStatusCommand.HYTALE_VERSION_MESSAGE);
 		commandContext.sendMessage(HypertaleVersionCommand.VERSION_MESSAGE);
 		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
 		return null;

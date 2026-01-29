@@ -27,6 +27,7 @@ import com.fox2code.hypertale.utils.HypertalePaths;
 
 import java.io.*;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 
 public final class HypertaleJavaExec {
 	private static final String HYPERTALE_AGENT = "-javaagent:" +
@@ -58,11 +59,18 @@ public final class HypertaleJavaExec {
 	}
 
 	public void execDecompile(File libraryRoot, File input, File output) throws IOException, InterruptedException {
-		this.exec(this.javaExec.getAbsolutePath(),
-				"-Xmx4G", "-XX:-UseGCOverheadLimit", "-Dfile.encoding=UTF-8",
-				"-Dhypertale.librariesDir=" + libraryRoot.getAbsolutePath(),
-				"-cp", this.classpath.toString(), this.mainClass,
-				input.getAbsolutePath(), output.getAbsolutePath());
+		try {
+			this.exec(this.javaExec.getAbsolutePath(),
+					"-Xmx4G", "-XX:-UseGCOverheadLimit", "-Dfile.encoding=UTF-8",
+					"-Dhypertale.librariesDir=" + libraryRoot.getAbsolutePath(),
+					"-cp", this.classpath.toString(), this.mainClass,
+					input.getAbsolutePath(), output.getAbsolutePath());
+		} catch (IOException e) {
+			if (output.exists() && !output.delete()) {
+				throw new IOException("Failed to delete output file", e);
+			}
+			throw e;
+		}
 	}
 
 	public void exec(String... command) throws IOException, InterruptedException {
@@ -76,16 +84,17 @@ public final class HypertaleJavaExec {
 		final Process process = new ProcessBuilder(command).start();
 		new ThreadCopyStream(process.getInputStream(), System.out).start();
 		new ThreadCopyStream(process.getErrorStream(), System.out).start();
-		int exitCode;
+		boolean exitedCleanly;
 		try {
-			exitCode = process.waitFor();
+			exitedCleanly = process.waitFor(10, TimeUnit.MINUTES);
 		} finally {
 			if (process.isAlive()) {
 				process.destroy();
 				process.destroyForcibly();
 			}
 		}
-		if (exitCode != 0) {
+		int exitCode = process.exitValue();
+		if (exitCode != 0 || !exitedCleanly) {
 			throw new IOException("Process exited with error code: " + exitCode);
 		}
 	}
@@ -127,9 +136,10 @@ public final class HypertaleJavaExec {
 		@Override
 		public void run() {
 			try {
-				final byte[] buffer = new byte[1];
-				while (inputStream.read(buffer) > 0) {
-					printStream.write(buffer);
+				final byte[] buffer = new byte[2048];
+				int len;
+				while ((len = inputStream.read(buffer)) > 0) {
+					printStream.write(buffer, 0, len);
 				}
 			} catch (IOException ignored) {} finally {
 				if (tracker.hasBuffer()) {
