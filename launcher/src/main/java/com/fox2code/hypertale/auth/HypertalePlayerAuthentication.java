@@ -55,6 +55,20 @@ public final class HypertalePlayerAuthentication extends PlayerAuthentication {
 				Arrays.copyOf(entitlements, entitlements.length);
 	}
 
+	public boolean hasEntitlement(String entitlement) {
+		String[] entitlements = this.identityTokenClaims.entitlements;
+		if (entitlements == null) {
+			return false;
+		}
+		String[] strings = this.identityTokenClaims.entitlements;
+		for (String string : strings) {
+			if (entitlement.equals(string)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public @Nonnull String getSkin() {
 		String skin = this.identityTokenClaims.skin;
 		return skin == null || skin.isEmpty() ? "{}" : skin;
