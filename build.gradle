@@ -139,6 +139,7 @@ tasks.register("makeRelease", Copy) {
     description = "Make release for maven uploading!"
     dependsOn("cleanRelease")
     dependsOn("buildAndPublishToMavenLocal")
+    dependsOn(":launcher:test")
     from(mavenLocalFile) {
         include "com/fox2code/Hypertale/dev/${project['hypertale.version']}/*"
         include "com/fox2code/Hypertale/launcher/${project['hypertale.version']}/*"

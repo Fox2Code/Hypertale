@@ -93,14 +93,17 @@ public final class PatcherMain {
 			ZipEntry zipEntry;
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(131072);
 			while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+				final String entryName = zipEntry.getName();
 				if ((zipEntry.isDirectory() && zipEntry.getSize() <= 0) ||
-						zipEntry.getName().startsWith("it/unimi/dsi/fastutil/")) {
+						entryName.startsWith("com/google/gson/") ||
+						entryName.startsWith("it/unimi/dsi/fastutil/") ||
+						entryName.startsWith("org/objectweb/asm/")) {
 					zipInputStream.closeEntry();
 					continue;
 				}
 				patchAndInsert(byteArrayOutputStream,
 						zipOutputStream, zipInputStream,
-						zipEntry.getName(), loadPlugins);
+						entryName, loadPlugins);
 				progress[0]++;
 			}
 			if (logProgress) {

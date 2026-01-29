@@ -58,6 +58,7 @@ dependencies {
     api "org.ow2.asm:asm-util:${ASM_VERSION}"
     api "org.ow2.asm:asm-commons:${ASM_VERSION}"
     api "it.unimi.dsi:fastutil:${project['fastutil.version']}"
+    api "com.google.code.gson:gson:${project['gson.version']}"
     api "com.google.guava:guava:${project['guava.version']}"
     api "com.google.guava:failureaccess:${project['guava-failureaccess.version']}"
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
