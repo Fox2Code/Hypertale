@@ -125,6 +125,7 @@ tasks.register("fastBuild").configure {
     description = "Build this project skipping testing and patching"
     dependsOn(":launcher:assemble")
     dependsOn(":launcher:test")
+    dependsOn(":init:test")
     dependsOn(":dev:test")
 }
 tasks.register("runServer").configure {

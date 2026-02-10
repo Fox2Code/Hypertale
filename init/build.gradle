@@ -15,6 +15,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly(project(":patcher"))
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')

@@ -23,27 +23,8 @@
  */
 package com.fox2code.hypertale.init;
 
-import javax.annotation.Nullable;
-import java.lang.instrument.Instrumentation;
+public class HookMain {
+	static void main(String[] args) {
 
-public final class Agent {
-	static Instrumentation instrumentation;
-
-	private Agent() {}
-
-	public static void premain(final String agentArgs, final Instrumentation instrumentation) {
-		if (Agent.instrumentation == null && instrumentation != null) {
-			Agent.instrumentation = instrumentation;
-		}
-	}
-
-	public static void agentmain(final String agentArgs, final Instrumentation instrumentation) {
-		if (Agent.instrumentation == null && instrumentation != null) {
-			Agent.instrumentation = instrumentation;
-		}
-	}
-
-	@Nullable public static Instrumentation getInstrumentation() {
-		return Agent.instrumentation;
 	}
 }

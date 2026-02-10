@@ -45,6 +45,10 @@ repositories {
 
 dependencies {
     implementation(files(hytaleServer))
+    // We manage the HytaleServer.jar from this gradle script
+    afterEvaluate {project(":init").dependencies {
+        compileOnly(files(hytaleServer))
+    }}
     final String ASM_VERSION = project['asm.version']
     implementation "org.ow2.asm:asm-util:${ASM_VERSION}"
     implementation "org.ow2.asm:asm-commons:${ASM_VERSION}"

@@ -30,6 +30,7 @@ import java.io.File;
 public final class HypertalePaths {
 	public static final File hypertaleJar = SourceUtil.getSourceFile(HypertalePaths.class);
 	public static final File hypertaleCache = new File(".hypertale").getAbsoluteFile();
+	public static final File hypertaleCacheJust = new File(hypertaleCache, ".just").getAbsoluteFile();
 	public static final File hypertaleCacheLog = new File(hypertaleCache, "hypertale.log").getAbsoluteFile();
 	public static final File hypertaleCacheData = new File(hypertaleCache, "cache.dat");
 	public static final File hypertaleCacheJar = new File(hypertaleCache, "HytaleServer.jar");
@@ -49,6 +50,14 @@ public final class HypertalePaths {
 	}
 
 	public static File getHytaleJar() {
+		String initWrapperHytalePath;
+		if (Boolean.getBoolean("hypertale.useInitWrapper") && (initWrapperHytalePath =
+				System.getProperty("hypertale.initWrapperHytalePath")) != null) {
+			File initWrapperHytaleFile = new File(initWrapperHytalePath).getAbsoluteFile();
+			if (allowFileAsHytaleJar(initWrapperHytaleFile)) {
+				return initWrapperHytaleFile;
+			}
+		}
 		if (allowFileAsHytaleJar(HypertalePaths.hytaleJar)) {
 			return HypertalePaths.hytaleJar;
 		}
@@ -70,7 +79,7 @@ public final class HypertalePaths {
 		if (Boolean.getBoolean("hypertale.useInitWrapper")) {
 			try {
 				hypertaleInitJar = SourceUtil.getSourceFile(
-						Class.forName("com.fox2code.hypertale.init.Main"));
+						Class.forName("com.fox2code.hypertale.init.Agent"));
 				return hypertaleInitJar;
 			} catch (ClassNotFoundException _) {}
 		}
@@ -79,6 +88,8 @@ public final class HypertalePaths {
 
 	public static File getHypertaleExecJar() {
 		File hypertaleInitJar = getHypertaleInitJar();
-		return hypertaleInitJar == null ? hypertaleJar : hypertaleInitJar;
+		return hypertaleInitJar != null &&
+				"bootstrap".equals(System.getProperty("hypertale.initMethod")) ?
+				hypertaleInitJar : hypertaleJar;
 	}
 }

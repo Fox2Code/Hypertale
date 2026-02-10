@@ -36,6 +36,8 @@ import java.util.concurrent.CompletableFuture;
 final class HypertaleStatusCommand extends AbstractCommand {
 	static final Message HYTALE_VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
 			Message.raw(": Hytale version -> " + HytaleVersion.HYTALE_VERSION));
+	static final Message HYPERTALE_INIT_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
+			Message.raw(": Hytale init type -> " + System.getProperty("hypertale.initMethod", "unknown")));
 
 	HypertaleStatusCommand() {
 		super("status", "Show hypertale status information!");
@@ -46,6 +48,7 @@ final class HypertaleStatusCommand extends AbstractCommand {
 		commandContext.sendMessage(HypertaleStatusCommand.HYTALE_VERSION_MESSAGE);
 		commandContext.sendMessage(HypertaleVersionCommand.VERSION_MESSAGE);
 		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
+		commandContext.sendMessage(HypertaleStatusCommand.HYPERTALE_INIT_MESSAGE);
 		return null;
 	}
 }

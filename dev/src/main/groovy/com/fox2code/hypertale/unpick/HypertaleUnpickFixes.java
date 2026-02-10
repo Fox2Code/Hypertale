@@ -25,6 +25,7 @@ package com.fox2code.hypertale.unpick;
 
 import com.fox2code.hypertale.patcher.TransformerUtils;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import org.objectweb.asm.tree.analysis.*;
 
@@ -32,10 +33,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.jar.JarFile;
 
 final class HypertaleUnpickFixes {
@@ -53,6 +51,7 @@ final class HypertaleUnpickFixes {
 				UnpickFix fix = switch (tokens[0]) {
 					case "-<clinit>" -> new NoClInitUnpickFix(tokens[1]);
 					case "-assert" -> new NoAssertUnpickFix(tokens[1]);
+					case "param" -> new ParamUnpickFix(tokens[1]);
 					default -> null;
 				};
 				if (fix != null) {
@@ -146,6 +145,46 @@ final class HypertaleUnpickFixes {
 				}
 			});
 
+			return classNode;
+		}
+	}
+
+	private static class ParamUnpickFix extends UnpickFix {
+		private final String[] tokens;
+		private final int argCount;
+
+		private ParamUnpickFix(String target) {
+			String[] tokens = target.split(" ", 2);
+			super(tokens[0]);
+			this.tokens = tokens;
+			this.argCount = tokens.length - 1;
+		}
+
+		@Override
+		ClassNode apply(JarFile jarFile, ClassNode classNode) throws IOException {
+			for (MethodNode methodNode : classNode.methods) {
+				if (methodNode.name.equals(this.tokens[0]) &&
+						Type.getArgumentCount(methodNode.name) == this.argCount) {
+					int index = (methodNode.access & Opcodes.ACC_STATIC) == 0 ? 1 : 0;
+					if (methodNode.localVariables == null) {
+						methodNode.localVariables = new ArrayList<>(this.argCount + index);
+					}
+					if (methodNode.parameters == null) {
+						methodNode.parameters = new ArrayList<>(this.argCount);
+					} else {
+						methodNode.parameters.clear();
+					}
+					if ((methodNode.access & Opcodes.ACC_STATIC) == 0) {
+						TransformerUtils.setThisParameterName(classNode, methodNode);
+					}
+					Type[] arguments = Type.getArgumentTypes(methodNode.desc);
+					for (int i = 0; i < arguments.length; ++i) {
+						TransformerUtils.setParameterName(methodNode, index, this.tokens[i + 1]);
+						methodNode.parameters.add(new ParameterNode(this.tokens[i + 1], 0));
+						index += arguments[i].getSize();
+					}
+				}
+			}
 			return classNode;
 		}
 	}

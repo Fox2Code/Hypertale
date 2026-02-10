@@ -36,6 +36,7 @@ import java.security.ProtectionDomain;
  * Uses {@link io.netty.util.internal.EmptyArrays}
  */
 public final class Optimizer implements Opcodes {
+	private static final boolean agentless = Boolean.getBoolean("hypertale.agentless");
 	private static final String HypertaleEmptyArrays = "com/fox2code/hypertale/utils/EmptyArrays";
 	private static final String HytaleArrayUtils = "com/hypixel/hytale/common/util/ArrayUtil";
 	private static final String NettyEmptyArrays = "io/netty/util/internal/EmptyArrays";
@@ -160,6 +161,9 @@ public final class Optimizer implements Opcodes {
 	}
 
 	private static boolean canOptimize(String path) {
+		if (agentless) {
+			return path.startsWith("com/hypixel/");
+		}
 		return !path.startsWith("javax/") && !path.startsWith("java/") &&
 				!path.startsWith("sun/") &&
 				!path.startsWith("org/objectweb/asm/") &&

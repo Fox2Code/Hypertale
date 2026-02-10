@@ -38,7 +38,12 @@ final class HytalePatcherHelper {
 
 	static void init(boolean logProgress) {
 		if (!classTransformers.isEmpty()) return;
+		System.setProperty("hypertale.patcherProcess", "true");
 		for(ClassTransformer transformer : ServiceLoader.load(ClassTransformer.class)) {
+			if (transformer == null || transformer.getClass()
+					.getName().startsWith("com.fox2code.hypertale.init.")) {
+				continue;
+			}
 			if (logProgress) {
 				EarlyLogger.log("Loading Hytale early plugin transformer: " +
 						transformer.getClass().getName() +

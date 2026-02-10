@@ -37,6 +37,7 @@ import java.util.Objects;
 public final class HypertaleJavadocProvider implements IFabricJavadocProvider {
 	public static final HypertaleJavadocProvider INSTANCE = new HypertaleJavadocProvider();
 	private static final HashMap<String, String> methodsJavaDocs = new HashMap<>();
+	static final HashMap<String, String[]> methodsParams = new HashMap<>();
 
 	private HypertaleJavadocProvider() {}
 
@@ -47,33 +48,40 @@ public final class HypertaleJavadocProvider implements IFabricJavadocProvider {
 			String line;
 
 			final StringBuilder stringBuilder = new StringBuilder();
-			String key = null;
+			String key = null, params = null;
 			while ((line = bufferedReader.readLine()) != null) {
 				if (line.startsWith("# ")) {
 					if (key != null) {
-						addJavadoc(key, stringBuilder);
+						addJavadoc(key, stringBuilder, params);
 					}
 					stringBuilder.setLength(0);
 					key = line.substring(2);
+					params = null;
+					continue;
+				}
+				if (line.startsWith("? ")) {
+					params = line.substring(2);
 					continue;
 				}
 				stringBuilder.append(line).append('\n');
 			}
 			if (key != null) {
-				addJavadoc(key, stringBuilder);
+				addJavadoc(key, stringBuilder, params);
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to read javadocs.txt", e);
 		}
 	}
 
-	private static void addJavadoc(String key, StringBuilder javaDoc) {
+	private static void addJavadoc(String key, StringBuilder javaDoc, String params) {
 		int end = javaDoc.length();
 		while (javaDoc.charAt(end - 1) < ' ') {
 			end--;
 		}
 		javaDoc.setLength(end);
 		methodsJavaDocs.put(key, javaDoc.toString());
+		if (params == null) return;
+		methodsParams.put(key, params.split(" "));
 	}
 
 	@Override

@@ -25,6 +25,7 @@ package com.fox2code.hypertale.launcher;
 
 import com.fox2code.hypertale.init.Agent;
 
+import javax.annotation.Nullable;
 import java.lang.instrument.Instrumentation;
 
 public final class HypertaleAgent {
@@ -44,7 +45,7 @@ public final class HypertaleAgent {
 		}
 	}
 
-	public static Instrumentation getInstrumentation() {
+	@Nullable public static Instrumentation getInstrumentation() {
 		return instrumentation;
 	}
 
@@ -56,7 +57,7 @@ public final class HypertaleAgent {
 			} catch (Throwable _) {}
 		}
 		if (instrumentation == null) {
-			// Try to get ByteBuddy agent for development environment
+			// Try to get ByteBuddy agent for the development environment
 			try {
 				instrumentation = (Instrumentation)
 						Class.forName("net.bytebuddy.agent.ByteBuddyAgent")

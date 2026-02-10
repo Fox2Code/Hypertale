@@ -8,10 +8,10 @@ An example mod is available at: https://github.com/Fox2Code/HypertaleExampleMod
 
 ## About
 
-This mod improve performance and reduce memory pressure on Hytale server!
+This mod improves performance and reduces memory pressure on the Hytale server!
 
-Memory pressure is how much memory is allocated per second,
-when high this makes the java garbage collector slow the server down a lot!
+Memory pressure is how much memory is allocated per second.
+When high, this makes the java garbage collector slow the server down a lot!
 
 Used spark a lot to help with performance profiling.
 
@@ -19,7 +19,7 @@ Hypertale should be compatible with existing performance mods for Hytale!
 
 ## Building
 
-Hypertale will try to locate Hytale client/launcher to allow to build it without issues, 
+Hypertale will try to locate Hytale client/launcher to allow building it without issues, 
 with a fallback to `./HypertaleServer.jar` if you do not have Hytale installed on the building machine!
 
 Running `./gradlew build` should then provide a file in `launcher/build/libs` for you to grab!
@@ -28,7 +28,7 @@ Running `./gradlew build` should then provide a file in `launcher/build/libs` fo
 
 Hypertale should not cause any compatibility issues with any mod!
 
-Hypertale currently have custom support code the following mods:
+Hypertale currently has custom support code for the following mods:
 - Mod List Mods -> add icon (Icon by ColdLavenderSun aka. Fluttershy)
 - ModSync -> Support bootstrap ([ModTale](https://modtale.net/mod/modsync-8329f904-978d-4138-bc37-0d1ef7749dc4) | [CurseForge](https://www.curseforge.com/hytale/bootstrap/modsync-bootstrap))
 

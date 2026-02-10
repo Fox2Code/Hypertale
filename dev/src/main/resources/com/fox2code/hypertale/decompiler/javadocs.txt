@@ -1,0 +1,8 @@
+# com/hypixel/hytale/plugin/early/ClassTransformer.priority()
+The transformer priority, higher priority transformers are executed first.
+# com/hypixel/hytale/plugin/early/ClassTransformer.transform()
+? className internalClassName bytes
+Transform a class, returning the transformed class.
+Both Hytale and Hypertale use this method differently.
+Hytale calls this while the server is running, whereas
+Hypertale calls this before the server is starting up in a separate process.

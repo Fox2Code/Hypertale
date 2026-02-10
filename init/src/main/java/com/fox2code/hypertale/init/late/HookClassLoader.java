@@ -21,29 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.init;
+package com.fox2code.hypertale.init.late;
 
-import javax.annotation.Nullable;
-import java.lang.instrument.Instrumentation;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Objects;
 
-public final class Agent {
-	static Instrumentation instrumentation;
+final class HookClassLoader extends URLClassLoader {
+	private final ClassLoader systemClassLoader;
 
-	private Agent() {}
-
-	public static void premain(final String agentArgs, final Instrumentation instrumentation) {
-		if (Agent.instrumentation == null && instrumentation != null) {
-			Agent.instrumentation = instrumentation;
-		}
+	public HookClassLoader(URL[] urls) {
+		super(urls, ClassLoader.getSystemClassLoader().getParent());
+		this.systemClassLoader = ClassLoader.getSystemClassLoader();
 	}
 
-	public static void agentmain(final String agentArgs, final Instrumentation instrumentation) {
-		if (Agent.instrumentation == null && instrumentation != null) {
-			Agent.instrumentation = instrumentation;
-		}
+	public void addURLHelper(URL url) {
+		Objects.requireNonNull(url, "url must not be null");
+		super.addURL(url);
 	}
 
-	@Nullable public static Instrumentation getInstrumentation() {
-		return Agent.instrumentation;
+	@Override
+	public Class<?> loadClass(String name) throws ClassNotFoundException {
+		if (name.startsWith("java.") || name.startsWith("javax.") ||
+				name.startsWith("sun.") || name.startsWith("com.sun.")) {
+			return this.systemClassLoader.loadClass(name);
+		}
+		if (name.startsWith("com.fox2code.hypertale.init.")) {
+			return HookClassLoader.class.getClassLoader().loadClass(name);
+		}
+		return super.loadClass(name);
 	}
 }

@@ -115,6 +115,10 @@ public final class HypertaleModGatherer {
 			if (file.isFile() && file.getName().endsWith(".jar") &&
 					!file.getName().equals(HypertalePaths.hypertaleJar.getName())) {
 				try (ZipFile zipFile = new ZipFile(file)) {
+					if (zipFile.getEntry(
+							"com/fox2code/hypertale/init/Main.class") != null) {
+						continue; // <- Do not consider HypertaleInit as a mod!
+					}
 					ZipEntry manifestEntry;
 					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
 						String modInfo;

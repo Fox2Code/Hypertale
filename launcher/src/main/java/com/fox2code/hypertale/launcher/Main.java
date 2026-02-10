@@ -38,6 +38,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -60,6 +61,11 @@ public final class Main {
 		System.setProperty("file.encoding", "UTF-8");
 		HypertaleAgent.tryLoadEarlyAgent();
 		System.setProperty("rellatsnI.tnega.yddubetyb.ten", HypertaleAgent.class.getName());
+		if (Boolean.getBoolean("hypertale.gradleInit")) {
+			System.setProperty("hypertale.initMethod", "gradle");
+		} else if (!Boolean.getBoolean("hypertale.useInitWrapper")) {
+			System.setProperty("hypertale.initMethod", "direct");
+		}
 		if (args.length == 0 && !isRunningFromTerminal()) {
 			// Avoid running a server from a double click.
 			System.out.println("[Hypertale] File double click detected! Skipping running!");
@@ -90,10 +96,10 @@ public final class Main {
 					DependencyHelper.loadDependency(dependency);
 				}
 				for (File mod : modGatherer.getMods()) {
-					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
+					DependencyHelper.addFileToClasspath(mod);
 				}
 				for (File mod : modGatherer.getLibraries()) {
-					HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(mod));
+					DependencyHelper.addFileToClasspath(mod);
 				}
 				File input = HypertalePaths.getHytaleJar();
 				if (HypertalePaths.hypertalePrePatcher.isFile()) {
@@ -108,8 +114,9 @@ public final class Main {
 							mainClass = mainClass.substring(0, mainClass.length() - 6).replace('/', '.');
 						}
 					}
+					prePatcher.close();
 					if (mainClass != null) {
-						HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(prePatcher);
+						DependencyHelper.addFileToClasspath(HypertalePaths.hypertalePrePatcher);
 						try {
 							Method method = Class.forName(mainClass).getDeclaredMethod("main", String[].class);
 							if (!Modifier.isPublic(method.getModifiers())) {
@@ -133,7 +140,7 @@ public final class Main {
 						EarlyLogger.log("Found pre-patcher but failed to find patching class!");
 					}
 				}
-				HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(input));
+				DependencyHelper.addFileToClasspath(input);
 				PatcherMain.patch(input, HypertalePaths.hypertaleCacheJar, true, true);
 				if (HypertalePaths.hypertalePrePatched.exists() && !HypertalePaths.hypertalePrePatched.delete()) {
 					HypertalePaths.hypertalePrePatched.deleteOnExit();
@@ -146,7 +153,7 @@ public final class Main {
 		} else if (args.length == 3 &&
 				((dev = "--run-patcher-dev".equals(args[0])) || "--run-patcher".equals(args[0]))) {
 			final File input = new File(args[1]);
-			HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(input));
+			DependencyHelper.addFileToClasspath(input);
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 				DependencyHelper.loadDependency(dependency);
 			}
@@ -218,8 +225,7 @@ public final class Main {
 			}
 		}
 		if (HypertalePaths.hypertaleCacheJar.exists()) {
-			HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(
-					new JarFile(HypertalePaths.hypertaleCacheJar));
+			DependencyHelper.addFileToClasspath(HypertalePaths.hypertaleCacheJar);
 		} else if (!dev) {
 			throw new FileNotFoundException("Failed to get ./.hypertale/HytaleServer.jar");
 		}
@@ -235,7 +241,14 @@ public final class Main {
 			} catch (LinkageError | ClassNotFoundException _) {}
 		}
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
-		HypertaleAgent.getInstrumentation().addTransformer(Optimizer.classFileTransformer);
+		Instrumentation instrumentation = HypertaleAgent.getInstrumentation();
+		if (instrumentation != null) {
+			instrumentation.addTransformer(Optimizer.classFileTransformer);
+		}
+		if (HypertalePaths.hypertaleCacheJust.isFile() &&
+				!HypertalePaths.hypertaleCacheJust.delete()) {
+			EarlyLogger.log("Failed to delete \".hypertale/.just\"");
+		}
 		EarlyLogger.log("Launching Hytale...");
 		EarlyLogger.stop();
 		// We load Hytale is the same classloader! So we can do that!

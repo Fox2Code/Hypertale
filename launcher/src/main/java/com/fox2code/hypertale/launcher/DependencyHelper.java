@@ -26,18 +26,22 @@ package com.fox2code.hypertale.launcher;
 import com.fox2code.hypertale.utils.IOUtils;
 import com.fox2code.hypertale.utils.NetUtils;
 
-import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.lang.instrument.Instrumentation;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.jar.JarFile;
 
 public final class DependencyHelper {
 	private static final boolean DEBUG = false;
 	private static final File librariesDir = new File(
 			System.getProperty("hypertale.librariesDir", "libraries")).getAbsoluteFile();
+	@SuppressWarnings("unchecked")
+	private static final Consumer<URL> initCLAddURL = Boolean.getBoolean("hypertale.useInitWrapper") ?
+			(Consumer<URL>) System.getProperties().get("hypertale.initCLAddURL") : null;
 	public static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2";
 
 	public static final Dependency[] patcherDependencies = new Dependency[]{
@@ -109,7 +113,7 @@ public final class DependencyHelper {
 		}
 		checkHashOrDelete(file, dependency, true);
 		try {
-			HypertaleAgent.getInstrumentation().appendToSystemClassLoaderSearch(new JarFile(file));
+			addFileToClasspath(file);
 			if (hasClass(dependency.classCheck)) {
 				if (DEBUG) {
 					EarlyLogger.log("Loaded " +
@@ -127,6 +131,21 @@ public final class DependencyHelper {
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static void addFileToClasspath(File file) throws IOException {
+		Objects.requireNonNull(file, "File must not be null");
+		Instrumentation instrumentation;
+		if (initCLAddURL != null) {
+			if (!file.isFile()) {
+				throw new FileNotFoundException("File must be a regular file!");
+			}
+			initCLAddURL.accept(file.toURI().toURL());
+		} else if ((instrumentation = HypertaleAgent.getInstrumentation()) != null) {
+			instrumentation.appendToSystemClassLoaderSearch(new JarFile(file));
+		} else {
+			throw new RuntimeException("Failed to load " + file.getPath() + " (Init system failure)");
 		}
 	}
 

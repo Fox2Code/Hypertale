@@ -61,7 +61,10 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 	}
 
 	private static class HypertaleVarNameProvider implements IVariableNameProvider {
+		private static final int[] MONO_ARG_INDEX2PARAMS = new int[] {0};
 		final StructMethod structMethod;
+		final String[] params;
+		final int[] index2Params;
 
 		StructClass structClass;
 		ArrayList<NamingStructMethod> directExtenders;
@@ -70,6 +73,33 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 
 		private HypertaleVarNameProvider(StructMethod structMethod) {
 			this.structMethod = structMethod;
+			final int paramCount = Type.getArgumentCount(structMethod.getDescriptor());
+			String[] params = paramCount == 0 ? null : HypertaleJavadocProvider.methodsParams.get(
+					this.structMethod.getClassQualifiedName() + "." + this.structMethod.getName() + "()");
+			if (params != null && params.length != paramCount) {
+				params = null;
+			}
+			this.params = params;
+			if (params != null) {
+				if (paramCount == 1) {
+					this.index2Params = MONO_ARG_INDEX2PARAMS;
+				} else {
+					final Type[] arguments = Type.getArgumentTypes(this.structMethod.getDescriptor());
+					int paramMaxIndex = (this.structMethod.getAccessFlags() & ACC_STATIC) == 0 ? 1 : 0;
+					for (Type argument : arguments) {
+						paramMaxIndex += argument.getSize();
+					}
+					this.index2Params = new int[paramMaxIndex];
+					Arrays.fill(this.index2Params, -1);
+					paramMaxIndex = (this.structMethod.getAccessFlags() & ACC_STATIC) == 0 ? 1 : 0;
+					for (int i = 0; i < arguments.length; i++) {
+						this.index2Params[paramMaxIndex] = i;
+						paramMaxIndex += arguments[i].getSize();
+					}
+				}
+			} else {
+				this.index2Params = null;
+			}
 			this.directExtenders = null;
 		}
 
@@ -110,6 +140,11 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 		}
 
 		public String renameParameterEx(int flags, VarType type, String name, int index, boolean abs) {
+			if (this.params != null && index < this.index2Params.length) {
+				// Hypertale Javadoc injector can override parameters
+				// names if the ones in the Hytale server are confusing
+				return this.params[this.index2Params[index]];
+			}
 			if (name != null && !name.trim().isEmpty() && !isVarOrParam(name)) {
 				return name; // Name is already defined properly
 			}
