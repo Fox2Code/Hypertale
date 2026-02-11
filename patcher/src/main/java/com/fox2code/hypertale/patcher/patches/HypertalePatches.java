@@ -51,6 +51,7 @@ public final class HypertalePatches {
 		addPatch(new PatchPacketIO());
 		addPatch(new PatchPlayerRef());
 		addPatch(new PatchPluginManager());
+		addPatch(new PatchBundled());
 		addPatch(new PatchPlugins());
 		addPatch(new PatchExtraAuthenticationData());
 		addPatch(new PatchHytaleLogFormatter());

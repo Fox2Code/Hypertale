@@ -55,6 +55,9 @@ public final class HypertalePlugin extends JavaPlugin {
 	public HypertalePlugin(@NonNull JavaPluginInit init) {
 		super(init);
 		if (!INVALID_INSTALLATION) {
+			if (inHypertalePatcherProcess) {
+				throw new Error("HypertalePlugin should not be loaded inside the patcher process!");
+			}
 			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale" + ANSI_RESET);
 		}
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);

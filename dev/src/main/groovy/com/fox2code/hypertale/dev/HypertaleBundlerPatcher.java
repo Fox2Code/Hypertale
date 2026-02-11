@@ -39,27 +39,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.HashSet;
 
 public final class HypertaleBundlerPatcher implements HypertaleASMConstants {
-	private static final HashMap<String, String> bundlerHashMap = new HashMap<>();
-	private static final HashMap<String, String> injectionHashMap = new HashMap<>();
-	private static final HashMap<String, String> fieldRedirectHashMap = new HashMap<>();
-	private static final Remapper bundlerRemapper = new SimpleRemapper(TransformerUtils.ASM_BUILD, bundlerHashMap);
-
-	static {
-		addBundledMapping(JavaPlugin, HypertaleJavaPlugin, "hasHypertale");
-	}
-
-	private static void addBundledMapping(String hytaleClass, String hypertaleClass, String optionalField) {
-		String bundledClass = "META-INF/bundled/#" +
-				hypertaleClass.substring(hypertaleClass.lastIndexOf('/') + 1);
-		bundlerHashMap.put(hypertaleClass, bundledClass);
-		injectionHashMap.put(hytaleClass, bundledClass);
-		if (optionalField != null) {
-			fieldRedirectHashMap.put(hytaleClass + "#" + optionalField, bundledClass);
-		}
-	}
+	private static final HashSet<String> classToInject = new HashSet<>(Arrays.asList(
+			JavaPlugin, ClassTransformer
+	));
+	private static final Remapper bundlerRemapper = new SimpleRemapper(
+			TransformerUtils.ASM_BUILD, HypertaleBundled, $HypertaleBundled);
 
 	public static void patch(Project project) {
 		SourceSetContainer sourceSet = (SourceSetContainer) project.getExtensions().getByName("sourceSets");
@@ -76,11 +63,13 @@ public final class HypertaleBundlerPatcher implements HypertaleASMConstants {
 								@Override
 								public void visit(int version, int access, String name, String signature,
 												  String superName, String[] interfaces) {
-									String interfaceInjection = injectionHashMap.get(superName);
-									if (interfaceInjection != null && Arrays.stream(interfaces)
-											.noneMatch(interfaceInjection::equals)) {
+									boolean doInjection = classToInject.contains(superName);
+									for (String interfaceName : interfaces) {
+										doInjection |= classToInject.contains(interfaceName);
+									}
+									if (doInjection && !Arrays.asList(interfaces).contains($HypertaleBundled)) {
 										interfaces = Arrays.copyOf(interfaces, interfaces.length + 1);
-										interfaces[interfaces.length - 1] = interfaceInjection;
+										interfaces[interfaces.length - 1] = $HypertaleBundled;
 									}
 									super.visit(version, access, name, signature, superName, interfaces);
 								}
@@ -93,9 +82,10 @@ public final class HypertaleBundlerPatcher implements HypertaleASMConstants {
 										@Override
 										public void visitFieldInsn(
 												int opcode, String owner, String name, String descriptor) {
-											if (opcode == Opcodes.GETSTATIC) {
-												owner = fieldRedirectHashMap.getOrDefault(
-														owner + "#" + name, owner);
+											if (opcode == Opcodes.GETSTATIC && ("hasHypertale".equals(name) ||
+													"inHypertalePatcherProcess".equals(name)) &&
+													owner.startsWith("com/hypixel/")) {
+												owner = $HypertaleBundled;
 											}
 											super.visitFieldInsn(opcode, owner, name, descriptor);
 										}

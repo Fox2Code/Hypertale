@@ -25,7 +25,7 @@ package com.fox2code.hypertale.patcher.patches;
 
 import com.fox2code.hypertale.patcher.HypertaleASMConstants;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Modifier;
 
@@ -63,4 +63,14 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 	}
 
 	public abstract ClassNode transform(ClassNode classNode);
+
+	static void injectHypertaleGetter(ClassNode classNode, FieldNode hypertaleWorld) {
+		MethodNode hypertale = new MethodNode(Opcodes.ACC_PUBLIC,
+				"hypertale", "()" + hypertaleWorld.desc, null, null);
+		hypertale.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+		hypertale.instructions.add(new FieldInsnNode(Opcodes.GETFIELD,
+				classNode.name, hypertaleWorld.name, hypertaleWorld.desc));
+		hypertale.instructions.add(new InsnNode(Opcodes.ARETURN));
+		classNode.methods.add(hypertale);
+	}
 }

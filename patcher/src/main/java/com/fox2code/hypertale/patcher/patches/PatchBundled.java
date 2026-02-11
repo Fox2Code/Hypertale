@@ -21,17 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.plugin;
+package com.fox2code.hypertale.patcher.patches;
 
-import com.hypixel.hytale.server.core.plugin.JavaPlugin;
+import org.objectweb.asm.tree.ClassNode;
 
-public interface HypertaleJavaPlugin {
-	// The hypertale field will be bundled into your mod!
-	boolean hasHypertale = hasHypertale();
+final class PatchBundled extends HypertalePatch {
+	PatchBundled() {
+		super(JavaPlugin, ClassTransformer);
+	}
 
-	static boolean hasHypertale() {
-		return HypertaleJavaPlugin.class.getClassLoader() == JavaPlugin.class.getClassLoader() &&
-				JavaPlugin.class.getClassLoader().getResource( // Check plugin existence!
-						"com/fox2code/hypertale/plugin/HypertaleJavaPlugin.class") != null;
+	@Override
+	public ClassNode transform(ClassNode classNode) {
+		classNode.interfaces.add(HypertaleBundled);
+		return classNode;
 	}
 }

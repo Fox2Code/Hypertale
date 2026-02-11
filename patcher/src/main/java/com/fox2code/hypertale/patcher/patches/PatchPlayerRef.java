@@ -64,13 +64,7 @@ final class PatchPlayerRef extends HypertalePatch {
 			}
 		}
 		// Label Hypertale APIs explicitly.
-		MethodNode hypertale = new MethodNode(Opcodes.ACC_PUBLIC,
-				"hypertale", "()" + hypertalePlayerRef.desc, null, null);
-		hypertale.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		hypertale.instructions.add(new FieldInsnNode(Opcodes.GETFIELD,
-				classNode.name, hypertalePlayerRef.name, hypertalePlayerRef.desc));
-		hypertale.instructions.add(new InsnNode(Opcodes.ARETURN));
-		classNode.methods.add(hypertale);
+		injectHypertaleGetter(classNode, hypertalePlayerRef);
 		return classNode;
 	}
 }

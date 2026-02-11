@@ -49,6 +49,7 @@ public interface HypertaleASMConstants {
 	String PluginIdentifier = "com/hypixel/hytale/common/plugin/PluginIdentifier";
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
 	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
+	String ClassTransformer = "com/hypixel/hytale/plugin/early/ClassTransformer";
 	String PacketIO = "com/hypixel/hytale/protocol/io/PacketIO";
 	String IdentityTokenClaims = "com/hypixel/hytale/server/core/auth/JWTValidator$IdentityTokenClaims";
 	String PlayerAuthentication = "com/hypixel/hytale/server/core/auth/PlayerAuthentication";
@@ -76,8 +77,8 @@ public interface HypertaleASMConstants {
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";
 	String HypertaleBasePlugin = "com/fox2code/hypertale/plugin/HypertaleBasePlugin";
-	String HypertaleJavaPlugin = "com/fox2code/hypertale/plugin/HypertaleJavaPlugin";
 	String HypertalePlayerRef = "com/fox2code/hypertale/universe/HypertalePlayerRef";
 	String HypertaleWorld = "com/fox2code/hypertale/universe/HypertaleWorld";
-	String EmptyArrays = "com/fox2code/hypertale/utils/EmptyArrays";
+	String HypertaleBundled = "com/fox2code/hypertale/utils/HypertaleBundled";
+	String $HypertaleBundled = "META-INF/bundled/#HypertaleBundled";
 }

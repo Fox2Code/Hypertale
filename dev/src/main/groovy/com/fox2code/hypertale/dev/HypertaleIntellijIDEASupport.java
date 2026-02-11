@@ -34,6 +34,7 @@ import java.util.*;
 final class HypertaleIntellijIDEASupport {
 	private static final String[] ideaAddDictionary = new String[]{
 			"hypixel", "hytale", "earlyplugins", "hypertale", "clinit", "mixin", "mixins",
+			"Hypixel's", "Hytale's", "Hypertale's", "Mixin's"
 	};
 
 	static void installIdeaDictionaryOnIDEASync(Project target, Iterable<String> words) throws IOException {
@@ -69,9 +70,10 @@ final class HypertaleIntellijIDEASupport {
 		stringBuilder.append("""
 				<component name="ProjectDictionaryState">
 				  <dictionary name="project">
-				    <words>""");
+				    <words>
+				""");
 		for (String word : wordsUnique) {
-			stringBuilder.append("\n      <w>").append(word).append("</w>");
+			stringBuilder.append("      <w>").append(word).append("</w>\n");
 		}
 		stringBuilder.append("""
 				    </words>

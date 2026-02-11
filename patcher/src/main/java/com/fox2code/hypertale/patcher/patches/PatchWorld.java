@@ -111,13 +111,7 @@ final class PatchWorld extends HypertalePatch {
 			throw new RuntimeException("Failed to apply patch");
 		}
 		// Label Hypertale APIs explicitly.
-		MethodNode hypertale = new MethodNode(Opcodes.ACC_PUBLIC,
-				"hypertale", "()" + hypertaleWorld.desc, null, null);
-		hypertale.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		hypertale.instructions.add(new FieldInsnNode(Opcodes.GETFIELD,
-				classNode.name, hypertaleWorld.name, hypertaleWorld.desc));
-		hypertale.instructions.add(new InsnNode(Opcodes.ARETURN));
-		classNode.methods.add(hypertale);
+		injectHypertaleGetter(classNode, hypertaleWorld);
 		return classNode;
 	}
 }

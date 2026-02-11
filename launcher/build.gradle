@@ -29,9 +29,9 @@ if (!hypertaleInitJar.getParentFile().isDirectory() &&
 final File classesFolder = new File(layout.buildDirectory.asFile.get(),
         "classes" + File.separator + "java" + File.separator + "main").getAbsoluteFile()
 final File hypertaleJavaPlugin = new File(classesFolder, "com" + File.separator + "fox2code" +
-        File.separator + "hypertale" + File.separator + "plugin" + File.separator + "HypertaleJavaPlugin.class")
+        File.separator + "hypertale" + File.separator + "utils" + File.separator + "HypertaleBundled.class")
 final File metaInfHypertaleJavaPlugin = new File(classesFolder,
-        "META-INF" + File.separator + "bundled" + File.separator + "#HypertaleJavaPlugin.class")
+        "META-INF" + File.separator + "bundled" + File.separator + "#HypertaleBundled.class")
 
 java {
     toolchain {
@@ -123,6 +123,7 @@ compileJava {
         ClassReader classReader = new ClassReader(hypertaleJavaPlugin.bytes)
         classReader.accept(classNode, 0)
         classNode.visitPermittedSubclass("com/hypixel/hytale/server/core/plugin/JavaPlugin")
+        classNode.visitPermittedSubclass("com/hypixel/hytale/plugin/early/ClassTransformer")
         ClassWriter classWriter = new ClassWriter(0)
         classNode.accept(classWriter)
         hypertaleJavaPlugin.bytes = classWriter.toByteArray()
@@ -133,8 +134,8 @@ compileJava {
         ClassWriter classWriterMetaInf = new ClassWriter(0)
         classNode.accept(new ClassRemapper(classWriterMetaInf,
                 new SimpleRemapper(Opcodes.ASM9,
-                        "com/fox2code/hypertale/plugin/HypertaleJavaPlugin",
-                        "META-INF/bundled/#HypertaleJavaPlugin")))
+                        "com/fox2code/hypertale/utils/HypertaleBundled",
+                        "META-INF/bundled/#HypertaleBundled")))
         metaInfHypertaleJavaPlugin.bytes = classWriterMetaInf.toByteArray()
     }
 }

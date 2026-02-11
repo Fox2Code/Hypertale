@@ -16,5 +16,7 @@
   "Dependencies": {},
   "OptionalDependencies": {},
   "DisabledByDefault": false,
-  "IncludesAssetPack": true
+  "IncludesAssetPack": true,
+  "HypertaleJavaAgent": "com.fox2code.hypertale.launcher.HypertaleAgent",
+  "HypertalePreLoad": true
 }
