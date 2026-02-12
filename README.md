@@ -37,6 +37,7 @@ Hypertale currently has custom support code for the following mods:
 Add new fields to `manifest.json` hypertale will read:
 - `HypertalePreLoad` if `true` it will load your mod in the same ClassLoader as the HytaleServer.jar
 - `HypertaleJavaAgent` class in your mod to add as a java agent.
+- `HypertaleMixinConfig` mixins configuration to apply to the server.
 
 Add new APIs with the `.hypertale()` extension for:
 - `com.hypixel.hytale.server.core.plugin.PluginBase`

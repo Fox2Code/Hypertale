@@ -28,8 +28,8 @@ import com.fox2code.hypertale.loader.HypertaleCompatibility;
 import com.fox2code.hypertale.loader.HypertaleConfig;
 import com.fox2code.hypertale.loader.HypertaleModGatherer;
 import com.fox2code.hypertale.loader.HypertaleModLoader;
-import com.fox2code.hypertale.patcher.Optimizer;
 import com.fox2code.hypertale.patcher.PatcherMain;
+import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
 import com.hypixel.hytale.logger.backend.HytaleConsole;
@@ -38,7 +38,6 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -161,6 +160,8 @@ public final class Main {
 			PatcherMain.patch(input, new File(args[2]), true, true);
 			return;
 		} else if (args.length == 1 && "--launch-dev".equals(args[0])) {
+			EarlyLogger.start(false);
+			EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION);
 			launchGame(EmptyArrays.EMPTY_STRING_ARRAY, true);
 			return;
 		}
@@ -212,7 +213,9 @@ public final class Main {
 	}
 
 	private static void launchGame(String[] args, boolean dev) throws IOException {
-		HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
+		HypertaleModGatherer modGatherer = dev ?
+				HypertaleModGatherer.gatherModsDev() :
+				HypertaleModGatherer.gatherMods(args);
 		if (args.length == 0) {
 			if (HypertalePaths.hytaleAssets.exists()) {
 				args = new String[]{"--assets", "Assets.zip"};
@@ -232,6 +235,8 @@ public final class Main {
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
 		}
+		MixinLoader.preInitializeMixin();
+		PatchHelper.install();
 		if (modGatherer.getModSyncBootstrap() != null &&
 				// Don't run modSyncBootstrap twice if init already called it!
 				!Boolean.getBoolean("hypertale.modSyncBootstrapInit")) {
@@ -240,11 +245,9 @@ public final class Main {
 				Class.forName(HypertaleCompatibility.classModSyncBootstrap, true, urlClassLoader);
 			} catch (LinkageError | ClassNotFoundException _) {}
 		}
+		MixinLoader.initialize();
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
-		Instrumentation instrumentation = HypertaleAgent.getInstrumentation();
-		if (instrumentation != null) {
-			instrumentation.addTransformer(Optimizer.classFileTransformer);
-		}
+		MixinLoader.postInitialize();
 		if (HypertalePaths.hypertaleCacheJust.isFile() &&
 				!HypertalePaths.hypertaleCacheJust.delete()) {
 			EarlyLogger.log("Failed to delete \".hypertale/.just\"");

@@ -23,15 +23,23 @@
  */
 package com.fox2code.hypertale.init.late;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 final class HookClassLoader extends URLClassLoader {
 	private final ClassLoader systemClassLoader;
+	private final Package hytaleExamplePackage;
+	private final Object packageMakeLock = new Object();
+	private BiFunction<String, byte[], byte[]> classTransformer;
+	private Class<?> firstHytaleClass = null;
 
-	public HookClassLoader(URL[] urls) {
+	public HookClassLoader(URL[] urls, Package hytaleExamplePackage) {
 		super(urls, ClassLoader.getSystemClassLoader().getParent());
+		this.hytaleExamplePackage = hytaleExamplePackage;
 		this.systemClassLoader = ClassLoader.getSystemClassLoader();
 	}
 
@@ -50,5 +58,54 @@ final class HookClassLoader extends URLClassLoader {
 			return HookClassLoader.class.getClassLoader().loadClass(name);
 		}
 		return super.loadClass(name);
+	}
+
+	@Override
+	protected Class<?> findClass(String name) throws ClassNotFoundException {
+		URL resource;
+		if (!name.startsWith("com.hypixel.hytale.") ||
+				(resource = getResource(name.replace('.', '/') + ".class")) == null) {
+			return super.findClass(name);
+		}
+		synchronized (this.packageMakeLock) {
+			if (this.firstHytaleClass == null) {
+				Class<?> hytaleClass = null;
+				synchronized (this) {
+					if (this.firstHytaleClass == null) {
+						this.firstHytaleClass = hytaleClass = super.findClass(name);
+					}
+				}
+				if (hytaleClass != null) {
+					System.out.println("Loaded first class: " + hytaleClass.getName());
+					return hytaleClass;
+				}
+			}
+		}
+		final String packageName = name.lastIndexOf('.') == -1 ?
+				"" : name.substring(0, name.lastIndexOf('.'));
+		if (getDefinedPackage(packageName) == null) {
+			definePackage(packageName,
+					this.hytaleExamplePackage.getSpecificationTitle(),
+					this.hytaleExamplePackage.getSpecificationVersion(),
+					this.hytaleExamplePackage.getSpecificationVendor(),
+					this.hytaleExamplePackage.getImplementationTitle(),
+					this.hytaleExamplePackage.getImplementationVersion(),
+					this.hytaleExamplePackage.getImplementationVendor(),
+					null);
+		}
+		try (InputStream inputStream = resource.openStream()) {
+			byte[] bytes = inputStream.readAllBytes();
+			if (this.classTransformer != null) {
+				bytes = this.classTransformer.apply(name, bytes);
+			}
+			return this.defineClass(name, bytes, 0, bytes.length,
+					this.firstHytaleClass.getProtectionDomain());
+		} catch (IOException e) {
+			throw new ClassNotFoundException(name, e);
+		}
+	}
+
+	public void setClassTransformer(BiFunction<String, byte[], byte[]> classTransformer) {
+		this.classTransformer = classTransformer;
 	}
 }

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public final class HookClassTransformer implements ClassTransformer {
@@ -51,9 +52,13 @@ public final class HookClassTransformer implements ClassTransformer {
 				try {
 					Objects.requireNonNull(hypertaleInfo);
 					HookClassLoader hookClassLoader = new HookClassLoader(
-							new URL[]{hypertaleInfo.hypertale().toURI().toURL()});
+							new URL[]{hypertaleInfo.hypertale().toURI().toURL()},
+							ClassTransformer.class.getPackage());
 					System.getProperties().put("hypertale.initCLAddURL",
 							(Consumer<URL>) hookClassLoader::addURLHelper);
+					System.getProperties().put("hypertale.initCLSetClassTransformer",
+							(Consumer<BiFunction<String, byte[], byte[]>>)
+									hookClassLoader::setClassTransformer);
 					Thread.currentThread().setContextClassLoader(hookClassLoader);
 					HypertaleInfo.runHypertale(hookClassLoader,
 							hypertaleInfo.mainClassName(),

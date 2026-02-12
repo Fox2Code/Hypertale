@@ -71,7 +71,13 @@ public final class DependencyHelper {
 					"cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb"),
 			new Dependency("com.google.guava:guava:" + BuildConfig.GUAVA_VERSION,
 					MAVEN_CENTRAL, "com.google.common.io.Files", null,
-					"1e301f0c52ac248b0b14fdc3d12283c77252d4d6f48521d572e7d8c4c2cc4ac7")
+					"1e301f0c52ac248b0b14fdc3d12283c77252d4d6f48521d572e7d8c4c2cc4ac7"),
+			new Dependency("net.fabricmc:sponge-mixin:" + BuildConfig.FABRIC_MIXIN_VERSION,
+					MAVEN_CENTRAL, "org.spongepowered.asm.mixin.Mixins", null,
+					"e7889fcd185e4199052dcbcf0fe2128581cbf8630aea7feb37429667b1ba49a9"),
+			new Dependency("io.github.llamalad7:mixinextras-common:" + BuildConfig.MIXIN_EXTRAS_VERSION,
+					MAVEN_CENTRAL, "com.llamalad7.mixinextras.MixinExtrasBootstrap", null,
+					"30e7538eb27d8f7e78e4745dc0c56c857464a6f03fcacfd3101d2fce29cf8890")
 	};
 
 	public static void loadDependency(Dependency dependency) {

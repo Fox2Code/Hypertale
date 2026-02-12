@@ -41,7 +41,8 @@ public final class EarlyLogger {
 			}
 			if (loggerFunction == null) {
 				if (!HypertalePaths.hypertaleCacheLog.exists() && !(
-						HypertalePaths.hypertaleCacheLog.getParentFile().mkdirs() &&
+						(HypertalePaths.hypertaleCache.isDirectory() ||
+								HypertalePaths.hypertaleCache.mkdirs()) &&
 								HypertalePaths.hypertaleCacheLog.createNewFile())) {
 					throw new IOException("Failed to create Hypertale log file!");
 				}
@@ -68,12 +69,15 @@ public final class EarlyLogger {
 	}
 
 	public static void log(String message) {
+		logRaw("[Hypertale] " + message);
+	}
+
+	public static void logRaw(String message) {
 		Consumer<String> loggerFunction = EarlyLogger.loggerFunction;
 		if (loggerFunction != null) {
 			loggerFunction.accept(message);
 			return;
 		}
-		message = "[Hypertale] " + message;
 		System.out.println(message);
 		PrintStream printStreamTmp = printStream;
 		if (printStreamTmp != null) {

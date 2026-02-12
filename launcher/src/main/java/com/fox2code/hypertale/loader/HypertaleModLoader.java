@@ -26,6 +26,7 @@ package com.fox2code.hypertale.loader;
 import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.launcher.HypertaleAgent;
+import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.fox2code.hypertale.utils.JsonPropertyHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -56,6 +57,15 @@ public final class HypertaleModLoader {
 
 	public static void loadHypertaleMods(HypertaleModGatherer modGatherer) throws IOException {
 		LinkedHashMap<File, JsonObject> loadedModsEarly = new LinkedHashMap<>();
+		// Load class path mods, allow dev mode to load the mod in development
+		for (HypertaleModGatherer.ClassPathModCandidate candidate : modGatherer.getClassPathManifests()) {
+			JsonObject jsonObject;
+			try (InputStreamReader inputStreamReader = new InputStreamReader(
+					candidate.manifest().openStream(), StandardCharsets.UTF_8)) {
+				jsonObject = gson.fromJson(inputStreamReader, JsonObject.class);
+			}
+			processJsonAsMod(loadedModsEarly, candidate.file(), jsonObject, false, true);
+		}
 		loadHypertaleMods(modGatherer, false, loadedModsEarly);
 		loadHypertaleMods(modGatherer, true, loadedModsEarly);
 		loadMods(loadedModsEarly, true);
@@ -76,20 +86,26 @@ public final class HypertaleModLoader {
 					EarlyLogger.log("Failed to load mod info of " + file.getName());
 					continue;
 				}
-				String id = JsonPropertyHelper.getBoolean(jsonObject, "Group") + ":" +
-						JsonPropertyHelper.getBoolean(jsonObject, "Name");
-				boolean preLoadByDefault = libraries ||
-						jarFile.getEntry("kotlin/KotlinVersion.class") != null;
-				if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad", preLoadByDefault)) {
-					DependencyHelper.addFileToClasspath(file);
-					loadedModsEarly.put(file, jsonObject);
-					if (!preloadedPlugins.add(id)) {
-						throw new IllegalArgumentException("Tried to pre-load duplicate plugin");
-					}
-				} else {
-					loadedModsLate.put(file, jsonObject);
-				}
+				processJsonAsMod(loadedModsEarly, file, jsonObject, libraries, false);
 			}
+		}
+	}
+
+	private static void processJsonAsMod(LinkedHashMap<File, JsonObject> loadedModsEarly, File file,
+										 JsonObject jsonObject, boolean isLibrary, boolean isClassPath)
+			throws IOException {
+		String id = JsonPropertyHelper.getBoolean(jsonObject, "Group") + ":" +
+				JsonPropertyHelper.getBoolean(jsonObject, "Name");
+		if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad", isLibrary)) {
+			if (!isClassPath) {
+				DependencyHelper.addFileToClasspath(file);
+			}
+			loadedModsEarly.put(file, jsonObject);
+			if (!preloadedPlugins.add(id)) {
+				throw new IllegalArgumentException("Tried to pre-load duplicate plugin");
+			}
+		} else {
+			loadedModsLate.put(file, jsonObject);
 		}
 	}
 
@@ -101,6 +117,8 @@ public final class HypertaleModLoader {
 		Instrumentation instrumentation = HypertaleAgent.getInstrumentation();
 		for (Map.Entry<File, JsonObject> entry : loadedMods.entrySet()) {
 			JsonObject jsonObject = entry.getValue();
+			String modIdentifier = JsonPropertyHelper.getString(jsonObject, "Group") +
+					":" + JsonPropertyHelper.getString(jsonObject, "Name");
 			String javaAgent = JsonPropertyHelper.getString(jsonObject, "HypertaleJavaAgent");
 			if (javaAgent != null && instrumentation != null) {
 				try {
@@ -116,6 +134,10 @@ public final class HypertaleModLoader {
 					EarlyLogger.log("Failed to load java-agent " + javaAgent +
 							" from " + entry.getKey().getName());
 				}
+			}
+			String mixin = JsonPropertyHelper.getString(jsonObject, "HypertaleMixinConfig");
+			if (mixin != null) {
+				MixinLoader.addMixinConfigurationSafe(modIdentifier, mixin);
 			}
 		}
 	}

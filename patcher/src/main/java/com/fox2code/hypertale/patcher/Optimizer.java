@@ -23,12 +23,9 @@
  */
 package com.fox2code.hypertale.patcher;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-import java.lang.instrument.ClassFileTransformer;
-import java.security.ProtectionDomain;
 
 /**
  * Uses {@link com.fox2code.hypertale.utils.EmptyArrays}
@@ -40,25 +37,6 @@ public final class Optimizer implements Opcodes {
 	private static final String HypertaleEmptyArrays = "com/fox2code/hypertale/utils/EmptyArrays";
 	private static final String HytaleArrayUtils = "com/hypixel/hytale/common/util/ArrayUtil";
 	private static final String NettyEmptyArrays = "io/netty/util/internal/EmptyArrays";
-
-	public static final ClassFileTransformer classFileTransformer = new ClassFileTransformer() {
-		@Override
-		public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
-								ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-			if (loader == null || loader == Optimizer.class.getClassLoader() ||
-					loader.getClass().getName().startsWith("jdk.internal.") ||
-					!canOptimize(className.replace('.', '/'))) {
-				return classfileBuffer;
-			}
-			ClassReader classReader = new ClassReader(classfileBuffer);
-			ClassNode classNode = new ClassNode();
-			classReader.accept(classNode, 0);
-			patchClass(classNode);
-			SafeClassWriter classWriter = new SafeClassWriter(0);
-			classNode.accept(classWriter);
-			return classWriter.toByteArray();
-		}
-	};
 
 	public static void patchClass(ClassNode classNode) {
 		if (!canOptimize(classNode.name)) return;
@@ -131,7 +109,7 @@ public final class Optimizer implements Opcodes {
 			AbstractInsnNode consuming = TransformerUtils.getConsumingInstruction(methodNode, next);
 			AbstractInsnNode nextX;
 			if (next2 == null || (next.getOpcode() != ARRAYLENGTH &&
-					// Always replace if it is always a get array index element.
+					// Always replace it if it is always a get array index element.
 					!(consuming != null && consuming.getOpcode() == AALOAD) &&
 					// Try to detect the bytecode pattern of an array loop, not very precise.
 					!(next.getOpcode() == ASTORE && next2.getOpcode() == ALOAD &&
@@ -160,7 +138,7 @@ public final class Optimizer implements Opcodes {
 		}
 	}
 
-	private static boolean canOptimize(String path) {
+	public static boolean canOptimize(String path) {
 		if (agentless) {
 			return path.startsWith("com/hypixel/");
 		}

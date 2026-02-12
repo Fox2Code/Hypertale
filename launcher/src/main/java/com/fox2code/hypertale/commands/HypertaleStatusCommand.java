@@ -37,7 +37,7 @@ final class HypertaleStatusCommand extends AbstractCommand {
 	static final Message HYTALE_VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
 			Message.raw(": Hytale version -> " + HytaleVersion.HYTALE_VERSION));
 	static final Message HYPERTALE_INIT_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
-			Message.raw(": Hytale init type -> " + System.getProperty("hypertale.initMethod", "unknown")));
+			Message.raw(": Hypertale init type -> " + System.getProperty("hypertale.initMethod", "unknown")));
 
 	HypertaleStatusCommand() {
 		super("status", "Show hypertale status information!");

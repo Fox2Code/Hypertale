@@ -192,6 +192,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 project.tasks.runServer.configure {
                     classpath = project.sourceSets.main.runtimeClasspath
                     workingDir(runDirectory)
+                    systemProperty("hypertale.gradleInit", "true")
                     jvmArgs(project.configurations.javaAgent.collect { "-javaagent:" + it.path })
                     mainClass = "com.fox2code.hypertale.launcher.Main"
                     standardInput = System.in

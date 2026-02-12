@@ -24,12 +24,14 @@
 package com.fox2code.hypertale.loader;
 
 import com.fox2code.hypertale.launcher.EarlyLogger;
+import com.fox2code.hypertale.utils.EmptyArrays;
 import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -41,14 +43,16 @@ public final class HypertaleModGatherer {
 	private final List<File> libraries;
 	private final File modSyncBootstrap;
 	private final int modHash;
+	private final List<ClassPathModCandidate> classPathManifests;
 
 	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries,
-								 File modSyncBootstrap, int modHash) {
+								 File modSyncBootstrap, int modHash, List<ClassPathModCandidate> classPathManifests) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
 		this.libraries = libraries;
 		this.modSyncBootstrap = modSyncBootstrap;
 		this.modHash = modHash;
+		this.classPathManifests = classPathManifests;
 	}
 
 	public List<File> getHypertaleMods() {
@@ -71,6 +75,14 @@ public final class HypertaleModGatherer {
 		return this.modHash;
 	}
 
+	public List<ClassPathModCandidate> getClassPathManifests() {
+		return this.classPathManifests;
+	}
+
+	public static HypertaleModGatherer gatherModsDev() {
+		return gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
+	}
+
 	public static HypertaleModGatherer gatherMods(String[] args) {
 		// TODO: Process launch arguments
 		ArrayList<File> mods = new ArrayList<>();
@@ -90,7 +102,37 @@ public final class HypertaleModGatherer {
 		Arrays.sort(fileSizes);
 		return new HypertaleModGatherer(Collections.unmodifiableList(hypertaleMods),
 				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
-				modSyncBootstrap, Arrays.hashCode(fileSizes));
+				modSyncBootstrap, Arrays.hashCode(fileSizes),
+				Collections.unmodifiableList(gatherClassPathMods()));
+	}
+
+	private static List<ClassPathModCandidate> gatherClassPathMods() {
+		try {
+			Enumeration<URL> urlEnumeration = HypertaleModGatherer.class.getClassLoader().getResources("manifest.json");
+			ArrayList<ClassPathModCandidate> classPathManifests = new ArrayList<>();
+			while (urlEnumeration.hasMoreElements()) {
+				URL url = urlEnumeration.nextElement();
+				if (url.getProtocol().equals("file")) {
+					File file = new File(url.toURI());
+					if (file.isFile()) {
+						classPathManifests.add(new ClassPathModCandidate(url, file.getParentFile()));
+					}
+				} else if (url.getProtocol().equals("jar")) {
+					String path = url.getPath();
+					int separatorIndex = path.indexOf("!/");
+					if (separatorIndex != -1) {
+						File file = new File(path.substring(5, separatorIndex)).getAbsoluteFile();
+						if (file.exists() && !HypertalePaths.hypertaleJar.equals(file) &&
+								!HypertalePaths.getHytaleJar().equals(file)) {
+							classPathManifests.add(new ClassPathModCandidate(url, file));
+						}
+					}
+				}
+			}
+			return classPathManifests;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static File appendEarlyLoaderMods(ArrayList<File> mods) {
@@ -104,7 +146,6 @@ public final class HypertaleModGatherer {
 						mods.add(file);
 					}
 				} catch (Exception _) {}
-
 			}
 		}
 		return modSyncBootstrap;
@@ -148,4 +189,6 @@ public final class HypertaleModGatherer {
 			}
 		}
 	}
+
+	public static record ClassPathModCandidate(URL manifest, File file) {}
 }
