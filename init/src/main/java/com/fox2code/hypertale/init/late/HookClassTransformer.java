@@ -56,7 +56,7 @@ public final class HookClassTransformer implements ClassTransformer {
 							(Consumer<URL>) hookClassLoader::addURLHelper);
 					Thread.currentThread().setContextClassLoader(hookClassLoader);
 					HypertaleInfo.runHypertale(hookClassLoader,
-							"com.fox2code.hypertale.launcher.Main",
+							hypertaleInfo.mainClassName(),
 							hypertaleInfo.hypertaleInitVer(), args);
 				} catch (Throwable e) {
 					sneakyThrow(new Throwable("Failed to start server!", e));

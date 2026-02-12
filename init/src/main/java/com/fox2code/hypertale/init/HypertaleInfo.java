@@ -35,16 +35,18 @@ import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
-public record HypertaleInfo(File hypertale, int hypertaleInitVer) {
+public record HypertaleInfo(File hypertale, int hypertaleInitVer, String mainClassName) {
 	private static final File mods = new File("mods").getAbsoluteFile();
 	private static final File hytaleServerJar = new File("HytaleServer.jar").getAbsoluteFile();
 	private static final File hypertaleConfig = new File(".hypertale/hypertale.ini").getAbsoluteFile();
 	private static final File hypertaleInit = getSourceFile(HypertaleInfo.class);
 	private static final Attributes.Name hypertaleInitAttribute = new Attributes.Name("Hypertale-Init");
+	private static final Attributes.Name mainClass = new Attributes.Name("Main-Class");
 
 	public static HypertaleInfo findHypertale() {
 		File launchJar = null;
 		int hypertaleInitVer = 0;
+		String mainClassName = null;
 		if (mods.isDirectory()) {
 			for (File file : Objects.requireNonNull(mods.listFiles())) {
 				if (file.getName().endsWith(".jar")) {
@@ -54,13 +56,15 @@ public record HypertaleInfo(File hypertale, int hypertaleInitVer) {
 						if (fileHypertaleInitVer > 0) {
 							hypertaleInitVer = fileHypertaleInitVer;
 							launchJar = file;
+							mainClassName = jarFile.getManifest().getMainAttributes().getValue(mainClass);
 						}
 					} catch (Exception _) {
 					}
 				}
 			}
 		}
-		return launchJar == null ? null : new HypertaleInfo(launchJar, hypertaleInitVer);
+		return launchJar == null ? null : new HypertaleInfo(launchJar, hypertaleInitVer,
+				mainClassName == null ? "com.fox2code.hypertale.launcher.Main" : mainClassName);
 	}
 
 

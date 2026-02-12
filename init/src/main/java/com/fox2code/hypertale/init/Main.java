@@ -96,7 +96,7 @@ public final class Main {
 			}
 		}
 		HypertaleInfo hypertaleInfo = HypertaleInfo.findHypertale();
-		String mainClassName = "com.fox2code.hypertale.launcher.Main";
+		String mainClassName;
 		int hypertaleInitVer = 0;
 		File launchJar;
 		if (hypertaleInfo == null) {
@@ -112,6 +112,7 @@ public final class Main {
 		} else {
 			hypertaleInitVer = hypertaleInfo.hypertaleInitVer();
 			launchJar = hypertaleInfo.hypertale();
+			mainClassName = hypertaleInfo.mainClassName();
 		}
 		try {
 			Agent.instrumentation.appendToSystemClassLoaderSearch(new JarFile(launchJar));
