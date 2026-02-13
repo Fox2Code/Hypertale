@@ -50,7 +50,6 @@ public final class HypertalePlugin extends JavaPlugin {
 	public static final Message HYPERTALE = Message.join(Message.raw("Hypertale").color(Color.MAGENTA));
 	// Use 16, 256, and true color ANSI codes for color, if it is not supported, it is usually ignored!
 	private static final String ANSI_MAGENTA = "\u001B[35;95m\u001B[38;5;201m\u001B[38;2;255;0;255m";
-	private static final String ANSI_RESET = "\u001B[0m";
 
 	public HypertalePlugin(@NonNull JavaPluginInit init) {
 		super(init);
@@ -58,7 +57,7 @@ public final class HypertalePlugin extends JavaPlugin {
 			if (inHypertalePatcherProcess) {
 				throw new Error("HypertalePlugin should not be loaded inside the patcher process!");
 			}
-			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale" + ANSI_RESET);
+			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale");
 		}
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);

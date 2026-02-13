@@ -76,7 +76,35 @@ final class PatchHytaleLogFormatter extends HypertalePatch {
 				classNode.name, stripAnsi.name, stripAnsi.desc));
 		injection.add(new VarInsnNode(ASTORE, store.var));
 		injection.add(skip);
+		int ansiColor = -1;
+		boolean patch2 = false;
 		format.instructions.insert(store, injection);
+		for (AbstractInsnNode abstractInsnNode : format.instructions) {
+			if (abstractInsnNode.getOpcode() == Opcodes.LDC &&
+					abstractInsnNode instanceof LdcInsnNode ldcInsnNode &&
+					"\u001b[31m".equals(ldcInsnNode.cst) &&
+					abstractInsnNode.getNext() instanceof VarInsnNode varInsnNode &&
+					varInsnNode.getOpcode() == Opcodes.ASTORE) {
+				ansiColor = varInsnNode.var;
+			} else if (ansiColor != -1 && abstractInsnNode instanceof VarInsnNode varInsnNode &&
+					varInsnNode.getOpcode() == Opcodes.ALOAD && varInsnNode.var == ansiColor) {
+				AbstractInsnNode previous = TransformerUtils.previousCodeInsn(varInsnNode);
+				if (previous.getOpcode() == Opcodes.ALOAD) {
+					InsnList injectionAnsi = new InsnList();
+					injectionAnsi.add(new VarInsnNode(ALOAD, store.var));
+					injectionAnsi.add(new VarInsnNode(ALOAD, varInsnNode.var));
+					injectionAnsi.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, ASMString,
+							"concat", "(L" + ASMString + ";)L" + ASMString + ";"));
+					injectionAnsi.add(new VarInsnNode(ASTORE, store.var));
+					format.instructions.insertBefore(previous, injectionAnsi);
+					patch2 = true;
+					break;
+				}
+			}
+		}
+		if (!patch2) {
+			throw new RuntimeException("Failed to apply patch!");
+		}
 		return classNode;
 	}
 }
