@@ -26,6 +26,7 @@ package com.fox2code.hypertale.plugin;
 import com.fox2code.hypertale.loader.HypertaleModLoader;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.plugin.PluginBase;
 
 import javax.annotation.Nonnull;
@@ -84,5 +85,9 @@ public final class HypertaleBasePlugin {
 	public void setLoggerName(@Nonnull String loggerName) {
 		Objects.requireNonNull(loggerName, "Invalid null logger name!");
 		this.setLogger(HytaleLogger.get(loggerName));
+	}
+
+	public void setLoggerName(@Nonnull Message loggerName) {
+		this.setLoggerName(loggerName.getAnsiMessage());
 	}
 }
