@@ -24,6 +24,7 @@
 package com.fox2code.hypertale.plugin;
 
 import com.fox2code.hypertale.loader.HypertaleModLoader;
+import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.PluginBase;
 
@@ -33,11 +34,13 @@ import java.util.Objects;
 
 public final class HypertaleBasePlugin {
 	private final boolean preLoaded;
+	private final boolean hasMixin;
 	private final HytaleLogger originalLogger;
 	private HytaleLogger logger;
 
 	public HypertaleBasePlugin(PluginBase pluginBase, HytaleLogger originalLogger) {
 		this.preLoaded = HypertaleModLoader.isPreloadedPlugin(pluginBase.getIdentifier());
+		this.hasMixin = MixinLoader.modHasMixins(pluginBase.getIdentifier().toString());
 		this.originalLogger = originalLogger;
 		this.logger = this.originalLogger;
 		// Fix preload plugins logger propagating to parent!
@@ -48,6 +51,10 @@ public final class HypertaleBasePlugin {
 
 	public boolean isPreLoaded() {
 		return this.preLoaded;
+	}
+
+	public boolean hasMixin() {
+		return this.hasMixin;
 	}
 
 	@Nonnull

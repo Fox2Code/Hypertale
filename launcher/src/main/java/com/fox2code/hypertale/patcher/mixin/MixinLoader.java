@@ -159,4 +159,8 @@ public final class MixinLoader {
 	public static boolean isPostInitialized() {
 		return postInitialized;
 	}
+
+	public static boolean modHasMixins(String modId) {
+		return modWithMixins.contains(modId);
+	}
 }
