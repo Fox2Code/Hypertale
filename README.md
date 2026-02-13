@@ -1,3 +1,5 @@
+![](launcher/src/main/resources/Common/UI/Custom/Hypertale_Hypertale_Banner.png)
+
 # Hypertale
 
 Optimization mod and API extender for Hytale
