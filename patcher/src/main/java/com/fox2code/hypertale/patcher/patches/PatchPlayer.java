@@ -34,6 +34,7 @@ final class PatchPlayer extends HypertalePatch {
 
 	@Override
 	public ClassNode transform(ClassNode classNode) {
+		classNode.access |= TransformerUtils.ACC_COMPUTE_FRAMES;
 		final FieldNode hypertalePlayer = new FieldNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL,
 				"hypertalePlayer", "L" + HypertalePlayer + ";", null, null);
 		classNode.fields.add(hypertalePlayer);
