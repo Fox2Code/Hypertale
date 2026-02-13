@@ -42,6 +42,7 @@ Add new fields to `manifest.json` hypertale will read:
 - `HypertaleMixinConfig` mixins configuration to apply to the server.
 
 Add new APIs with the `.hypertale()` extension for:
+- `com.hypixel.hytale.server.core.entity.entities.Player`
 - `com.hypixel.hytale.server.core.plugin.PluginBase`
 - `com.hypixel.hytale.server.core.universe.PlayerRef`
 - `com.hypixel.hytale.server.core.universe.world.World`
