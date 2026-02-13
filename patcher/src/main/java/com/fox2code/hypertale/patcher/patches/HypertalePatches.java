@@ -49,6 +49,7 @@ public final class HypertalePatches {
 		addPatch(new PatchWorld());
 		addPatch(new PatchChunkStore());
 		addPatch(new PatchPacketIO());
+		addPatch(new PatchPlayer());
 		addPatch(new PatchPlayerRef());
 		addPatch(new PatchPluginManager());
 		addPatch(new PatchBundled());

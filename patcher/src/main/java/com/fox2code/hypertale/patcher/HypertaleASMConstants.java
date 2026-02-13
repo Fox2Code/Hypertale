@@ -54,6 +54,7 @@ public interface HypertaleASMConstants {
 	String IdentityTokenClaims = "com/hypixel/hytale/server/core/auth/JWTValidator$IdentityTokenClaims";
 	String PlayerAuthentication = "com/hypixel/hytale/server/core/auth/PlayerAuthentication";
 	String Entity = "com/hypixel/hytale/server/core/entity/Entity";
+	String Player = "com/hypixel/hytale/server/core/entity/entities/Player";
 	String AuthenticationPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/AuthenticationPacketHandler";
 	String HandshakeHandler = "com/hypixel/hytale/server/core/io/handlers/login/HandshakeHandler";
 	String PasswordPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/PasswordPacketHandler";
@@ -77,6 +78,7 @@ public interface HypertaleASMConstants {
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";
 	String HypertaleBasePlugin = "com/fox2code/hypertale/plugin/HypertaleBasePlugin";
+	String HypertalePlayer = "com/fox2code/hypertale/universe/HypertalePlayer";
 	String HypertalePlayerRef = "com/fox2code/hypertale/universe/HypertalePlayerRef";
 	String HypertaleWorld = "com/fox2code/hypertale/universe/HypertaleWorld";
 	String HypertaleBundled = "com/fox2code/hypertale/utils/HypertaleBundled";
