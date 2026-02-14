@@ -15,7 +15,7 @@ This mod improves performance and reduces memory pressure on the Hytale server!
 Memory pressure is how much memory is allocated per second.
 When high, this makes the java garbage collector slow the server down a lot!
 
-Used spark a lot to help with performance profiling.
+Spark was used extensively a lot to help with performance profiling.
 
 Hypertale should be compatible with existing performance mods for Hytale!
 

@@ -65,6 +65,7 @@ public final class Main {
 		} else if (!Boolean.getBoolean("hypertale.useInitWrapper")) {
 			System.setProperty("hypertale.initMethod", "direct");
 		}
+		MainPlus.setEditionProperties();
 		if (args.length == 0 && !isRunningFromTerminal()) {
 			// Avoid running a server from a double click.
 			System.out.println("[Hypertale] File double click detected! Skipping running!");
@@ -164,6 +165,14 @@ public final class Main {
 			EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION);
 			launchGame(EmptyArrays.EMPTY_STRING_ARRAY, true);
 			return;
+		} else if (args.length == 1 && "--patch-class-path".equals(args[0])) {
+			if (Boolean.getBoolean("hypertale.premium")) {
+				EarlyLogger.start(false);
+				MainPlus.patchAsClassPath();
+			} else {
+				System.out.println("This feature is only available on premium builds of Hypertale!");
+			}
+			return;
 		}
 		EarlyLogger.start(false);
 		EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION);
@@ -200,6 +209,12 @@ public final class Main {
 		}
 		if (args.length == 1 && "--noop".equals(args[0])) {
 			return;
+		}
+		if (HypertaleConfig.hyperOptimizeClassPath()) {
+			MainPlus.launchPatchedAsClassPath(args);
+			return;
+		} else if (HypertaleConfig.premiumHyperOptimizeClassPath) {
+			EarlyLogger.log("HyperOptimizeClassPath is only supported on premium builds of Hypertale!");
 		}
 		try {
 			launchGame(args, false);
@@ -263,6 +278,15 @@ public final class Main {
 
 	private static void runPatcher(HypertaleData actualData) throws IOException, InterruptedException {
 		EarlyLogger.log("Patching HytaleServer...");
+		execSelf("--run-patcher");
+		actualData.modifiedJarSize = HypertalePaths.hypertaleCacheJar.length();
+		actualData.writeTo(HypertalePaths.hypertaleCacheData);
+	}
+
+	public static void execSelf(String arg) throws IOException, InterruptedException {
+		if (!EarlyLogger.isDirectLogging()) {
+			throw new IllegalStateException("Invalid state!");
+		}
 		EarlyLogger.stop();
 		ArrayList<String> command = new ArrayList<>();
 		if (System.getProperty("os.name").toLowerCase(Locale.ROOT).startsWith("win")) {
@@ -272,14 +296,12 @@ public final class Main {
 		}
 		command.add("-jar");
 		command.add(HypertalePaths.getHypertaleExecJar().getAbsolutePath());
-		command.add("--run-patcher");
+		command.add(arg);
 		int returnCode = new ProcessBuilder(command).inheritIO().start().waitFor();
 		if (returnCode != 0 || !HypertalePaths.hypertaleCacheJar.exists()) {
 			throw new IOException("Patch failed with return code is " + returnCode);
 		}
 		EarlyLogger.start(true);
-		actualData.modifiedJarSize = HypertalePaths.hypertaleCacheJar.length();
-		actualData.writeTo(HypertalePaths.hypertaleCacheData);
 	}
 
 	// https://errorprone.info/bugpattern/SystemConsoleNull

@@ -75,6 +75,9 @@ public final class HypertaleModLoader {
 			HypertaleModGatherer modGatherer, boolean libraries,
 			LinkedHashMap<File, JsonObject> loadedModsEarly) throws IOException {
 		for (File file : (libraries ? modGatherer.getLibraries() : modGatherer.getHypertaleMods())) {
+			if (loadedModsEarly.containsKey(file)) {
+				continue;
+			}
 			try (JarFile jarFile = new JarFile(file)) {
 				JarEntry hypertaleModInfo = jarFile.getJarEntry("manifest.json");
 				if (hypertaleModInfo == null) continue;

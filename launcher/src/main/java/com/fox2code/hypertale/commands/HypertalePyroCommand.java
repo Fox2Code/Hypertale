@@ -54,6 +54,8 @@ final class HypertalePyroCommand extends AbstractCommand {
 	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
 		if (commandContext.isPlayer()) {
 			commandContext.sendMessage(PYRO_MESSAGE);
+		} else {
+			commandContext.sendMessage(PYRO_MESSAGE_ALT);
 		}
 		return null;
 	}

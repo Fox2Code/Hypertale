@@ -128,7 +128,6 @@ public final class NetUtils {
 			if (start == -1) return DEFAULT_ENCODING;
 			start += 10;
 		}
-		start += 9;
 		int end = contentType.indexOf(';', start);
 		if (end == -1) end = contentType.length();
 		try {

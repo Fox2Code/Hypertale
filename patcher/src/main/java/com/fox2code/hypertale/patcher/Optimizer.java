@@ -117,7 +117,7 @@ public final class Optimizer implements Opcodes {
 							((nextX = nextX.getNext()) != null && nextX.getOpcode() == ISTORE) &&
 							((nextX = nextX.getNext()) != null && nextX.getOpcode() == ICONST_0) &&
 							((nextX = nextX.getNext()) != null && nextX.getOpcode() == ISTORE)) &&
-					// Ignore self constructor, unless we know it's bad, not very precise.
+					// Ignore self-constructor, unless we know it's bad, not very precise.
 					!(next.getOpcode() != PUTSTATIC && next2.getOpcode() != AASTORE &&
 							methodNode.name.equals("<clinit>")))) {
 				return;

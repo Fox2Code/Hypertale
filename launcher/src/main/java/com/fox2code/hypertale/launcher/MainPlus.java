@@ -21,36 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.commands;
+package com.fox2code.hypertale.launcher;
 
-import com.fox2code.hypertale.launcher.BuildConfig;
-import com.fox2code.hypertale.loader.HypertalePlugin;
-import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.command.system.AbstractCommand;
-import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.CommandSender;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import java.io.IOException;
+import java.lang.instrument.Instrumentation;
 
-import java.util.concurrent.CompletableFuture;
-
-final class HypertaleVersionCommand extends AbstractCommand {
-	static final Message VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
-			Message.raw(": Hypertale version -> " + BuildConfig.HYPERTALE_VERSION +
-					" (" + HypertalePlugin.EDITION + ")"));
-
-	HypertaleVersionCommand() {
-		super("version", "Show Hypertale version!");
+/**
+ * This class is overwritten by Hypertale Plus
+ */
+final class MainPlus {
+	static void setEditionProperties() {
+		System.setProperty("hypertale.edition", "OSS");
+		System.setProperty("hypertale.premium", "false");
 	}
 
-	@Override
-	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
-		commandContext.sendMessage(VERSION_MESSAGE);
+	static Instrumentation tryGetInstrumentationFallback() {
 		return null;
 	}
 
-	@Override
-	public boolean hasPermission(@NonNull CommandSender sender) {
-		return true;
+	@SuppressWarnings("DoNotCallSuggester")
+	static void patchAsClassPath() throws IOException {
+		throw new IOException("Only premium versions of Hypertale can use this feature!");
+	}
+
+	@SuppressWarnings("DoNotCallSuggester")
+	static void launchPatchedAsClassPath(String[] args) throws IOException {
+		throw new IOException("Only premium versions of Hypertale can use this feature!");
 	}
 }

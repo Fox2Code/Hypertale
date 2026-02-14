@@ -44,6 +44,8 @@ import java.nio.file.Files;
 import java.util.Objects;
 
 public final class HypertalePlugin extends JavaPlugin {
+	public static final String EDITION = System.getProperty("hypertale.edition", "OSS");
+	public static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	private static final boolean INVALID_INSTALLATION =
 			HypertalePlugin.class.getClassLoader() != JavaPlugin.class.getClassLoader();
 	private static final boolean USE_HYPERTALE_INIT = Boolean.getBoolean("hypertale.useInitWrapper");
@@ -88,6 +90,9 @@ public final class HypertalePlugin extends JavaPlugin {
 		if (INVALID_INSTALLATION) return;
 		HypertaleModLoader.loadModsLate();
 		this.getLogger().atInfo().log("Successfully loaded!");
+		if (PREMIUM) {
+			this.getLogger().atInfo().log("Thank you for supporting Hypertale!");
+		}
 	}
 
 	private void tryInstallHypertaleFromModFolder() throws IOException {

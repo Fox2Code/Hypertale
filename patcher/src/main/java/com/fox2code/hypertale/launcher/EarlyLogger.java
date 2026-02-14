@@ -96,4 +96,8 @@ public final class EarlyLogger {
 			}
 		}
 	}
+
+	static boolean isDirectLogging() {
+		return printStream != null;
+	}
 }

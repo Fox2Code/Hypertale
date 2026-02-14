@@ -37,10 +37,12 @@ public final class HypertaleConfig {
 	private static final String HYPERTALE_CONFIG_COMMENT =
 			"Configuration for Hypertale " + BuildConfig.HYPERTALE_VERSION + "\n" +
 			"Do not modify unless you know what you are doing!";
+	private static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	public static String hytaleBranch = "release";
 	public static String secondaryJarName = "Server.jar";
 	public static boolean optimizePluginOnlyAPIs = true;
 	public static boolean aggressivelyOptimizePluginOnlyAPIs = false;
+	public static boolean premiumHyperOptimizeClassPath = false;
 	public static int watchdogWarnLagAfter = 10;
 	public static int watchdogExitAfter = 30;
 
@@ -144,6 +146,9 @@ public final class HypertaleConfig {
 				configFlags |= 0x02;
 			}
 		}
+		if (premiumHyperOptimizeClassPath && PREMIUM) {
+			configFlags |= 0x04;
+		}
 		return configFlags;
 	}
 
@@ -154,5 +159,9 @@ public final class HypertaleConfig {
 		if ("HytaleServer.jar".equals(secondaryJarName) || secondaryJarName.isEmpty()) {
 			secondaryJarName = "Server.jar";
 		}
+	}
+
+	public static boolean hyperOptimizeClassPath() {
+		return HypertaleConfig.premiumHyperOptimizeClassPath && !PREMIUM;
 	}
 }

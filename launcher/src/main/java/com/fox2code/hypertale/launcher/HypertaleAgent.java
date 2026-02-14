@@ -64,5 +64,8 @@ public final class HypertaleAgent {
 								.getMethod("getInstrumentation").invoke(null);
 			} catch (Exception _) {}
 		}
+		if (instrumentation == null) {
+			instrumentation = MainPlus.tryGetInstrumentationFallback();
+		}
 	}
 }

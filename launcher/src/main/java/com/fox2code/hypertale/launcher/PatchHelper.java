@@ -36,12 +36,18 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 final class PatchHelper {
+	private static boolean installed = false;
+
+	private PatchHelper() {}
+
 	@SuppressWarnings("unchecked")
 	private static final Consumer<BiFunction<String, byte[], byte[]>> initCLSetClassTransformer =
 			(Consumer<BiFunction<String, byte[], byte[]>>)
 					System.getProperties().get("hypertale.initCLSetClassTransformer");
 
 	static void install() {
+		if (installed) return;
+		installed = true;
 		Instrumentation instrumentation = HypertaleAgent.getInstrumentation();
 		if (instrumentation != null) {
 			EarlyLogger.log("Using agent transformer for patching!");

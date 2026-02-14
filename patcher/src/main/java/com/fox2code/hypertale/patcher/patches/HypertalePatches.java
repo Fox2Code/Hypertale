@@ -32,7 +32,7 @@ public final class HypertalePatches {
 	private static final ArrayList<HypertalePatch> noPatches = new ArrayList<>();
 	private static final ArrayList<HypertalePatch> globalHypertalePatches = new ArrayList<>();
 	private static final HashMap<String, ArrayList<HypertalePatch>> hypertaleClassPatches = new HashMap<>();
-	private static void addPatch(HypertalePatch hypertalePatch) {
+	static void addPatch(HypertalePatch hypertalePatch) {
 		if (hypertalePatch.targets == null) {
 			globalHypertalePatches.add(hypertalePatch);
 		} else {
@@ -58,6 +58,7 @@ public final class HypertalePatches {
 		addPatch(new PatchHytaleLogFormatter());
 		addPatch(new PatchRedirectToOptimisedGetPlayers());
 		addPatch(new PatchRedirectToOptimisedGetChunkIfInMemory());
+		HypertalePatchesPlus.registerPatches();
 	}
 
 	public static ClassNode patchClassNode(ClassNode classNode) {
