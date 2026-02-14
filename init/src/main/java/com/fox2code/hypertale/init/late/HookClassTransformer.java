@@ -36,7 +36,8 @@ import java.util.function.Consumer;
 
 public final class HookClassTransformer implements ClassTransformer {
 	private static final boolean isPatcherProcess = Boolean.getBoolean("hypertale.patcherProcess");
-	private static final HypertaleInfo hypertaleInfo = isPatcherProcess ? null : HypertaleInfo.findHypertale();
+	private static final HypertaleInfo hypertaleInfo = isPatcherProcess ? null :
+			HypertaleInfo.findHypertaleSingleplayer();
 
 	static {
 		if (!isPatcherProcess) {

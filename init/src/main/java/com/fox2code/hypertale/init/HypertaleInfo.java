@@ -44,11 +44,36 @@ public record HypertaleInfo(File hypertale, int hypertaleInitVer, String mainCla
 	private static final Attributes.Name mainClass = new Attributes.Name("Main-Class");
 
 	public static HypertaleInfo findHypertale() {
+		return findHypertale(mods);
+	}
+
+	public static HypertaleInfo findHypertaleSingleplayer() {
+		HypertaleInfo hypertaleInfo = findHypertale(mods);
+		// Used for singleplayer support
+		if (hypertaleInfo == null) {
+			File hytaleServer = HypertaleInfo.getSourceFile(HypertaleInfo.class).getAbsoluteFile();
+			File client = new File(hytaleServer.getParentFile().getParentFile(), "Client");
+			if (client.exists()) {
+				int dirCut = 6;
+				File data = hytaleServer;
+				while (dirCut-->0) {
+					data = data.getParentFile();
+				}
+				hypertaleInfo = findHypertale(new File(data, "UserData" + File.separator + "Mods"));
+			}
+		}
+		if (hypertaleInfo == null) {
+			hypertaleInfo = findHypertale(new File(hypertaleInit.getParentFile().getParentFile(), "Mods"));
+		}
+		return hypertaleInfo;
+	}
+
+	public static HypertaleInfo findHypertale(File folder) {
 		File launchJar = null;
 		int hypertaleInitVer = 0;
 		String mainClassName = null;
-		if (mods.isDirectory()) {
-			for (File file : Objects.requireNonNull(mods.listFiles())) {
+		if (folder.isDirectory()) {
+			for (File file : Objects.requireNonNull(folder.listFiles())) {
 				if (file.getName().endsWith(".jar")) {
 					try (JarFile jarFile = new JarFile(file)) {
 						int fileHypertaleInitVer = Integer.parseInt(jarFile.getManifest()

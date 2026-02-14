@@ -36,8 +36,6 @@ final class PatchPlugins extends HypertalePatch {
 	public ClassNode transform(ClassNode classNode) {
 		if (classNode.name.equals(PluginBase)) {
 			transformPluginBase(classNode);
-		} else if (classNode.name.equals(JavaPlugin)) {
-			transformJavaPlugin(classNode);
 		}
 		return classNode;
 	}
@@ -83,6 +81,4 @@ final class PatchPlugins extends HypertalePatch {
 		// Label Hypertale APIs explicitly.
 		injectHypertaleGetter(classNode, hypertalePlugin);
 	}
-
-	private static void transformJavaPlugin(ClassNode classNode) {}
 }

@@ -30,6 +30,7 @@ import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.HypertaleSystemInfo;
 import com.fox2code.hypertale.utils.SourceUtil;
+import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.ShutdownReason;
@@ -67,7 +68,12 @@ public final class HypertalePlugin extends JavaPlugin {
 			} catch (Exception e) {
 				this.getLogger().atSevere().withCause(e).log("Failed to setup Hypertale properly!");
 			}
-			HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
+			if (Constants.SINGLEPLAYER) {
+				HytaleServer.get().shutdownServer(ShutdownReason.UPDATE
+						.withMessage("Please reopen your world to join!"));
+			} else {
+				HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
+			}
 		}
 	}
 
@@ -93,18 +99,12 @@ public final class HypertalePlugin extends JavaPlugin {
 		}
 		if (USE_HYPERTALE_INIT) {
 			this.getLogger().atInfo().log("Hypertale is already installed but not working?");
+			this.getLogger().atWarning().withCause(new Throwable()).log();
 			return;
 		}
-		if (HypertalePlatform.getPlatform() == HypertalePlatform.WINDOWS) {
-			// Windows file locking prevents in place upgrading, let's assume
-			// the user has Hytale installed if Windows is detected!
-			this.getLogger().atSevere().log(HypertalePaths.hypertaleJar.getName() +
-					" need to be ran directly and should not be put in the mods folder!");
-			try (PrintStream printStream = new PrintStream(new File("hypertale.bat").getAbsoluteFile())) {
-				printStream.println("@echo off");
-				printStream.println("java -jar \"" + HypertalePaths.hypertaleJar.getAbsolutePath() + "\"");
-			}
-		} else if (!HypertalePaths.hypertaleCacheJust.isFile()) {
+		if (HypertalePlatform.getPlatform() != HypertalePlatform.WINDOWS &&
+				!HypertalePaths.hypertaleCacheJust.isFile() &&
+				!Constants.SINGLEPLAYER) {
 			if (!HypertalePaths.hypertaleCacheJust.createNewFile()) {
 				this.getLogger().atWarning().log("Failed to make the install marker!");
 			}
@@ -153,7 +153,16 @@ public final class HypertalePlugin extends JavaPlugin {
 			this.getLogger().atInfo().log("The server will be stopped and Hypertale will be active on restart!");
 		} else {
 			this.getLogger().atInfo().log("Previous Hypertale installation was not appropriate for your server host!");
-			File hypertaleInit = new File(HypertalePaths.hytaleEarlyPlugins, "HypertaleInit.jar");
+			File earlyPluginFolder = HypertalePaths.hytaleEarlyPlugins;
+			File userData = HypertalePaths.hypertaleJar.getParentFile().getParentFile();
+			this.getLogger().atInfo().log("UserData folder: " + userData.getPath());
+			if (Constants.SINGLEPLAYER && new File(userData, "Settings.json").exists()) {
+				earlyPluginFolder = new File(userData, "EarlyPlugins");
+				if (!earlyPluginFolder.isDirectory() && !earlyPluginFolder.mkdirs()) {
+					throw new IOException("Failed to create early plugins folder!");
+				}
+			}
+			File hypertaleInit = new File(earlyPluginFolder, "HypertaleInit.jar");
 			try (InputStream inputStream = new BufferedInputStream(
 					Objects.requireNonNull(HypertalePlugin.class.getClassLoader()
 									.getResourceAsStream(HYPERTALE_INIT),
