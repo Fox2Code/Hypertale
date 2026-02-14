@@ -45,9 +45,9 @@ final class HypertaleStatusCommand extends AbstractCommand {
 
 	@Override
 	protected @Nullable CompletableFuture<Void> execute(@NonNull CommandContext commandContext) {
+		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
 		commandContext.sendMessage(HypertaleStatusCommand.HYTALE_VERSION_MESSAGE);
 		commandContext.sendMessage(HypertaleVersionCommand.VERSION_MESSAGE);
-		commandContext.sendMessage(HypertaleSystemCommand.SYSTEM_MESSAGE);
 		commandContext.sendMessage(HypertaleStatusCommand.HYPERTALE_INIT_MESSAGE);
 		return null;
 	}
