@@ -263,6 +263,13 @@ public final class Main {
 		MixinLoader.initialize();
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
 		MixinLoader.postInitialize();
+		startHytale(args);
+	}
+
+	static void startHytale(String... args) {
+		if (!EarlyLogger.isDirectLogging()) {
+			throw new IllegalStateException("Game looks already launched!");
+		}
 		if (HypertalePaths.hypertaleCacheJust.isFile() &&
 				!HypertalePaths.hypertaleCacheJust.delete()) {
 			EarlyLogger.log("Failed to delete \".hypertale/.just\"");
