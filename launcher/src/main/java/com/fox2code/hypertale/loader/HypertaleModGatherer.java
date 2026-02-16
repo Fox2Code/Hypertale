@@ -44,15 +44,18 @@ public final class HypertaleModGatherer {
 	private final File modSyncBootstrap;
 	private final int modHash;
 	private final List<ClassPathModCandidate> classPathManifests;
+	private final boolean usingMixins;
 
 	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries,
-								 File modSyncBootstrap, int modHash, List<ClassPathModCandidate> classPathManifests) {
+								 File modSyncBootstrap, int modHash, List<ClassPathModCandidate> classPathManifests,
+								 boolean usingMixins) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
 		this.libraries = libraries;
 		this.modSyncBootstrap = modSyncBootstrap;
 		this.modHash = modHash;
 		this.classPathManifests = classPathManifests;
+		this.usingMixins = usingMixins;
 	}
 
 	public List<File> getHypertaleMods() {
@@ -79,12 +82,17 @@ public final class HypertaleModGatherer {
 		return this.classPathManifests;
 	}
 
+	public boolean isUsingMixins() {
+		return this.usingMixins;
+	}
+
 	public static HypertaleModGatherer gatherModsDev() {
 		return gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
 	}
 
 	public static HypertaleModGatherer gatherMods(String[] args) {
 		// TODO: Process launch arguments
+		boolean[] useMixins = new boolean[]{false};
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
 		ArrayList<File> libraries = new ArrayList<>();
@@ -93,7 +101,7 @@ public final class HypertaleModGatherer {
 			modSyncBootstrap = appendEarlyLoaderMods(mods);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
-			appendMods(hypertaleMods, mods, libraries);
+			appendMods(hypertaleMods, mods, libraries, useMixins);
 		}
 		long[] fileSizes = new long[mods.size()];
 		for (int i = 0; i < fileSizes.length; i++) {
@@ -103,10 +111,10 @@ public final class HypertaleModGatherer {
 		return new HypertaleModGatherer(Collections.unmodifiableList(hypertaleMods),
 				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
 				modSyncBootstrap, Arrays.hashCode(fileSizes),
-				Collections.unmodifiableList(gatherClassPathMods()));
+				Collections.unmodifiableList(gatherClassPathMods(useMixins)), useMixins[0]);
 	}
 
-	private static List<ClassPathModCandidate> gatherClassPathMods() {
+	private static List<ClassPathModCandidate> gatherClassPathMods(boolean[] useMixins) {
 		try {
 			Enumeration<URL> urlEnumeration = HypertaleModGatherer.class.getClassLoader().getResources("manifest.json");
 			ArrayList<ClassPathModCandidate> classPathManifests = new ArrayList<>();
@@ -125,6 +133,15 @@ public final class HypertaleModGatherer {
 						if (file.exists() && !HypertalePaths.hypertaleJar.equals(file) &&
 								!HypertalePaths.getHytaleJar().equals(file)) {
 							classPathManifests.add(new ClassPathModCandidate(url, file));
+						}
+					}
+				}
+				if (!useMixins[0]) {
+					try (InputStream inputStream = url.openStream()) {
+						byte[] manifestData = IOUtils.readAllBytes(inputStream);
+						String modInfo = new String(manifestData, StandardCharsets.UTF_8);
+						if (modInfo.contains("\"HypertaleMixinConfig\"")) {
+							useMixins[0] = true;
 						}
 					}
 				}
@@ -151,7 +168,8 @@ public final class HypertaleModGatherer {
 		return modSyncBootstrap;
 	}
 
-	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods, ArrayList<File> libraries) {
+	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods,
+								   ArrayList<File> libraries, boolean[] useMixins) {
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleMods.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar") &&
 					!file.getName().equals(HypertalePaths.hypertaleJar.getName())) {
@@ -167,6 +185,9 @@ public final class HypertaleModGatherer {
 							modInfo = new String(IOUtils.readAllBytes(inputStream), StandardCharsets.UTF_8);
 						} catch (RuntimeException _) {
 							modInfo = "";
+						}
+						if (modInfo.contains("\"HypertaleMixinConfig\"")) {
+							useMixins[0] = true;
 						}
 						if (modInfo.contains("\"Hypertale")) {
 							hypertaleMods.add(file);

@@ -167,7 +167,7 @@ public final class Main {
 			return;
 		} else if (args.length == 1 && "--patch-class-path".equals(args[0])) {
 			if (Boolean.getBoolean("hypertale.premium")) {
-				EarlyLogger.start(false);
+				EarlyLogger.start(true);
 				MainPlus.patchAsClassPath();
 			} else {
 				System.out.println("This feature is only available on premium builds of Hypertale!");
@@ -231,6 +231,11 @@ public final class Main {
 		HypertaleModGatherer modGatherer = dev ?
 				HypertaleModGatherer.gatherModsDev() :
 				HypertaleModGatherer.gatherMods(args);
+		if (modGatherer.isUsingMixins()) {
+			EarlyLogger.log("Detected Mixin usage! (Mixin system will be enabled)");
+		} else {
+			EarlyLogger.log("No Mixin usage detected! (Mixin system will be disabled)");
+		}
 		if (args.length == 0) {
 			if (HypertalePaths.hytaleAssets.exists()) {
 				args = new String[]{"--assets", "Assets.zip"};
@@ -257,8 +262,10 @@ public final class Main {
 		if (MainPlus.checkHaltLaunchGame(args)) {
 			return;
 		}
-		MixinLoader.preInitializeMixin();
-		PatchHelper.install();
+		if (modGatherer.isUsingMixins()) {
+			MixinLoader.preInitializeMixin();
+		}
+		PatchHelper.install(modGatherer.isUsingMixins());
 		if (modGatherer.getModSyncBootstrap() != null &&
 				// Don't run modSyncBootstrap twice if init already called it!
 				!Boolean.getBoolean("hypertale.modSyncBootstrapInit")) {
@@ -267,9 +274,13 @@ public final class Main {
 				Class.forName(HypertaleCompatibility.classModSyncBootstrap, true, urlClassLoader);
 			} catch (LinkageError | ClassNotFoundException _) {}
 		}
-		MixinLoader.initialize();
+		if (modGatherer.isUsingMixins()) {
+			MixinLoader.initialize();
+		}
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
-		MixinLoader.postInitialize();
+		if (modGatherer.isUsingMixins()) {
+			MixinLoader.postInitialize();
+		}
 		startHytale(args);
 	}
 

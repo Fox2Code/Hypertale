@@ -35,7 +35,7 @@ final class HookClassLoader extends URLClassLoader {
 	private final Package hytaleExamplePackage;
 	private final Object packageMakeLock = new Object();
 	private BiFunction<String, byte[], byte[]> classTransformer;
-	private Class<?> firstHytaleClass = null;
+	private volatile Class<?> firstHytaleClass = null;
 
 	public HookClassLoader(URL[] urls, Package hytaleExamplePackage) {
 		super(urls, ClassLoader.getSystemClassLoader().getParent());
@@ -107,5 +107,9 @@ final class HookClassLoader extends URLClassLoader {
 
 	public void setClassTransformer(BiFunction<String, byte[], byte[]> classTransformer) {
 		this.classTransformer = classTransformer;
+	}
+
+	static {
+		ClassLoader.registerAsParallelCapable();
 	}
 }

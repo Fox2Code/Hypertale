@@ -98,6 +98,8 @@ class HypertaleGradlePlugin implements Plugin<Project> {
             group = "Hypertale"
             description = "Run Hypertale with your mod loaded"
             dependsOn(project.tasks.assemble)
+            // We must cap Hytale server RAM usage so it does not crash Linux machines!
+            jvmArgs("-Xmx6G")
         }
         project.tasks.register("generateBuildConfig").configure {
             group = "Hypertale"

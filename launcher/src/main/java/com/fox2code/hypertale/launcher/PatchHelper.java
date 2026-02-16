@@ -45,7 +45,7 @@ final class PatchHelper {
 			(Consumer<BiFunction<String, byte[], byte[]>>)
 					System.getProperties().get("hypertale.initCLSetClassTransformer");
 
-	static void install() {
+	static void install(final boolean useMixins) {
 		if (installed) return;
 		installed = true;
 		Instrumentation instrumentation = HypertaleAgent.getInstrumentation();
@@ -55,7 +55,7 @@ final class PatchHelper {
 				@Override
 				public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 										ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-					if (className.startsWith("com/hypixel/hytale/")) {
+					if (useMixins && className.startsWith("com/hypixel/hytale/")) {
 						classfileBuffer = MixinLoader.transformClass(className.replace('/', '.'), classfileBuffer);
 					}
 					if (loader == null || loader == Optimizer.class.getClassLoader() ||
@@ -74,7 +74,9 @@ final class PatchHelper {
 			});
 		} else if (initCLSetClassTransformer != null) {
 			EarlyLogger.log("Using late transformer for patching!");
-			initCLSetClassTransformer.accept(MixinLoader::transformClass);
+			if (useMixins) {
+				initCLSetClassTransformer.accept(MixinLoader::transformClass);
+			}
 		} else {
 			throw new IllegalStateException("Unsupported environment!");
 		}
