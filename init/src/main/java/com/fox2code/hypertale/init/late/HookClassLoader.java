@@ -76,7 +76,6 @@ final class HookClassLoader extends URLClassLoader {
 					}
 				}
 				if (hytaleClass != null) {
-					System.out.println("Loaded first class: " + hytaleClass.getName());
 					return hytaleClass;
 				}
 			}
