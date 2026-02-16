@@ -43,6 +43,7 @@ public final class HypertaleConfig {
 	public static boolean optimizePluginOnlyAPIs = true;
 	public static boolean aggressivelyOptimizePluginOnlyAPIs = false;
 	public static boolean premiumHyperOptimizeClassPath = false;
+	public static boolean premiumCheckJarValidity = true;
 	public static int watchdogWarnLagAfter = 10;
 	public static int watchdogExitAfter = 30;
 
@@ -163,5 +164,9 @@ public final class HypertaleConfig {
 
 	public static boolean hyperOptimizeClassPath() {
 		return HypertaleConfig.premiumHyperOptimizeClassPath && !PREMIUM;
+	}
+
+	public static boolean checkJarValidity() {
+		return HypertaleConfig.premiumCheckJarValidity && PREMIUM;
 	}
 }

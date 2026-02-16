@@ -124,6 +124,9 @@ compileJava {
         ClassNode classNode = new ClassNode()
         ClassReader classReader = new ClassReader(hypertaleJavaPlugin.bytes)
         classReader.accept(classNode, 0)
+        if (classNode.permittedSubclasses != null) {
+            classNode.permittedSubclasses.clear()
+        }
         classNode.visitPermittedSubclass("com/hypixel/hytale/server/core/plugin/JavaPlugin")
         classNode.visitPermittedSubclass("com/hypixel/hytale/plugin/early/ClassTransformer")
         ClassWriter classWriter = new ClassWriter(0)

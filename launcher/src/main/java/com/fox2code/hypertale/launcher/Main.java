@@ -126,7 +126,7 @@ public final class Main {
 								EarlyLogger.log("Pre-patching the game with " + mainClass);
 								method.invoke(null, (Object) new String[]{input.getAbsolutePath(),
 										HypertalePaths.hypertalePrePatched.getAbsolutePath()});
-								if (HypertalePaths.hypertalePrePatched.isFile()) {
+								if (MainPlus.checkHytaleJarFile(HypertalePaths.hypertalePrePatched)) {
 									input = HypertalePaths.hypertalePrePatched;
 								}
 							} catch (Exception e) {
@@ -177,11 +177,11 @@ public final class Main {
 		EarlyLogger.start(false);
 		EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION);
 		File hytaleJar = HypertalePaths.getHytaleJar();
-		if (!hytaleJar.exists()) {
+		if (!hytaleJar.isFile()) {
 			EarlyLogger.log("Cannot find original HytaleServer.jar");
+			EarlyLogger.stop();
 			return;
 		}
-		// TODO: Detect singleplayer mode
 		HypertaleConfig.load();
 		HypertaleData cachedData = null;
 		if (HypertalePaths.hypertaleCacheJar.exists() &&
@@ -242,13 +242,20 @@ public final class Main {
 				}
 			}
 		}
-		if (HypertalePaths.hypertaleCacheJar.exists()) {
+		if (HypertalePaths.hypertaleCacheJar.isFile()) {
+			if (!MainPlus.checkHytaleJarFile(HypertalePaths.hypertaleCacheJar)) {
+				EarlyLogger.log("Patched jar is invalid, or corrupted!");
+				return;
+			}
 			DependencyHelper.addFileToClasspath(HypertalePaths.hypertaleCacheJar);
 		} else if (!dev) {
 			throw new FileNotFoundException("Failed to get ./.hypertale/HytaleServer.jar");
 		}
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
+		}
+		if (MainPlus.checkHaltLaunchGame(args)) {
+			return;
 		}
 		MixinLoader.preInitializeMixin();
 		PatchHelper.install();

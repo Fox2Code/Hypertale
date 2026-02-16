@@ -127,7 +127,7 @@ public final class DependencyHelper {
 				}
 			} else {
 				if (!justDownloaded) {
-					// Assume file is corrupted if load failed.
+					// Assume the file is corrupted if the load failed.
 					if (file.exists() && !file.delete()) file.deleteOnExit();
 					loadDependency(dependency);
 					return;

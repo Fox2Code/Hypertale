@@ -23,6 +23,9 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.loader.HypertaleConfig;
+
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 
@@ -47,5 +50,16 @@ final class MainPlus {
 	@SuppressWarnings("DoNotCallSuggester")
 	static void launchPatchedAsClassPath(String[] args) throws IOException {
 		throw new IOException("Only premium versions of Hypertale can use this feature!");
+	}
+
+	static boolean checkHytaleJarFile(File file) {
+		if (HypertaleConfig.checkJarValidity()) {
+			throw new RuntimeException("Only premium versions of Hypertale can use this feature!");
+		}
+		return file.isFile();
+	}
+
+	static boolean checkHaltLaunchGame(String[] args) {
+		return false;
 	}
 }
