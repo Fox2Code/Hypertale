@@ -5,6 +5,8 @@ import org.objectweb.asm.commons.ClassRemapper
 import org.objectweb.asm.commons.SimpleRemapper
 import org.objectweb.asm.tree.ClassNode
 
+import java.util.jar.JarFile
+
 buildscript {
     dependencies {
         classpath "org.ow2.asm:asm-commons:${project['asm.version']}"
@@ -79,7 +81,18 @@ dependencies {
 if (!Boolean.getBoolean("idea.sync.active")) {
     processResources {
         filesMatching("manifest.json") {
-            expand(version: project.version)
+            String serverVersion = null
+            if (workInProgress.isFile()) {
+                try (JarFile wipJarFile = new JarFile(workInProgress)) {
+                    serverVersion = wipJarFile.getManifest().getMainAttributes()
+                            .getValue("Implementation-Version")
+                }
+            }
+            if (serverVersion != null) {
+                expand(version: project['hypertale.version'], serverVersion: serverVersion)
+            } else {
+                expand(version: project['hypertale.version'], serverVersion: "Unknown")
+            }
         }
     }
 }

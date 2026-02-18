@@ -34,6 +34,8 @@ import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 
+import java.util.jar.JarFile
+
 class HypertaleGradlePlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
@@ -204,9 +206,22 @@ class HypertaleGradlePlugin implements Plugin<Project> {
             }
             // Using filesMatching in processResources during import confuse IntellijIDEA
             if (!HypertaleIntellijIDEASupport.ideaSync) {
+                String serverVersion = "Unknown"
+                File hytaleServer = HypertaleHytaleDownloader.getVanillaServer(
+                        hypertaleGradleFolder, config)
+                if (hytaleServer == null) {
+                    hytaleServer = HypertalePatcher.getPatchedHypertale(
+                            hypertaleGradleFolder, config.getHytaleBranch())
+                }
+                if (hytaleServer != null) {
+                    try (JarFile jarFile = new JarFile(hytaleServer)) {
+                        serverVersion = jarFile.manifest.mainAttributes.getValue(
+                                "Implementation-Version")
+                    }
+                }
                 project.tasks.processResources {
                     filesMatching("manifest.json") {
-                        expand(version: project.version)
+                        expand(version: project.version, serverVersion: serverVersion)
                     }
                 }
             }

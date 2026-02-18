@@ -12,11 +12,12 @@
   ],
   "Website": "https://github.com/Fox2Code/Hypertale",
   "Main": "com.fox2code.hypertale.loader.HypertalePlugin",
-  "ServerVersion": "*",
+  "ServerVersion": "${serverVersion}",
   "Dependencies": {},
   "OptionalDependencies": {},
   "DisabledByDefault": false,
   "IncludesAssetPack": true,
   "HypertaleJavaAgent": "com.fox2code.hypertale.launcher.HypertaleAgent",
-  "HypertalePreLoad": true
+  "HypertalePreLoad": true,
+  "HypertaleServerVersion": "*"
 }

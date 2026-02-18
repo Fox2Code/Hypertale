@@ -1,3 +1,7 @@
+/dev/out
+/init/out
+/launcher/out
+/patcher/out
 
 .gradle/
 build/

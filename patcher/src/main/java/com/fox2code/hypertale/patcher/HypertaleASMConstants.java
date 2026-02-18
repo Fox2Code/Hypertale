@@ -46,7 +46,9 @@ public interface HypertaleASMConstants {
 	String Long2ObjectConcurrentHashMap = "com/hypixel/fastutil/longs/Long2ObjectConcurrentHashMap";
 	// Hytale ASM Constants
 	String BuilderToolsPlugin = "com/hypixel/hytale/builtin/buildertools/BuilderToolsPlugin";
+	String KeyedCodec = "com/hypixel/hytale/codec/KeyedCodec";
 	String PluginIdentifier = "com/hypixel/hytale/common/plugin/PluginIdentifier";
+	String PluginManifest = "com/hypixel/hytale/common/plugin/PluginManifest";
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
 	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
 	String ClassTransformer = "com/hypixel/hytale/plugin/early/ClassTransformer";
@@ -74,6 +76,7 @@ public interface HypertaleASMConstants {
 	String DumpUtil = "com/hypixel/hytale/server/core/util/DumpUtil";
 	// Hypertale ASM Constants
 	String HypertalePlayerAuthentication = "com/fox2code/hypertale/auth/HypertalePlayerAuthentication";
+	String HypertaleKeyedCodec = "com/fox2code/hypertale/io/HypertaleKeyedCodec";
 	String HypertaleRecyclableByteBuf = "com/fox2code/hypertale/io/HypertaleRecyclableByteBuf";
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";
