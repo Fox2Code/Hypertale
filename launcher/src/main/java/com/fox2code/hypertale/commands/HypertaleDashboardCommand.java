@@ -23,29 +23,28 @@
  */
 package com.fox2code.hypertale.commands;
 
-import com.fox2code.hypertale.launcher.BuildConfig;
-import com.hypixel.hytale.server.core.command.system.CommandSender;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
+import com.fox2code.hypertale.dashboard.HypertaleDashboard;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
 
-public final class HypertaleCommand extends AbstractCommandCollection {
-	public HypertaleCommand() {
-		super("hypertale", """
-		Hypertale is a mod for the HytaleServer software bringing extra APIs and optimizations!
-		
-		Current Hypertale version: %version%
-		Source code: https://github.com/Fox2Code/Hypertale
-		""".replace("%version%", BuildConfig.HYPERTALE_VERSION));
-		this.addSubCommand(new HypertaleVersionCommand());
-		this.addSubCommand(new HypertaleSystemCommand());
-		this.addSubCommand(new HypertaleStatusCommand());
-		this.addSubCommand(new HypertalePyroCommand());
-		this.addSubCommand(new HypertaleDashboardCommand());
-		this.addAliases("hyper");
+final class HypertaleDashboardCommand extends AbstractPlayerCommand {
+	HypertaleDashboardCommand() {
+		super("dashboard", "Open Hypertale in-game dashboard!");
 	}
 
 	@Override
-	public boolean hasPermission(@NonNull CommandSender sender) {
-		return true;
+	protected void execute(@NonNull CommandContext commandContext, @NonNull Store<EntityStore> store,
+						   @NonNull Ref<EntityStore> ref, @NonNull PlayerRef playerRef, @NonNull World world) {
+		Player player = playerRef.hypertale().getPlayer();
+		if (player != null) {
+			player.getPageManager().openCustomPage(ref, store, new HypertaleDashboard(playerRef));
+		}
 	}
 }

@@ -1,0 +1,168 @@
+$C = "../Common.ui";
+$Theme = "HypertaleTheme.ui";
+
+Group {
+  Anchor: (Width: 600, Height: 400);
+  LayoutMode: Left;
+
+  Group #LeftPanel {
+    Anchor: (Width: 180);
+    Background: #0a1119(0.95);
+    LayoutMode: Top;
+    Padding: (Full: 16);
+
+    Label {
+      Text: "MENU";
+      Anchor: (Height: 25);
+      Style: (
+        FontSize: 11,
+        TextColor: #4a5568,
+        RenderUppercase: true,
+        LetterSpacing: 2
+      );
+    }
+
+    Group { Anchor: (Height: 8); }
+
+    Label #OverviewLabel {
+      Text: "> Overview";
+      Anchor: (Height: 30);
+      Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+    }
+
+    Label #StatisticsLabel {
+      Text: "  Statistics";
+      Anchor: (Height: 30);
+      Style: (FontSize: 14, TextColor: #6e7da1);
+    }
+
+    Label #Settings {
+      Text: "  Settings";
+      Anchor: (Height: 30);
+      Style: (FontSize: 14, TextColor: #6e7da1);
+    }
+
+    Label {
+      Text: "  About";
+      Anchor: (Height: 30);
+      Style: (FontSize: 14, TextColor: #6e7da1);
+    }
+  }
+
+  Group #RightPanel {
+    FlexWeight: 1;
+    Background: #141c26(0.98);
+    LayoutMode: Top;
+    Padding: (Full: 20);
+
+    Label #PanelTitle {
+      Text: "Overview";
+      Anchor: (Height: 40);
+      Style: (
+        FontSize: 24,
+        TextColor: #ffffff,
+        RenderBold: true
+      );
+    }
+
+    Group {
+      Anchor: (Height: 1);
+      Background: #2b3542;
+    }
+
+    Group { Anchor: (Height: 12); }
+
+    Label #Description {
+      Text: "Loading...";
+      Anchor: (Height: 35);
+      Style: (FontSize: 14, TextColor: #96a9be);
+    }
+
+    Group #StatsGrid1 {
+      LayoutMode: Left;
+      Anchor: (Height: 70);
+
+      Group {
+        FlexWeight: 1;
+        LayoutMode: Top;
+
+        Label #StatPlayers {
+          Text: "???";
+          Anchor: (Height: 32);
+          Style: $Theme.@StatLabelStyle;
+        }
+        Label {
+          Text: "Players";
+          Anchor: (Height: 18);
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+      }
+
+      Group {
+        FlexWeight: 1;
+        LayoutMode: Top;
+
+        Label #StatUptime {
+          Text: "???";
+          Anchor: (Height: 32);
+          Style: $Theme.@StatLabelLoadingStyle;
+        }
+        Label {
+          Text: "Uptime";
+          Anchor: (Height: 18);
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+      }
+
+      Group {
+        FlexWeight: 1;
+        LayoutMode: Top;
+
+        Label #StatCPU {
+          Text: "???";
+          Anchor: (Height: 32);
+          Style: $Theme.@StatLabelLoadingStyle;
+        }
+        Label {
+          Text: "CPU Load";
+          Anchor: (Height: 18);
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+      }
+    }
+
+    Group #StatsGrid2 {
+      LayoutMode: Left;
+      Anchor: (Height: 70);
+
+      Group {
+        FlexWeight: 1;
+        LayoutMode: Top;
+
+        Label #StatMemory {
+          Text: "???";
+          Anchor: (Height: 32);
+          Style: $Theme.@StatLabelLoadingStyle;
+        }
+        Label {
+          Text: "Memory";
+          Anchor: (Height: 18);
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+      }
+    }
+
+    Group { FlexWeight: 1; }
+
+    Group {
+      LayoutMode: Right;
+      Anchor: (Height: 40);
+
+      TextButton #CloseButton {
+        Text: "CLOSE";
+        Anchor: (Width: 100, Height: 36);
+        Style: $Theme.@CloseButtonStyle;
+      }
+    }
+  }
+}

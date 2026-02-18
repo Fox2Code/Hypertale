@@ -1,0 +1,179 @@
+/* Hypertale JavaDoc CSS */
+
+@import url('fonts/JetBrainsMono.css');
+
+:root {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+    font-optical-sizing: none;
+    --hypertale-color: #EE00EE;
+    --hypertale-color-secondary: #770077;
+    --hypertale-text-color: #CCCCCC;
+    --hypertale-text-minor-color: #999999;
+    --hypertale-important-text-color: #EEEEEE;
+    --hypertale-primary-background-color: #2B2B2B;
+    --hypertale-secondary-background-color: #313335;
+    --hypertale-ternary-background-color: #36383C;
+    --hypertale-quaternary-background-color: #5C6367;
+    --hypertale-tab-background-color: #393A3D;
+    --hypertale-tab-selected-background-color: #404144;
+    --hypertale-link-color: #6897BB;
+    --hypertale-border-color: #444444;
+    --hypertale-primitive-type-color: #CC7832;
+    --hypertale-annotation-color: #BBB529;
+}
+
+body {
+    --max-content-width: max(1700px, 75vw);
+    --code-font-family: 'JetBrains Mono', 'DejaVu Sans Mono', monospace;
+    --body-background-color: var(--hypertale-primary-background-color);
+    --body-text-color: var(--hypertale-text-color);
+    --border-color: var(--hypertale-border-color);
+    --title-color: var(--hypertale-important-text-color);
+    --link-color: var(--hypertale-link-color);
+    --link-color-active: #0056b3;
+    --toc-background-color: var(--hypertale-secondary-background-color);
+    --toc-highlight-color: var(--hypertale-primary-background-color);
+    --toc-hover-color: #2A2A2B;
+    --subnav-link-color: var(--hypertale-link-color);
+    --subnav-background-color: var(--hypertale-secondary-background-color);
+    --section-background-color: transparent;
+    --detail-background-color: var(--hypertale-secondary-background-color);
+    --even-row-color: var(--hypertale-primary-background-color);
+    --odd-row-color: var(--hypertale-secondary-background-color);
+    --table-header-color: var(--hypertale-secondary-background-color);
+    --member-heading-background-color: var(--hypertale-secondary-background-color);
+    --code-background-color: var(--hypertale-ternary-background-color);
+    --block-text-color: var(--hypertale-text-color);
+    --selected-text-color: var(--hypertale-important-text-color);
+    --selected-background-color: var(--hypertale-tab-selected-background-color);
+    --navbar-background-color: var(--hypertale-tab-background-color);
+    --search-input-background-color: var(--hypertale-ternary-background-color);
+    --search-input-text-color: var(--hypertale-text-color);
+}
+
+kbd {
+    background-color: #333333;
+    border-color: var(--hypertale-border-color);
+    box-shadow: none;
+}
+
+a::after {
+    content: none !important;
+    display: none !important;
+}
+
+#navbar-top.top-nav {
+    background-color: var(--hypertale-ternary-background-color);
+}
+
+.annotations {
+    color: var(--hypertale-annotation-color);
+}
+
+code .hypertale-modifier, .modifiers, .inherited-list > code,
+code .hypertale-primitive, .member-signature .hypertale-primitive,
+code .hypertale-keyword, .type-signature .hypertale-keyword,
+.member-signature .hypertale-keyword {
+    color: var(--hypertale-primitive-type-color);
+}
+
+.index-page dt .hypertale-keyword, .index-page dt .hypertale-modifier {
+    color: var(--hypertale-primitive-type-color);
+}
+
+.search-result-desc {
+    color: var(--hypertale-text-minor-color) !important;
+}
+
+main {
+    padding-bottom: 64px;
+}
+
+.summary-table {
+    border-top-style: none;
+    border-left-style: none;
+    border-right-style: none;
+}
+
+ol.toc-list > li > a {
+    transition: background-color 0.05s, color 0.05s;
+    border-left-style: solid;
+    border-radius: 8px 0 0 8px;
+    border-width: 0;
+    border-left-width: 1px;
+    border-color: transparent;
+}
+
+ol.toc-list > li > a.current-selection {
+    transition: none;
+}
+
+.hypertale-nav-title {
+    font-size: 1.2em;
+}
+
+.hypertale-overview-title {
+    font-size: 1.5em;
+}
+
+.hypertale-name {
+    font: -moz-field;
+    font-family: var(--code-font-family), monospace;
+    color: var(--hypertale-color);
+    white-space: nowrap;
+    user-select: contain;
+    -moz-user-select: text;
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+}
+.hypertale-name::before,
+.hypertale-name::after {
+    content: "\200B"; /* Zero-width space */
+    user-select: none;
+    -moz-user-select: none;
+}
+
+/*a[href]:hover .hypertale-package, a[href]:active .hypertale-package {
+    color: var(--hypertale-color-secondary);
+}*/
+
+.hypertale-package::selection, .hypertale-name::selection {
+    color: var(--hypertale-color);
+    background-color: var(--hypertale-color-secondary);
+}
+
+.main-grid nav.toc button {
+    border: 1px solid transparent;
+}
+
+.main-grid nav.toc button span {
+    display: inline;
+}
+
+.main-grid nav.toc button.hide-sidebar span::after {
+    content: "<";
+}
+
+.main-grid nav.toc button.show-sidebar span::before {
+    content: ">";
+}
+
+.main-grid nav.toc button img {
+    display: none;
+}
+
+.caption span.hypertale-package {
+    padding: 0;
+}
+
+ul.nav-list li.nav-bar-cell1-rev {
+    margin: 0;
+}
+
+ul.nav-list li, ul.nav-list li.nav-bar-cell1-rev {
+    border-radius: 4px;
+}

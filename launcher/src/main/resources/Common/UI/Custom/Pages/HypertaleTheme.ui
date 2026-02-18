@@ -1,0 +1,23 @@
+@CloseButtonStyle = TextButtonStyle(
+    Default: (Background: #2b3542, LabelStyle: (FontSize: 13, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+    Hovered: (Background: #3b4552, LabelStyle: (FontSize: 13, TextColor: #b6c9de, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+    Pressed: (Background: #1b2532, LabelStyle: (FontSize: 13, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center))
+);
+@StatLabelStyle = LabelStyle(
+    FontSize: 26, TextColor: #EE00EE, RenderBold: true
+);
+@StatLabelLoadingStyle = LabelStyle(
+    FontSize: 26, TextColor: #777777, RenderBold: true
+);
+@StatLabelFineStyle = LabelStyle(
+    FontSize: 26, TextColor: #00EE00, RenderBold: true
+);
+@StatLabelWarnStyle = LabelStyle(
+    FontSize: 26, TextColor: #EEEE00, RenderBold: true
+);
+@StatLabelSeriousStyle = LabelStyle(
+    FontSize: 26, TextColor: #EE4E00, RenderBold: true
+);
+@StatLabelSevereStyle = LabelStyle(
+    FontSize: 26, TextColor: #EE0000, RenderBold: true
+);

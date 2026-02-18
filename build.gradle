@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 buildscript {
     ext {
         spotlessVersion = (project['spotless.version'] as String)
@@ -24,7 +26,14 @@ if (!runDirectory.isDirectory() && !runDirectory.mkdirs()) {
 
 final File mavenLocalFile = new File(System.getProperty("user.home") +
         File.separator + ".m2" + File.separator + "repository")
-final File destLocation = new File(project.layout.buildDirectory.get().asFile, "repository")
+final File releaseFolder = new File(project.layout.buildDirectory.get().asFile, "release")
+final File mavenDestination = new File(releaseFolder, "maven")
+final File javaDocDestination = new File(releaseFolder,
+        "javadoc" + File.separator + "hypertale")
+final File javaDocSourceRoot = new File(rootDir, "dev" + File.separator +
+        "src" + File.separator + "main" + File.separator + "javadoc")
+final File javadocExtraCSS = new File(javaDocSourceRoot,
+        "resource-files" + File.separator + "hypertale-javadoc.css")
 
 tasks.register('publishToMavenLocal', Task).configure {
     shouldRunAfter("build")
@@ -133,12 +142,132 @@ tasks.register("runServer").configure {
     dependsOn(":launcher:runServer")
 }
 tasks.register("cleanRelease", Delete) {
-    delete destLocation
+    delete releaseFolder
+}
+record ReplaceAction(String from, String to, boolean firstOnly) {
+    ReplaceAction(String from, String to) {
+        this(from, to, false)
+    }
+
+    String replace(String text) {
+        if (this.firstOnly) {
+            int index = text.indexOf(this.from)
+            if (index == -1) return text;
+            return new StringBuilder(text.length() + this.to.length() - this.from.length())
+                    .append(text, 0, index).append(this.to)
+                    .append(text, index + this.from.length(), text.length()).toString()
+        } else {
+            return text.replace(this.from, this.to)
+        }
+    }
+}
+tasks.register("aggregateJavadocs", Javadoc) {
+    group = "documentation"
+    description = "Merge Javadocs from all subprojects into a single unified site."
+
+    destinationDir = javaDocDestination
+    source = files({
+        subprojects.collect {sub ->
+            if (sub.name === "patcher" || sub.name === "launcher") {
+                sub.provider { sub.sourceSets.main.allJava }
+            }
+        }
+    })
+    classpath = files({
+        subprojects.collect {sub ->
+            if (sub.name === "patcher") {
+                sub.provider { sub.sourceSets.main.compileClasspath }
+            } else if (sub.name === "launcher") {
+                sub.provider {
+                    [sub.sourceSets.main.compileClasspath, sub.sourceSets.main.output]
+                }
+            }
+        }
+    })
+
+    exclude("com/fox2code/hypertale/commands/*")
+    exclude("com/fox2code/hypertale/dashboard/*")
+    exclude("com/fox2code/hypertale/patcher/mixin/*")
+    exclude("com/fox2code/hypertale/patcher/patches/*")
+
+    options.addStringOption('Xdoclint:-missing', '-quiet')
+    options.addStringOption('-add-stylesheet', javadocExtraCSS.absolutePath)
+    options.addStringOption('header', "<span class='hypertale-nav-title'>" +
+            "<span class='hypertale-name'>Hypertale</span> ${project['hypertale.version']} API</span>")
+    options.addStringOption('doctitle', "<span class='hypertale-overview-title'>" +
+            "<span class='hypertale-name'>Hypertale</span> ${project['hypertale.version']} API</span>")
+    options.windowTitle = "Hypertale ${project['hypertale.version']} API"
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.links += "https://asm.ow2.io/javadoc/"
+
+    doLast {
+        copy {
+            from javaDocSourceRoot
+            into javaDocDestination
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+
+        ArrayList<ReplaceAction> replaceActions = new ArrayList<>()
+        for (String modifier : ["public", "static", "abstract", "final", "interface"]) {
+            replaceActions.add(new ReplaceAction(modifier,
+                    "<span class='hypertale-modifier'>" + modifier + "</span>"))
+        }
+        for (String primitive : ["void", "byte", "short", "int", "long",
+                                "float", "double", "char", "boolean"]) {
+            replaceActions.add(new ReplaceAction(primitive + " ",
+                    "<span class='hypertale-primitive'>" + primitive + "</span> "))
+            replaceActions.add(new ReplaceAction(primitive + "\n",
+                    "<span class='hypertale-primitive'>" + primitive + "</span>\n"))
+            replaceActions.add(new ReplaceAction(primitive + "<",
+                    "<span class='hypertale-primitive'>" + primitive + "</span><"))
+        }
+        for (String modifier : ["extends", "throws"]) {
+            replaceActions.add(new ReplaceAction(modifier,
+                    "<span class='hypertale-keyword'>" + modifier + "</span>"))
+        }
+        replaceActions.add(new ReplaceAction("class com.fox2code.hypertale.",
+                "<span class='hypertale-keyword'>class</span> com.fox2code.hypertale."))
+        replaceActions.add(new ReplaceAction("package com.fox2code.hypertale.",
+                "<span class='hypertale-keyword'>package</span> com.fox2code.hypertale."))
+        replaceActions.add(new ReplaceAction(
+                "<span class='hypertale-modifier'>interface</span> in ", "interface in "))
+        replaceActions.add(new ReplaceAction(">com.fox2code.hypertale.",
+                ">com.fox2code.<span class='hypertale-package'>hypertale</span>."))
+        replaceActions.add(new ReplaceAction('</li>\n</ul>',
+                '</li>\n' + // Add GitHub link to JavaDoc!
+                        '<li><a target="_blank" href="https://github.com/Fox2Code/Hypertale">GitHub</a></li>' +
+                        '</ul>', true))
+        replaceActions.add(new ReplaceAction('</head>',
+                '<meta name="darkreader-lock">\n' +
+                '</head>'))
+        fileTree(javaDocDestination).matching {
+            include '**/*.html'
+        }.forEach { htmlFile ->
+            String text = htmlFile.getText('UTF-8')
+            for (ReplaceAction replaceAction : replaceActions) {
+                text = replaceAction.replace(text)
+            }
+            htmlFile.write(text, 'UTF-8')
+        }
+    }
+
+    dependsOn("cleanRelease")
+    dependsOn(":launcher:jar")
+}
+tasks.register("fastUpdateJavaDocResources") {
+    doLast {
+        copy {
+            from javaDocSourceRoot
+            into javaDocDestination
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
+    }
 }
 tasks.register("makeRelease", Copy) {
     group = "build"
     description = "Make release for maven uploading!"
     dependsOn("cleanRelease")
+    dependsOn("aggregateJavadocs")
     dependsOn("buildAndPublishToMavenLocal")
     dependsOn(":launcher:test")
     from(mavenLocalFile) {
@@ -146,5 +275,5 @@ tasks.register("makeRelease", Copy) {
         include "com/fox2code/Hypertale/launcher/${project['hypertale.version']}/*"
         include "hypertale/dev/hypertale.dev.gradle.plugin/${project['hypertale.version']}/*"
     }
-    into destLocation
+    into mavenDestination
 }

@@ -24,7 +24,6 @@
 package com.fox2code.hypertale.commands;
 
 import com.fox2code.hypertale.loader.HypertalePlugin;
-import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
@@ -47,7 +46,6 @@ final class HypertalePyroCommand extends AbstractCommand {
 
 	HypertalePyroCommand() {
 		super("pyro", "Pyro beans are cool!\n\nExecute the command for clickable link to https://pyro.host/ :3");
-		this.setPermissionGroups("Default", GameMode.Adventure.toString());
 	}
 
 	@Override

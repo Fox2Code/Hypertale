@@ -21,31 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.commands;
+package com.fox2code.hypertale.utils.jvm;
 
-import com.fox2code.hypertale.launcher.BuildConfig;
-import com.hypixel.hytale.server.core.command.system.CommandSender;
-import com.hypixel.hytale.server.core.command.system.basecommands.AbstractCommandCollection;
-import org.jspecify.annotations.NonNull;
+import java.lang.management.OperatingSystemMXBean;
 
-public final class HypertaleCommand extends AbstractCommandCollection {
-	public HypertaleCommand() {
-		super("hypertale", """
-		Hypertale is a mod for the HytaleServer software bringing extra APIs and optimizations!
-		
-		Current Hypertale version: %version%
-		Source code: https://github.com/Fox2Code/Hypertale
-		""".replace("%version%", BuildConfig.HYPERTALE_VERSION));
-		this.addSubCommand(new HypertaleVersionCommand());
-		this.addSubCommand(new HypertaleSystemCommand());
-		this.addSubCommand(new HypertaleStatusCommand());
-		this.addSubCommand(new HypertalePyroCommand());
-		this.addSubCommand(new HypertaleDashboardCommand());
-		this.addAliases("hyper");
+final class HypertaleJVMHelperFallback extends HypertaleJVMHelper {
+	private final OperatingSystemMXBean operatingSystemMXBean;
+
+	HypertaleJVMHelperFallback(OperatingSystemMXBean operatingSystemMXBean) {
+		this.operatingSystemMXBean = operatingSystemMXBean;
 	}
 
 	@Override
-	public boolean hasPermission(@NonNull CommandSender sender) {
-		return true;
+	public double getCpuLoad() {
+		return this.operatingSystemMXBean.getSystemLoadAverage();
+	}
+
+	@Override
+	public double getProcessCpuLoad() {
+		return this.operatingSystemMXBean.getSystemLoadAverage();
 	}
 }

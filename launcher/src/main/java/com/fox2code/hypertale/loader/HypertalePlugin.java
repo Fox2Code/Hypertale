@@ -53,9 +53,16 @@ public final class HypertalePlugin extends JavaPlugin {
 	public static final Message HYPERTALE = Message.join(Message.raw("Hypertale").color(Color.MAGENTA));
 	// Use 16, 256, and true color ANSI codes for color, if it is not supported, it is usually ignored!
 	private static final String ANSI_MAGENTA = "\u001B[35;95m\u001B[38;5;201m\u001B[38;2;255;0;255m";
+	private static HypertalePlugin instance;
+
+	public static HypertalePlugin get() {
+		return instance;
+	}
 
 	public HypertalePlugin(@NonNull JavaPluginInit init) {
+		if (instance != null) throw new IllegalStateException("HypertalePlugin is already loaded!");
 		super(init);
+		instance = this;
 		if (!INVALID_INSTALLATION) {
 			if (inHypertalePatcherProcess) {
 				throw new Error("HypertalePlugin should not be loaded inside the patcher process!");
