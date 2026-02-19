@@ -76,7 +76,6 @@ public interface HypertaleASMConstants {
 	String DumpUtil = "com/hypixel/hytale/server/core/util/DumpUtil";
 	// Hypertale ASM Constants
 	String HypertalePlayerAuthentication = "com/fox2code/hypertale/auth/HypertalePlayerAuthentication";
-	String HypertaleKeyedCodec = "com/fox2code/hypertale/io/HypertaleKeyedCodec";
 	String HypertaleRecyclableByteBuf = "com/fox2code/hypertale/io/HypertaleRecyclableByteBuf";
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
 	String HypertaleModLoader = "com/fox2code/hypertale/loader/HypertaleModLoader";

@@ -183,6 +183,11 @@ public final class Main {
 			return;
 		}
 		HypertaleConfig.load();
+		if (HypertaleConfig.isUnsupportedConfiguration()) {
+			EarlyLogger.log("You are using an unsupported configuration!");
+			EarlyLogger.log("Check \"unsupported\" prefixed configuration keys in:");
+			EarlyLogger.log("- \".hypertale/hypertale.ini\"");
+		}
 		HypertaleData cachedData = null;
 		if (HypertalePaths.hypertaleCacheJar.exists() &&
 				HypertalePaths.hypertaleCacheData.exists()) {

@@ -52,7 +52,26 @@ final class PatchPluginManager extends HypertalePatch {
 				break;
 			}
 		}
-
+		MethodNode loadPendingJavaPlugin = TransformerUtils.getMethod(classNode, "loadPendingJavaPlugin");
+		for (AbstractInsnNode abstractInsnNode : loadPendingJavaPlugin.instructions) {
+			if (abstractInsnNode.getOpcode() == Opcodes.CHECKCAST &&
+					abstractInsnNode instanceof TypeInsnNode typeInsnNode &&
+					typeInsnNode.desc.equals(PluginManifest)) {
+				methodNode.instructions.insert(typeInsnNode, new MethodInsnNode(
+						INVOKESTATIC, HypertaleModLoader, "passPluginManifest",
+						"(L" + PluginManifest + ";)L" + PluginManifest + ";"));
+			}
+		}
+		MethodNode loadPluginsInClasspath = TransformerUtils.getMethod(classNode, "loadPluginsInClasspath");
+		for (AbstractInsnNode abstractInsnNode : loadPluginsInClasspath.instructions) {
+			if (abstractInsnNode.getOpcode() == Opcodes.CHECKCAST &&
+					abstractInsnNode instanceof TypeInsnNode typeInsnNode &&
+					typeInsnNode.desc.equals(PluginManifest)) {
+				methodNode.instructions.insert(typeInsnNode, new MethodInsnNode(
+						INVOKESTATIC, HypertaleModLoader, "passPluginManifest",
+						"(L" + PluginManifest + ";)L" + PluginManifest + ";"));
+			}
+		}
 		return classNode;
 	}
 }

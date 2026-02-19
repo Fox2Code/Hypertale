@@ -25,6 +25,7 @@ package com.fox2code.hypertale.commands;
 
 import com.fox2code.hypertale.loader.HypertalePlugin;
 import com.fox2code.hypertale.utils.HytaleVersion;
+import com.hypixel.hytale.common.util.java.ManifestUtil;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
@@ -34,8 +35,12 @@ import org.jspecify.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 final class HypertaleStatusCommand extends AbstractCommand {
+	private static final String HYTALE_VERSION_MANIFEST = ManifestUtil.getVersion();
 	static final Message HYTALE_VERSION_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
-			Message.raw(": Hytale version -> " + HytaleVersion.HYTALE_VERSION));
+			Message.raw(HytaleVersion.HYTALE_VERSION.equals(HYTALE_VERSION_MANIFEST) ?
+					": Hytale version -> " + HytaleVersion.HYTALE_VERSION :
+					": Hytale version -> " + HytaleVersion.HYTALE_VERSION +
+							"(" + HYTALE_VERSION_MANIFEST + ")"));
 	static final Message HYPERTALE_INIT_MESSAGE = Message.join(HypertalePlugin.HYPERTALE,
 			Message.raw(": Hypertale init type -> " + System.getProperty("hypertale.initMethod", "unknown")));
 

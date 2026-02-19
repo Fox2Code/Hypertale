@@ -43,7 +43,7 @@ public final class HytaleVersion {
 						"META-INF/maven/com.hypixel.hytale/Common/pom.properties")))) {
 			properties.load(inputStream);
 		} catch (Exception _) {}
-		String hytaleVersion = properties.getProperty("version", "");
+		String hytaleVersion = properties.getProperty("version", "").trim();
 		if (!hytaleVersion.isEmpty()) {
 			return hytaleVersion;
 		}

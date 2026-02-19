@@ -27,12 +27,14 @@ import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.launcher.HypertaleAgent;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
+import com.fox2code.hypertale.utils.HytaleVersion;
 import com.fox2code.hypertale.utils.JsonPropertyHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
+import com.hypixel.hytale.common.plugin.PluginManifest;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
 
 import java.io.File;
@@ -49,9 +51,11 @@ import java.util.jar.JarFile;
 public final class HypertaleModLoader {
 	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 	private static final LinkedHashMap<File, JsonObject> loadedModsLate = new LinkedHashMap<>();
+	private static final LinkedHashMap<String, String> versionServerSupportOverride = new LinkedHashMap<>();
 	private static final HashSet<String> preloadedPlugins = new HashSet<>();
 
 	static {
+		versionServerSupportOverride.put("Hypertale:Hypertale", HytaleVersion.HYTALE_VERSION);
 		preloadedPlugins.add("Hypertale:Hypertale");
 	}
 
@@ -99,6 +103,13 @@ public final class HypertaleModLoader {
 			throws IOException {
 		String id = JsonPropertyHelper.getBoolean(jsonObject, "Group") + ":" +
 				JsonPropertyHelper.getBoolean(jsonObject, "Name");
+		String hypertaleServerVersion = JsonPropertyHelper.getString(jsonObject, "HypertaleServerVersion");
+		if (hypertaleServerVersion != null && !hypertaleServerVersion.isEmpty()) {
+			if ("*".equals(hypertaleServerVersion)) {
+				hypertaleServerVersion = HytaleVersion.HYTALE_VERSION;
+			}
+			versionServerSupportOverride.put(id, hypertaleServerVersion);
+		}
 		if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad", isLibrary)) {
 			if (!isClassPath) {
 				DependencyHelper.addFileToClasspath(file);
@@ -147,5 +158,19 @@ public final class HypertaleModLoader {
 
 	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
 		return preloadedPlugins.contains(pluginIdentifier.toString());
+	}
+
+	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
+		if (pluginManifest == null) return null;
+		if (HypertaleConfig.unsupportedDisablePluginServerVersionCheck) {
+			pluginManifest.setServerVersion(HytaleVersion.HYTALE_VERSION);
+		} else {
+			String serverVersionPatch = versionServerSupportOverride.get(
+					pluginManifest.getGroup() + ":" + pluginManifest.getName());
+			if (serverVersionPatch != null) {
+				pluginManifest.setServerVersion(serverVersionPatch);
+			}
+		}
+		return pluginManifest;
 	}
 }

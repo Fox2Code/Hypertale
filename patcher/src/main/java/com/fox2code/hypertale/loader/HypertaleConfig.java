@@ -42,6 +42,7 @@ public final class HypertaleConfig {
 	public static String secondaryJarName = "Server.jar";
 	public static boolean optimizePluginOnlyAPIs = true;
 	public static boolean aggressivelyOptimizePluginOnlyAPIs = false;
+	public static boolean unsupportedDisablePluginServerVersionCheck = false;
 	public static boolean premiumHyperOptimizeClassPath = false;
 	public static boolean premiumCheckJarValidity = true;
 	public static int watchdogWarnLagAfter = 10;
@@ -76,10 +77,7 @@ public final class HypertaleConfig {
 
 	public static void load() throws IOException {
 		Properties properties;
-		if (!HypertalePaths.hypertaleConfig.exists()) {
-			if (!HypertalePaths.hypertaleConfig.createNewFile()) {
-				throw new IOException("Failed to create config file!");
-			}
+		if (HypertalePaths.hypertaleConfig.exists()) {
 			properties = new Properties(defaultProperties);
 			try (InputStreamReader inputStreamReader = new InputStreamReader(
 					new BufferedInputStream(new FileInputStream(
@@ -87,6 +85,9 @@ public final class HypertaleConfig {
 				properties.load(inputStreamReader);
 			}
 		} else {
+			if (!HypertalePaths.hypertaleConfig.createNewFile()) {
+				throw new IOException("Failed to create config file!");
+			}
 			properties = defaultProperties;
 			try (OutputStreamWriter outputStreamWriter =
 						 new OutputStreamWriter(new BufferedOutputStream(
@@ -168,5 +169,9 @@ public final class HypertaleConfig {
 
 	public static boolean checkJarValidity() {
 		return HypertaleConfig.premiumCheckJarValidity && PREMIUM;
+	}
+
+	public static boolean isUnsupportedConfiguration() {
+		return HypertaleConfig.unsupportedDisablePluginServerVersionCheck;
 	}
 }

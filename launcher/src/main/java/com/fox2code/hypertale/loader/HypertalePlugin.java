@@ -31,6 +31,8 @@ import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.HypertaleSystemInfo;
 import com.fox2code.hypertale.utils.SourceUtil;
+import com.hypixel.hytale.common.util.java.ManifestUtil;
+import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
@@ -73,6 +75,11 @@ public final class HypertalePlugin extends JavaPlugin {
 			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale");
 		}
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
+		this.getLogger().atInfo().log("Target server: \"" + this.getManifest().getServerVersion() + "\"");
+		this.getLogger().atInfo().log("Server: \"" + ManifestUtil.getVersion() + "\"");
+		this.getLogger().atInfo().log("Equals: " + Objects.equals(
+				ManifestUtil.getVersion(),
+				this.getManifest().getServerVersion()));
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);
 		if (INVALID_INSTALLATION) {
 			try {
@@ -93,6 +100,9 @@ public final class HypertalePlugin extends JavaPlugin {
 	protected void setup() {
 		if (INVALID_INSTALLATION) return;
 		this.getCommandRegistry().registerCommand(new HypertaleCommand());
+		this.getEventRegistry().registerGlobal(
+				EventPriority.LAST, AntiCheatEvent.class,
+				this::onUnhandledAntiCheatEvent);
 	}
 
 	@Override
@@ -103,9 +113,6 @@ public final class HypertalePlugin extends JavaPlugin {
 		if (PREMIUM) {
 			this.getLogger().atInfo().log("Thank you for supporting Hypertale!");
 		}
-		this.getEventRegistry().register(
-				Short.MIN_VALUE, AntiCheatEvent.class,
-				this::onUnhandledAntiCheatEvent);
 	}
 
 	private void onUnhandledAntiCheatEvent(AntiCheatEvent event) {
@@ -117,7 +124,7 @@ public final class HypertalePlugin extends JavaPlugin {
 			if (event.getAction() == AntiCheatEvent.AntiCheatAction.AWAITING_BAN) {
 				// I should implement a proper ban provider in hytale for this.
 				CommandManager.get().handleCommand(ConsoleSender.INSTANCE,
-						"ban " + event.getPlayerRef().getUsername() + " Hypertale: Unhandled anti-cheat event!");
+						"ban " + event.getPlayerRef().getUsername() + " Hypertale: Unhandled anti-cheat event!").join();
 			} else {
 				event.getPlayerRef().getPacketHandler().disconnect("Hypertale: Unhandled anti-cheat event!");
 			}
