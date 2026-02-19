@@ -24,6 +24,7 @@
 package com.fox2code.hypertale.loader;
 
 import com.fox2code.hypertale.commands.HypertaleCommand;
+import com.fox2code.hypertale.event.AntiCheatEvent;
 import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.HypertalePaths;
@@ -34,6 +35,8 @@ import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.ShutdownReason;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
+import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import org.jspecify.annotations.NonNull;
@@ -99,6 +102,25 @@ public final class HypertalePlugin extends JavaPlugin {
 		this.getLogger().atInfo().log("Successfully loaded!");
 		if (PREMIUM) {
 			this.getLogger().atInfo().log("Thank you for supporting Hypertale!");
+		}
+		this.getEventRegistry().register(
+				Short.MIN_VALUE, AntiCheatEvent.class,
+				this::onUnhandledAntiCheatEvent);
+	}
+
+	private void onUnhandledAntiCheatEvent(AntiCheatEvent event) {
+		if (event.willDisconnect() && event.getPlayerRef().getPacketHandler().stillActive()) {
+			this.getLogger().atSevere().log("Unhandled anti-cheat event for " + event.getPlayerRef().getUsername());
+			this.getLogger().atSevere().log("Certainty: " + event.getCertainty() + ", action: " + event.getAction());
+			this.getLogger().atSevere().log("Message: " + event.getMessage().getAnsiMessage());
+			this.getLogger().atSevere().log("CheckID: " + event.getId());
+			if (event.getAction() == AntiCheatEvent.AntiCheatAction.AWAITING_BAN) {
+				// I should implement a proper ban provider in hytale for this.
+				CommandManager.get().handleCommand(ConsoleSender.INSTANCE,
+						"ban " + event.getPlayerRef().getUsername() + " Hypertale: Unhandled anti-cheat event!");
+			} else {
+				event.getPlayerRef().getPacketHandler().disconnect("Hypertale: Unhandled anti-cheat event!");
+			}
 		}
 	}
 
