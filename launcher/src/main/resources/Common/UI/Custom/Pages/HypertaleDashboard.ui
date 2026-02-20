@@ -17,7 +17,6 @@ Group {
       Style: (
         FontSize: 11,
         TextColor: #4a5568,
-        RenderUppercase: true,
         LetterSpacing: 2
       );
     }
@@ -34,18 +33,21 @@ Group {
       Text: "  Statistics";
       Anchor: (Height: 30);
       Style: (FontSize: 14, TextColor: #6e7da1);
+      Visible: false;
     }
 
     Label #Settings {
       Text: "  Settings";
       Anchor: (Height: 30);
       Style: (FontSize: 14, TextColor: #6e7da1);
+      Visible: false;
     }
 
     Label {
       Text: "  About";
       Anchor: (Height: 30);
       Style: (FontSize: 14, TextColor: #6e7da1);
+      Visible: false;
     }
   }
 
