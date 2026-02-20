@@ -80,6 +80,22 @@ public final class TransformerUtils {
 						map.get(tryCatchBlockNode.end), map.get(tryCatchBlockNode.handler), tryCatchBlockNode.type));
 			}
 		}
+		if (methodNode.invisibleAnnotations != null) {
+			methodNodeCopy.invisibleAnnotations = new ArrayList<>();
+			for (AnnotationNode annotationNode : methodNode.invisibleAnnotations) {
+				AnnotationNode annotationNodeCopy = new AnnotationNode(annotationNode.desc);
+				annotationNode.accept(annotationNodeCopy);
+				methodNodeCopy.invisibleAnnotations.add(annotationNodeCopy);
+			}
+		}
+		if (methodNode.visibleAnnotations != null) {
+			methodNodeCopy.visibleAnnotations = new ArrayList<>();
+			for (AnnotationNode annotationNode : methodNode.visibleAnnotations) {
+				AnnotationNode annotationNodeCopy = new AnnotationNode(annotationNode.desc);
+				annotationNode.accept(annotationNodeCopy);
+				methodNodeCopy.visibleAnnotations.add(annotationNodeCopy);
+			}
+		}
 		return methodNodeCopy;
 	}
 

@@ -45,6 +45,7 @@ public final class HypertalePatches {
 	}
 
 	static {
+		addPatch(new PatchMat4f());
 		addPatch(new PatchPluginClassLoader());
 		addPatch(new PatchWorld());
 		addPatch(new PatchChunkStore());

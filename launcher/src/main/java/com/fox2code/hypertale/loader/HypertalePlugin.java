@@ -31,7 +31,6 @@ import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.HypertaleSystemInfo;
 import com.fox2code.hypertale.utils.SourceUtil;
-import com.hypixel.hytale.common.util.java.ManifestUtil;
 import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.HytaleServer;
@@ -75,11 +74,6 @@ public final class HypertalePlugin extends JavaPlugin {
 			this.hypertale().setLoggerName(ANSI_MAGENTA + "Hypertale");
 		}
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
-		this.getLogger().atInfo().log("Target server: \"" + this.getManifest().getServerVersion() + "\"");
-		this.getLogger().atInfo().log("Server: \"" + ManifestUtil.getVersion() + "\"");
-		this.getLogger().atInfo().log("Equals: " + Objects.equals(
-				ManifestUtil.getVersion(),
-				this.getManifest().getServerVersion()));
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);
 		if (INVALID_INSTALLATION) {
 			try {

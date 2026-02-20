@@ -51,6 +51,7 @@ public interface HypertaleASMConstants {
 	String PluginManifest = "com/hypixel/hytale/common/plugin/PluginManifest";
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
 	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
+	String Mat4f = "com/hypixel/hytale/math/Mat4f";
 	String ClassTransformer = "com/hypixel/hytale/plugin/early/ClassTransformer";
 	String PacketIO = "com/hypixel/hytale/protocol/io/PacketIO";
 	String IdentityTokenClaims = "com/hypixel/hytale/server/core/auth/JWTValidator$IdentityTokenClaims";
