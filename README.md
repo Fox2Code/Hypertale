@@ -7,11 +7,13 @@
 **Hypertale** is a high-performance optimization mod and API extension toolkit for the **Hytale** (Early Access, Jan 13, 2026) server.
 It leverages advanced bytecode manipulation to reduce memory pressure, increase TPS stability, and provide an extended set of APIs for the next generation Hytale mods.
 
-**Downloads**: [GitHub Releases](https://github.com/Fox2Code/Hypertale/releases) | [ModTale](https://modtale.net/mod/hypertale)
+**Downloads**: [GitHub Releases](https://github.com/Fox2Code/Hypertale/releases) | [ModTale](https://modtale.net/mod/hypertale) | [Orbis](https://www.orbis.place/mod/hypertale)
+
+###### Note: You can download the project from multiple sources if you like it! \:D
 
 ---
 
-## Installation & Building
+## Installation
 
 ### Quick Start
 For most users, grab the latest version from the [GitHub Releases](https://github.com/Fox2Code/Hypertale/releases) page,
@@ -67,6 +69,8 @@ Hypertale adds the `.hypertale()` extension to core Hytale classes, providing ac
 *   `com.hypixel.hytale.server.core.plugin.PluginBase`
 *   `com.hypixel.hytale.server.core.universe.PlayerRef`
 *   `com.hypixel.hytale.server.core.universe.world.World`
+
+You can also check out [the official Hypertale Javadoc](https://fox2code.com/javadoc/hypertale/)
 
 ---
 
