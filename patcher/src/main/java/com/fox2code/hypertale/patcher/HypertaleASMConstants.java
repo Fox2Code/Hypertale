@@ -49,6 +49,8 @@ public interface HypertaleASMConstants {
 	String KeyedCodec = "com/hypixel/hytale/codec/KeyedCodec";
 	String PluginIdentifier = "com/hypixel/hytale/common/plugin/PluginIdentifier";
 	String PluginManifest = "com/hypixel/hytale/common/plugin/PluginManifest";
+	String Ref = "com/hypixel/hytale/component/Ref";
+	String Store = "com/hypixel/hytale/component/Store";
 	String HytaleLogger = "com/hypixel/hytale/logger/HytaleLogger";
 	String HytaleLogFormatter = "com/hypixel/hytale/logger/backend/HytaleLogFormatter";
 	String Mat4f = "com/hypixel/hytale/math/Mat4f";
@@ -67,6 +69,7 @@ public interface HypertaleASMConstants {
 	String PluginManager = "com/hypixel/hytale/server/core/plugin/PluginManager";
 	String PendingLoadPlugin = "com/hypixel/hytale/server/core/plugin/pending/PendingLoadPlugin";
 	String PlayerRef = "com/hypixel/hytale/server/core/universe/PlayerRef";
+	String Universe = "com/hypixel/hytale/server/core/universe/Universe";
 	String World = "com/hypixel/hytale/server/core/universe/world/World";
 	String FloodLightCalculation = "com/hypixel/hytale/server/core/universe/world/lighting/FloodLightCalculation";
 	String FullBrightLightCalculation = "com/hypixel/hytale/server/core/universe/world/lighting/FullBrightLightCalculation";

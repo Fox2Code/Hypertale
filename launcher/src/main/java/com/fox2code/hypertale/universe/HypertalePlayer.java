@@ -23,19 +23,28 @@
  */
 package com.fox2code.hypertale.universe;
 
+import com.fox2code.hypertale.annotations.AsyncSafe;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public final class HypertalePlayer {
 	private final Player player;
+	private final Object playerRefLock;
+	private WeakReference<PlayerRef> playerRefWeakReference;
 
 	public HypertalePlayer(Player player) {
+		Objects.requireNonNull(player);
 		this.player = player;
+		this.playerRefLock = new Object();
 	}
 
 	@Nonnull
@@ -43,11 +52,28 @@ public final class HypertalePlayer {
 		return this.player;
 	}
 
+	@AsyncSafe
 	@Nullable public PlayerRef getPlayerRef() {
-		// Will optimize later when API has stabilized!
-		Ref<EntityStore> ref = player.getReference();
-		if (ref == null || !ref.isValid()) return null;
-		return ref.getStore().getComponent(ref, PlayerRef.getComponentType());
+		WeakReference<PlayerRef> playerRefWeakReference = this.playerRefWeakReference;
+		PlayerRef playerRef;
+		if (playerRefWeakReference != null && (playerRef = playerRefWeakReference.get()) != null &&
+				playerRef.isValid()) {
+			return playerRef;
+		}
+		synchronized (this.playerRefLock) {
+			Ref<EntityStore> ref = this.player.getReference();
+			World playerWorld = player.getWorld();
+			if (playerWorld == null || ref == null || !ref.isValid()) {
+				return null;
+			}
+			if (ref.getStore().isInThread()) {
+				playerRef = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
+				this.playerRefWeakReference = new WeakReference<>(playerRef);
+			} else {
+				playerRef = CompletableFuture.supplyAsync(this::getPlayerRef).join();
+			}
+		}
+		return playerRef;
 	}
 
 	public boolean isRealPlayer() {

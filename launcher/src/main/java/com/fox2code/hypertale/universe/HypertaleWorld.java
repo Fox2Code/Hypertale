@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.universe;
 
+import com.fox2code.hypertale.annotations.AsyncSafe;
 import com.hypixel.fastutil.longs.Long2ObjectConcurrentHashMap;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.util.ChunkUtil;
@@ -52,16 +53,19 @@ public final class HypertaleWorld {
 		this.worldChunkCache = new Long2ObjectConcurrentHashMap<>(true, ChunkUtil.NOT_FOUND);
 	}
 
+	@AsyncSafe
 	public World getWorld() {
 		return this.world;
 	}
 
+	@AsyncSafe
 	public void invalidatePlayerCache() {
 		synchronized (this.playerCacheLock) {
 			this.playersReference = null;
 		}
 	}
 
+	@AsyncSafe
 	public List<Player> getPlayers() {
 		WeakReference<List<Player>> playersReference = this.playersReference;
 		List<Player> playersCache;
@@ -100,11 +104,13 @@ public final class HypertaleWorld {
 		}
 	}
 
+	@AsyncSafe
 	public void invalidateChunkCache(long index) {
 		this.worldChunkCache.remove(index);
 	}
 
-	@Nullable public WorldChunk getChunkIfInMemory(long index) {
+	@AsyncSafe
+	public @Nullable WorldChunk getChunkIfInMemory(long index) {
 		WeakReference<WorldChunk> worldChunkWeakReference =
 				this.worldChunkCache.getOrDefault(index, null);
 		WorldChunk cachedWorldChunk;
@@ -133,6 +139,7 @@ public final class HypertaleWorld {
 		}
 	}
 
+	@AsyncSafe
 	public void onShutdown() {
 		synchronized (this.playerCacheLock) {
 			this.playersReference = null;

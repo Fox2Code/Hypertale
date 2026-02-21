@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.universe;
 
+import com.fox2code.hypertale.annotations.AsyncSafe;
 import com.fox2code.hypertale.auth.HypertalePlayerAuthentication;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -64,6 +65,7 @@ public final class HypertalePlayerRef {
 		}
 	}
 
+	@AsyncSafe
 	public @Nullable World getWorld() {
 		WeakReference<Player> playerWeakReference = this.player;
 		Player player;
@@ -79,6 +81,7 @@ public final class HypertalePlayerRef {
 				Universe.get().getWorld(worldUUID);
 	}
 
+	@AsyncSafe
 	public @Nullable Player getPlayer() {
 		WeakReference<Player> playerWeakReference = this.player;
 		Player player = null;
