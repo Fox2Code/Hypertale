@@ -33,8 +33,8 @@ import java.util.*;
 
 final class HypertaleIntellijIDEASupport {
 	private static final String[] ideaAddDictionary = new String[]{
-			"hypixel", "hytale", "earlyplugins", "hypertale", "clinit", "mixin", "mixins",
-			"Hypixel's", "Hytale's", "Hypertale's", "Mixin's"
+			"hypixel", "hytale", "earlyplugins", "hypertale", "clinit", "mixin", "mixins", "hyxin",
+			"Hypixel's", "Hytale's", "Hypertale's", "Mixin's", "Hyxin's"
 	};
 
 	static void installIdeaDictionaryOnIDEASync(Project target, Iterable<String> words) throws IOException {

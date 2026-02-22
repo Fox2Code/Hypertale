@@ -40,13 +40,17 @@ final class HytalePatcherHelper {
 		if (!classTransformers.isEmpty()) return;
 		System.setProperty("hypertale.patcherProcess", "true");
 		for(ClassTransformer transformer : ServiceLoader.load(ClassTransformer.class)) {
-			if (transformer == null || transformer.getClass()
+			Class<?> transformerClass;
+			if (transformer == null || (transformerClass = transformer.getClass())
 					.getName().startsWith("com.fox2code.hypertale.init.")) {
+				continue;
+			}
+			if (transformerClass.getName().startsWith("com.build_9.hyxin.")) {
 				continue;
 			}
 			if (logProgress) {
 				EarlyLogger.log("Loading Hytale early plugin transformer: " +
-						transformer.getClass().getName() +
+						transformerClass.getName() +
 						" (priority=" + transformer.priority() + ")");
 			}
 			classTransformers.add(transformer);

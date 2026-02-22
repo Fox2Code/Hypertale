@@ -45,10 +45,11 @@ public final class HypertaleModGatherer {
 	private final int modHash;
 	private final List<ClassPathModCandidate> classPathManifests;
 	private final boolean usingMixins;
+	private final boolean hasHyxin;
 
 	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries,
 								 File modSyncBootstrap, int modHash, List<ClassPathModCandidate> classPathManifests,
-								 boolean usingMixins) {
+								 boolean usingMixins, boolean hasHyxin) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
 		this.libraries = libraries;
@@ -56,6 +57,7 @@ public final class HypertaleModGatherer {
 		this.modHash = modHash;
 		this.classPathManifests = classPathManifests;
 		this.usingMixins = usingMixins;
+		this.hasHyxin = hasHyxin;
 	}
 
 	public List<File> getHypertaleMods() {
@@ -92,7 +94,7 @@ public final class HypertaleModGatherer {
 
 	public static HypertaleModGatherer gatherMods(String[] args) {
 		// TODO: Process launch arguments
-		boolean[] useMixins = new boolean[]{false};
+		boolean[] useMixins = new boolean[]{false, false};
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
 		ArrayList<File> libraries = new ArrayList<>();
@@ -111,7 +113,8 @@ public final class HypertaleModGatherer {
 		return new HypertaleModGatherer(Collections.unmodifiableList(hypertaleMods),
 				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
 				modSyncBootstrap, Arrays.hashCode(fileSizes),
-				Collections.unmodifiableList(gatherClassPathMods(useMixins)), useMixins[0]);
+				Collections.unmodifiableList(gatherClassPathMods(useMixins)),
+				useMixins[0], useMixins[1]);
 	}
 
 	private static List<ClassPathModCandidate> gatherClassPathMods(boolean[] useMixins) {
@@ -140,7 +143,7 @@ public final class HypertaleModGatherer {
 					try (InputStream inputStream = url.openStream()) {
 						byte[] manifestData = IOUtils.readAllBytes(inputStream);
 						String modInfo = new String(manifestData, StandardCharsets.UTF_8);
-						if (modInfo.contains("\"HypertaleMixinConfig\"")) {
+						if (modInfo.contains("\"HypertaleMixinConfig\"") || modInfo.contains("\"Hyxin\"")) {
 							useMixins[0] = true;
 						}
 					}
@@ -178,6 +181,11 @@ public final class HypertaleModGatherer {
 							"com/fox2code/hypertale/init/Main.class") != null) {
 						continue; // <- Do not consider HypertaleInit as a mod!
 					}
+					if (zipFile.getEntry(
+							"com/build_9/hyxin/mixin/MixinService.class") != null) {
+						useMixins[1] = true;
+						continue; // <- We already implement Hyxin APIs
+					}
 					ZipEntry manifestEntry;
 					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
 						String modInfo;
@@ -186,7 +194,7 @@ public final class HypertaleModGatherer {
 						} catch (RuntimeException _) {
 							modInfo = "";
 						}
-						if (modInfo.contains("\"HypertaleMixinConfig\"")) {
+						if (modInfo.contains("\"HypertaleMixinConfig\"") || modInfo.contains("\"Hyxin\"")) {
 							useMixins[0] = true;
 						}
 						if (modInfo.contains("\"Hypertale")) {

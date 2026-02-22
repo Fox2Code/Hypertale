@@ -29,10 +29,7 @@ import com.fox2code.hypertale.launcher.HypertaleAgent;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.fox2code.hypertale.utils.HytaleVersion;
 import com.fox2code.hypertale.utils.JsonPropertyHelper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.common.plugin.PluginManifest;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
@@ -153,6 +150,18 @@ public final class HypertaleModLoader {
 			if (mixin != null) {
 				MixinLoader.addMixinConfigurationSafe(modIdentifier, mixin);
 			}
+			JsonObject hyxin = JsonPropertyHelper.getObject(jsonObject, "Hyxin");
+			if (hyxin != null) {
+				JsonArray hyxinConfigs = hyxin.getAsJsonArray("configs");
+				if (hyxinConfigs != null) {
+					for (JsonElement hyxinConfig : hyxinConfigs) {
+						String hyxinConfigName = hyxinConfig.getAsString();
+						if (mixin == null || !mixin.equals(hyxinConfigName)) {
+							MixinLoader.addMixinConfigurationSafe(modIdentifier, hyxinConfigName);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -167,7 +176,9 @@ public final class HypertaleModLoader {
 		} else {
 			String serverVersionPatch = versionServerSupportOverride.get(
 					pluginManifest.getGroup() + ":" + pluginManifest.getName());
-			if (serverVersionPatch != null) {
+			if (serverVersionPatch != null &&
+					!HytaleVersion.HYTALE_VERSION.equals(
+							pluginManifest.getServerVersion())) {
 				pluginManifest.setServerVersion(serverVersionPatch);
 			}
 		}

@@ -61,6 +61,7 @@ public final class Main {
 		HypertaleAgent.tryLoadEarlyAgent();
 		System.setProperty("rellatsnI.tnega.yddubetyb.ten", HypertaleAgent.class.getName());
 		if (Boolean.getBoolean("hypertale.gradleInit")) {
+			System.setProperty("mixin.hotSwap", "true");
 			System.setProperty("hypertale.initMethod", "gradle");
 		} else if (!Boolean.getBoolean("hypertale.useInitWrapper")) {
 			System.setProperty("hypertale.initMethod", "direct");

@@ -28,6 +28,7 @@ import com.fox2code.hypertale.patcher.SafeClassWriter;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
+import org.spongepowered.tools.agent.MixinAgent;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -72,6 +73,7 @@ final class PatchHelper {
 					return classWriter.toByteArray();
 				}
 			});
+			MixinAgent.init(instrumentation);
 		} else if (initCLSetClassTransformer != null) {
 			EarlyLogger.log("Using late transformer for patching!");
 			if (useMixins) {

@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.utils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -56,5 +57,21 @@ public final class JsonPropertyHelper {
 			return jsonPrimitive.getAsString();
 		}
 		return def;
+	}
+
+	public static JsonObject getObject(JsonObject jsonObject, String key) {
+		JsonElement jsonElement = jsonObject.get(key);
+		if (jsonElement != null && jsonElement.isJsonObject()) {
+			return jsonElement.getAsJsonObject();
+		}
+		return null;
+	}
+
+	public static JsonArray getArray(JsonObject jsonObject, String key) {
+		JsonElement jsonElement = jsonObject.get(key);
+		if (jsonElement != null && jsonElement.isJsonArray()) {
+			return jsonElement.getAsJsonArray();
+		}
+		return null;
 	}
 }

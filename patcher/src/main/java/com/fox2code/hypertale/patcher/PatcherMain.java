@@ -74,7 +74,7 @@ public final class PatcherMain {
 			}
 			loadPlugins = false; // Don't ever crash if the API get removed!
 		}
-		// progress is false shared... but only run every 1000ms
+		// progress is false-shared... but only run every 1000ms
 		final long[] progress = new long[]{0, 0};
 		try (JarFile jarFile = new JarFile(in)) {
 			progress[1] = jarFile.stream().count();
