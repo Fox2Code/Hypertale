@@ -239,6 +239,8 @@ public final class Main {
 				HypertaleModGatherer.gatherMods(args);
 		if (modGatherer.isUsingMixins()) {
 			EarlyLogger.log("Detected Mixin usage! (Mixin system will be enabled)");
+		} else if (modGatherer.hasHyxin()) {
+			EarlyLogger.log("No Mixin usage detected, but Hyxin is present! (Mixin system will be enabled)");
 		} else {
 			EarlyLogger.log("No Mixin usage detected! (Mixin system will be disabled)");
 		}
@@ -268,10 +270,10 @@ public final class Main {
 		if (MainPlus.checkHaltLaunchGame(args)) {
 			return;
 		}
-		if (modGatherer.isUsingMixins()) {
+		if (modGatherer.shouldEnableMixinSubsystem()) {
 			MixinLoader.preInitializeMixin();
 		}
-		PatchHelper.install(modGatherer.isUsingMixins());
+		PatchHelper.install(modGatherer.shouldEnableMixinSubsystem());
 		if (modGatherer.getModSyncBootstrap() != null &&
 				// Don't run modSyncBootstrap twice if init already called it!
 				!Boolean.getBoolean("hypertale.modSyncBootstrapInit")) {
@@ -280,11 +282,11 @@ public final class Main {
 				Class.forName(HypertaleCompatibility.classModSyncBootstrap, true, urlClassLoader);
 			} catch (LinkageError | ClassNotFoundException _) {}
 		}
-		if (modGatherer.isUsingMixins()) {
+		if (modGatherer.shouldEnableMixinSubsystem()) {
 			MixinLoader.initialize();
 		}
 		HypertaleModLoader.loadHypertaleMods(modGatherer);
-		if (modGatherer.isUsingMixins()) {
+		if (modGatherer.shouldEnableMixinSubsystem()) {
 			MixinLoader.postInitialize();
 		}
 		startHytale(args);

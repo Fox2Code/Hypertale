@@ -23,13 +23,12 @@
  */
 package com.fox2code.hypertale.patcher.mixin;
 
+import com.fox2code.hypertale.loader.HypertaleURLResourceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.launch.platform.container.ContainerHandleVirtual;
 import org.spongepowered.asm.launch.platform.container.IContainerHandle;
 import org.spongepowered.asm.logging.ILogger;
-import org.spongepowered.asm.logging.Level;
-import org.spongepowered.asm.logging.LoggerAdapterAbstract;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformerFactory;
 import org.spongepowered.asm.service.*;
@@ -152,7 +151,11 @@ public final class MixinService extends MixinServiceAbstract implements IMixinSe
 
 	@Override
 	public ClassNode getClassNode(String name, boolean runTransformers, int readerFlags) throws ClassNotFoundException, IOException {
-		URL url = this.getClassLoader().getResource(name.replace('.', '/') + ".class");
+		String filePath = name.replace('.', '/') + ".class";
+		URL url = this.getClassLoader().getResource(filePath);
+		if (url == null) {
+			url = HypertaleURLResourceLoader.EARLY_PLUGINS.getResource(filePath);
+		}
 		if (url == null) {
 			throw new ClassNotFoundException(name);
 		}
@@ -180,8 +183,11 @@ public final class MixinService extends MixinServiceAbstract implements IMixinSe
 
 	@Override
 	public void addTransformerExclusion(String name) {
-
-		// Exclusions are not implemented in this context
+		// Emulate partial exclusion for mixins
+		if (!name.endsWith(".")) {
+			name += ".";
+		}
+		MixinLoader.addMixinExclusion(name);
 	}
 
 	@Override
@@ -197,7 +203,8 @@ public final class MixinService extends MixinServiceAbstract implements IMixinSe
 
 	@Override
 	public String getClassRestrictions(String className) {
-		return className.startsWith("com.hypixel.hytale.") ? "" : "PACKAGE_TRANSFORMER_EXCLUSION";
+		// Check emulated mixin exclusion
+		return MixinLoader.isMixinExcluded(className) ? "PACKAGE_TRANSFORMER_EXCLUSION" : "";
 	}
 
 	@Override
@@ -216,32 +223,7 @@ public final class MixinService extends MixinServiceAbstract implements IMixinSe
 
 	@Override
 	protected ILogger createLogger(final String name) {
-		return new LoggerAdapterAbstract(name) {
-			@Override
-			public String getType() {
-				return "Hytale";
-			}
-
-			@Override
-			public void catching(Level level, Throwable t) {
-
-			}
-
-			@Override
-			public void log(Level level, String message, Object... params) {
-
-			}
-
-			@Override
-			public void log(Level level, String message, Throwable t) {
-
-			}
-
-			@Override
-			public <T extends Throwable> T throwing(T t) {
-				return null;
-			}
-		};
+		return new MixinLoggerAdapter(name);
 	}
 
 	public void onStartup() {

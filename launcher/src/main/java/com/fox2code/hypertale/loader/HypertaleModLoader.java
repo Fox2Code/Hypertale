@@ -116,6 +116,9 @@ public final class HypertaleModLoader {
 				throw new IllegalArgumentException("Tried to pre-load duplicate plugin");
 			}
 		} else {
+			if (!isClassPath) {
+				HypertaleURLResourceLoader.EARLY_PLUGINS.loaderAddURL(file.toURI().toURL());
+			}
 			loadedModsLate.put(file, jsonObject);
 		}
 	}

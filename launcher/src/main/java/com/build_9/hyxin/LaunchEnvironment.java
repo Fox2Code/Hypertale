@@ -24,6 +24,8 @@
 package com.build_9.hyxin;
 
 import com.fox2code.hypertale.loader.HypertaleModGatherer;
+import com.fox2code.hypertale.loader.HypertaleURLResourceLoader;
+import com.google.errorprone.annotations.DoNotCall;
 import org.objectweb.asm.ClassReader;
 
 import java.io.FileNotFoundException;
@@ -42,10 +44,12 @@ public final class LaunchEnvironment {
 		return INSTANCE;
 	}
 
+	@DoNotCall
 	public static void create(ClassLoader systemLoader, ClassLoader earlyPluginLoader) {
 		throw new IllegalStateException("Cannot call create() on Hypertale!");
 	}
 
+	@DoNotCall
 	public void captureRuntimeLoader(ClassLoader loader) {
 		throw new IllegalStateException("Cannot call captureRuntimeLoader() on Hypertale!");
 	}
@@ -55,7 +59,7 @@ public final class LaunchEnvironment {
 	}
 
 	public ClassLoader getEarlyPluginLoader() {
-		return HypertaleModGatherer.class.getClassLoader();
+		return HypertaleURLResourceLoader.EARLY_PLUGINS;
 	}
 
 	public ClassLoader getRuntimeLoader() {
@@ -74,6 +78,8 @@ public final class LaunchEnvironment {
 		ClassLoader mainClassLoader = HypertaleModGatherer.class.getClassLoader();
 		if (mainClassLoader != null && mainClassLoader.getResource(resourceName) != null) {
 			return mainClassLoader;
+		} else if (HypertaleURLResourceLoader.EARLY_PLUGINS.getResource(resourceName) != null) {
+			return HypertaleURLResourceLoader.EARLY_PLUGINS;
 		} else {
 			throw new FileNotFoundException("Could not find resource '" + resourceName + "' on any class loader.");
 		}
@@ -84,11 +90,11 @@ public final class LaunchEnvironment {
 	}
 
 	public ClassReader getClassReader(String name) throws IOException, ClassNotFoundException {
-		String fileName = name.replace(".", "/").concat(".class");
-		try (InputStream inputStream = this.findResourceStream(fileName)) {
+		String filePath = name.replace('.', '/') + ".class";
+		try (InputStream inputStream = this.findResourceStream(filePath)) {
 			return new ClassReader(inputStream);
 		} catch (RuntimeException var3) {
-			throw new ClassNotFoundException("Could not find class '" + fileName + "'.");
+			throw new ClassNotFoundException("Could not find class '" + filePath + "'.");
 		}
 	}
 }

@@ -23,9 +23,37 @@
  */
 package com.fox2code.hypertale.loader;
 
-public final class HypertaleCompatibility {
-	public static final String entryModSyncBootstrap = "de/onyxmoon/modsync/bootstrap/ModSyncBootstrap.class";
-	public static final String classModSyncBootstrap = "de.onyxmoon.modsync.bootstrap.ModSyncBootstrap";
-	public static final String entryHyxinMixinService = "com/build_9/hyxin/mixin/MixinService.class";
-	public static final String entryHyxinTransformer = "com/build_9/hyxin/mixin/HyxinTransformer.class";
+import java.net.URL;
+import java.net.URLClassLoader;
+
+public final class HypertaleURLResourceLoader extends URLClassLoader {
+	public static final HypertaleURLResourceLoader EARLY_PLUGINS = new HypertaleURLResourceLoader();
+
+	private HypertaleURLResourceLoader() {
+		super("HypertaleURLResourceLoader", new URL[0], HypertaleURLResourceLoader.class.getClassLoader());
+	}
+
+	@Override
+	public Class<?> loadClass(String name) throws ClassNotFoundException {
+		throw new ClassNotFoundException(name);
+	}
+
+	@Override
+	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+		throw new ClassNotFoundException(name);
+	}
+
+	@Override
+	protected Class<?> findClass(String name) throws ClassNotFoundException {
+		throw new ClassNotFoundException(name);
+	}
+
+	@Override
+	public String toString() {
+		return "HypertaleURLResourceLoader";
+	}
+
+	void loaderAddURL(URL url) {
+		super.addURL(url);
+	}
 }

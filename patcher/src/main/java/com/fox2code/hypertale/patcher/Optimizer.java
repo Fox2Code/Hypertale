@@ -139,11 +139,8 @@ public final class Optimizer implements Opcodes {
 	}
 
 	public static boolean canOptimize(String path) {
-		if (agentless) {
-			return path.startsWith("com/hypixel/");
-		}
 		return !path.startsWith("javax/") && !path.startsWith("java/") &&
-				!path.startsWith("sun/") &&
+				!path.startsWith("sun/") && !path.startsWith("com/sun/") &&
 				!path.startsWith("org/objectweb/asm/") &&
 				!path.startsWith("com/fox2code/hypertale/utils/") &&
 				!HytaleArrayUtils.equals(path) &&

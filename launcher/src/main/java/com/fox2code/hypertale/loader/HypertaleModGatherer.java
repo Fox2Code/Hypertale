@@ -88,6 +88,15 @@ public final class HypertaleModGatherer {
 		return this.usingMixins;
 	}
 
+	public boolean hasHyxin() {
+		return this.hasHyxin;
+	}
+
+	public boolean shouldEnableMixinSubsystem() {
+		// Hypertale is a Mixin backend on its own.
+		return this.usingMixins || this.hasHyxin;
+	}
+
 	public static HypertaleModGatherer gatherModsDev() {
 		return gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
 	}
@@ -100,7 +109,7 @@ public final class HypertaleModGatherer {
 		ArrayList<File> libraries = new ArrayList<>();
 		File modSyncBootstrap = null;
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
-			modSyncBootstrap = appendEarlyLoaderMods(mods);
+			modSyncBootstrap = appendEarlyLoaderMods(mods, useMixins);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
 			appendMods(hypertaleMods, mods, libraries, useMixins);
@@ -155,11 +164,16 @@ public final class HypertaleModGatherer {
 		}
 	}
 
-	private static File appendEarlyLoaderMods(ArrayList<File> mods) {
+	private static File appendEarlyLoaderMods(ArrayList<File> mods, boolean[] useMixins) {
 		File modSyncBootstrap = null;
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleEarlyPlugins.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar")) {
 				try(ZipFile zipFile = new ZipFile(file)) {
+					if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
+							zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
+						useMixins[1] = true;
+						continue; // <- We already implement Hyxin APIs
+					}
 					if (zipFile.getEntry(HypertaleCompatibility.entryModSyncBootstrap) != null) {
 						modSyncBootstrap = file; // Mod sync bootstrap need special handling
 					} else {
@@ -181,8 +195,8 @@ public final class HypertaleModGatherer {
 							"com/fox2code/hypertale/init/Main.class") != null) {
 						continue; // <- Do not consider HypertaleInit as a mod!
 					}
-					if (zipFile.getEntry(
-							"com/build_9/hyxin/mixin/MixinService.class") != null) {
+					if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
+							zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
 						useMixins[1] = true;
 						continue; // <- We already implement Hyxin APIs
 					}

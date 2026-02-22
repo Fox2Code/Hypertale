@@ -63,7 +63,8 @@ final class HookClassLoader extends URLClassLoader {
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		URL resource;
-		if (!name.startsWith("com.hypixel.hytale.") ||
+		if (name.startsWith("com.fox2code.hypertale.") || name.startsWith("org.objectweb.asm.") ||
+				name.startsWith("org.spongepowered.asm.") || name.startsWith("org.bouncycastle.") ||
 				(resource = getResource(name.replace('.', '/') + ".class")) == null) {
 			return super.findClass(name);
 		}

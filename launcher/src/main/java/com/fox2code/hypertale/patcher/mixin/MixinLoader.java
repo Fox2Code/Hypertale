@@ -47,6 +47,19 @@ public final class MixinLoader {
 	private static final HashSet<String> modWithMixins = new HashSet<>();
 	private static boolean preInitialized = false, initialized = false, postInitialized = false;
 	private static IMixinTransformer mixinTransformer;
+	private static final HashSet<String> mixinExclusions = new HashSet<>();
+
+	static {
+		// Hypertale + Mixin system packages that must be excluded from mixin processing
+		mixinExclusions.add("com.fox2code.hypertale.");
+		mixinExclusions.add("org.objectweb.asm.");
+		mixinExclusions.add("org.spongepowered.asm.");
+		mixinExclusions.add("com.google.gson.");
+		mixinExclusions.add("com.build_9.hyxin.");
+		// Hytale classes that have miscellaneous reason to be excluded from mixin processing
+		mixinExclusions.add("org.bouncycastle.");
+		mixinExclusions.add("com.hypixel.hytale.plugin.early.");
+	}
 
 	private MixinLoader() {}
 
@@ -70,6 +83,7 @@ public final class MixinLoader {
 		MixinBootstrap.getPlatform().inject();
 		mixinTransformer = // Inject mixin transformer into the class loader.
 				(IMixinTransformer) MixinEnvironment.getCurrentEnvironment().getActiveTransformer();
+		com.build_9.hyxin.mixin.MixinService.transformer = mixinTransformer; // Hyxin support
 		MixinExtrasBootstrap.init();
 		preInitialized = true;
 	}
@@ -153,6 +167,7 @@ public final class MixinLoader {
 	}
 
 	public static byte[] transformClass(String name, byte[] bytes) {
+		if (isMixinExcluded(name)) return bytes;
 		return mixinTransformer.transformClass(MixinEnvironment.getDefaultEnvironment(), name, bytes);
 	}
 
@@ -162,5 +177,28 @@ public final class MixinLoader {
 
 	public static boolean modHasMixins(String modId) {
 		return modWithMixins.contains(modId);
+	}
+
+	static boolean isMixinExcluded(String className) {
+		for (String mixinPackage : mixinExclusions) {
+			if (className.startsWith(mixinPackage)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static void addMixinExclusion(String packageName) {
+		if (packageName == null || packageName.startsWith(".") ||
+				!packageName.endsWith(".") || packageName.indexOf('/') != -1) {
+			throw new IllegalArgumentException("Invalid package name: " + packageName);
+		}
+		if (packageName.startsWith("com.hypixel.hytale.") ||
+				"com.hypixel.hytale.".startsWith(packageName)) {
+			throw new IllegalArgumentException("Cannot exclude hytale itself: " + packageName);
+		}
+		if (!isMixinExcluded(packageName)) {
+			mixinExclusions.add(packageName);
+		}
 	}
 }

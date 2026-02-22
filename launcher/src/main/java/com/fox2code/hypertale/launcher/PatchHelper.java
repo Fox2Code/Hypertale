@@ -56,12 +56,16 @@ final class PatchHelper {
 				@Override
 				public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 										ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-					if (useMixins && className.startsWith("com/hypixel/hytale/")) {
+					if (loader == null || loader != PatchHelper.class.getClassLoader() ||
+							loader.getParent() != PatchHelper.class.getClassLoader() ||
+							className.startsWith("jdk/internal/")) {
+						return classfileBuffer;
+					}
+
+					if (useMixins) {
 						classfileBuffer = MixinLoader.transformClass(className.replace('/', '.'), classfileBuffer);
 					}
-					if (loader == null || loader == Optimizer.class.getClassLoader() ||
-							loader.getClass().getName().startsWith("jdk.internal.") ||
-							!Optimizer.canOptimize(className)) {
+					if (!Optimizer.canOptimize(className)) {
 						return classfileBuffer;
 					}
 					ClassReader classReader = new ClassReader(classfileBuffer);
