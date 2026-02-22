@@ -109,7 +109,8 @@ public final class HypertaleModGatherer {
 		ArrayList<File> libraries = new ArrayList<>();
 		File modSyncBootstrap = null;
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
-			modSyncBootstrap = appendEarlyLoaderMods(mods, useMixins);
+			modSyncBootstrap = appendEarlyLoaderMods(
+					hypertaleMods, mods, useMixins);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
 			appendMods(hypertaleMods, mods, libraries, useMixins);
@@ -164,15 +165,35 @@ public final class HypertaleModGatherer {
 		}
 	}
 
-	private static File appendEarlyLoaderMods(ArrayList<File> mods, boolean[] useMixins) {
+	private static File appendEarlyLoaderMods(
+			ArrayList<File> hypertaleMods, ArrayList<File> mods, boolean[] useMixins) {
 		File modSyncBootstrap = null;
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleEarlyPlugins.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar")) {
 				try(ZipFile zipFile = new ZipFile(file)) {
+					if (zipFile.getEntry(
+							"com/fox2code/hypertale/init/Main.class") != null) {
+						continue; // <- Do not consider HypertaleInit as a mod!
+					}
 					if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
 							zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
 						useMixins[1] = true;
 						continue; // <- We already implement Hyxin APIs
+					}
+					ZipEntry manifestEntry;
+					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
+						String modInfo;
+						try (InputStream inputStream = zipFile.getInputStream(manifestEntry)) {
+							modInfo = new String(IOUtils.readAllBytes(inputStream), StandardCharsets.UTF_8);
+						} catch (RuntimeException _) {
+							modInfo = "";
+						}
+						if (modInfo.contains("\"Hyxin\"")) {
+							useMixins[0] = true;
+							hypertaleMods.add(file);
+							mods.add(file);
+							continue;
+						}
 					}
 					if (zipFile.getEntry(HypertaleCompatibility.entryModSyncBootstrap) != null) {
 						modSyncBootstrap = file; // Mod sync bootstrap need special handling
@@ -208,10 +229,12 @@ public final class HypertaleModGatherer {
 						} catch (RuntimeException _) {
 							modInfo = "";
 						}
+						boolean modUseMixins = false;
 						if (modInfo.contains("\"HypertaleMixinConfig\"") || modInfo.contains("\"Hyxin\"")) {
 							useMixins[0] = true;
+							modUseMixins = true;
 						}
-						if (modInfo.contains("\"Hypertale")) {
+						if (modInfo.contains("\"Hypertale") || modUseMixins) {
 							hypertaleMods.add(file);
 							mods.add(file);
 							continue;
