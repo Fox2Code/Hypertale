@@ -89,7 +89,8 @@ subprojects {
                     disableWarningsInGeneratedCode.set(true)
                     allErrorsAsWarnings.set(true)
                     disable("EmptyCatch", "ThreadPriorityCheck", "NonApiType", "MutablePublicArray",
-                            "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation")
+                            "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation",
+                            "AssignmentExpression")
                     warn("DefaultCharset")
                 }
             }

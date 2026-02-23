@@ -248,7 +248,8 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                         disable("EmptyCatch", "ThreadPriorityCheck",
                                 "NonApiType", "MutablePublicArray",
                                 "StringSplitter", "FloggerFormatString",
-                                "FloggerLogString", "FloggerStringConcatenation")
+                                "FloggerLogString", "FloggerStringConcatenation",
+                                "AssignmentExpression")
                 }
             }
             if (config.getUseSpotless()) {
