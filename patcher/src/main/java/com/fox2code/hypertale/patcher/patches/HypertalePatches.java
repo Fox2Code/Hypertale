@@ -58,6 +58,7 @@ public final class HypertalePatches {
 		addPatch(new PatchExtraAuthenticationData());
 		addPatch(new PatchHytaleLogFormatter());
 		addPatch(new PatchUniverse());
+		addPatch(new PatchInventory());
 		addPatch(new PatchRedirectToOptimisedGetPlayers());
 		addPatch(new PatchRedirectToOptimisedGetChunkIfInMemory());
 		HypertalePatchesPlus.registerPatches();

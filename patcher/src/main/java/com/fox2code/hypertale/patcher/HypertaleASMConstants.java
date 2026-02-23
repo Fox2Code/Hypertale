@@ -60,6 +60,7 @@ public interface HypertaleASMConstants {
 	String PlayerAuthentication = "com/hypixel/hytale/server/core/auth/PlayerAuthentication";
 	String Entity = "com/hypixel/hytale/server/core/entity/Entity";
 	String Player = "com/hypixel/hytale/server/core/entity/entities/Player";
+	String Inventory = "com/hypixel/hytale/server/core/inventory/Inventory";
 	String AuthenticationPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/AuthenticationPacketHandler";
 	String HandshakeHandler = "com/hypixel/hytale/server/core/io/handlers/login/HandshakeHandler";
 	String PasswordPacketHandler = "com/hypixel/hytale/server/core/io/handlers/login/PasswordPacketHandler";
