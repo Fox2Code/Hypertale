@@ -260,24 +260,29 @@ public class AntiCheatEvent implements IEvent<Void> {
 					this.message, this.id, this.tempBanLengthTime, this.automation);
 		}
 
-		public void setCause(IEvent<?> cause) {
+		public Builder setCause(IEvent<?> cause) {
 			this.cause = cause;
+			return this;
 		}
 
-		public void setMessage(Message message) {
+		public Builder setMessage(Message message) {
 			this.message = message;
+			return this;
 		}
 
-		public void setId(String id) {
+		public Builder setId(String id) {
 			this.id = id;
+			return this;
 		}
 
-		public void setTempBanLengthTime(long tempBanLengthTime) {
+		public Builder setTempBanLengthTime(long tempBanLengthTime) {
 			this.tempBanLengthTime = tempBanLengthTime;
+			return this;
 		}
 
-		public void setAutomation(boolean automation) {
+		public Builder setAutomation(boolean automation) {
 			this.automation = automation;
+			return this;
 		}
 	}
 }
