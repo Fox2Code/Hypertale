@@ -79,7 +79,8 @@ You can also check out [the official Hypertale Javadoc](https://fox2code.com/jav
 Hypertale includes custom compatibility or official support for:
 *   **ModSync**: Full bootstrap support.
 *   **Mod List Mods**: Integrated icon support.
-*   **Spark**: Extensively tested with Spark for performance profiling.
+*   [**Spark**](https://github.com/lucko/spark): Extensively tested with Spark for performance profiling.
+*   [**Hyxin**](https://github.com/Build-9/Hyxin): Support to load Hyxin mods is built-in into Hypertale!
 
 **Example Mod**: [HypertaleExampleMod](https://github.com/Fox2Code/HypertaleExampleMod)
 
