@@ -34,10 +34,7 @@ import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
 import com.hypixel.hytale.logger.backend.HytaleConsole;
 
-import java.io.Console;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -50,6 +47,9 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
 public final class Main {
+	private static final boolean fakeNotOSS = Boolean.getBoolean("hypertale.fakeNotOSS");
+	private static boolean hytaleLaunched = false;
+
 	public static void hypertaleInitV1Main(String[] args) throws Throwable {
 		main(args);
 	}
@@ -73,16 +73,31 @@ public final class Main {
 			System.out.println("[Hypertale] Append \"--\" as an argument to skip this check!");
 			return;
 		}
+		// Do not allow some features in closed source builds.
+		final boolean isNotOSS = fakeNotOSS || MainPlus.forceOffline() ||
+				!"OSS".equals(System.getProperty("hypertale.edition", "Unknown"));
 		boolean dev;
 		if (args.length == 1 && "--".equals(args[0])) {
 			args = EmptyArrays.EMPTY_STRING_ARRAY;
 		} else if (args.length >= 1 && "--version".equals(args[0])) {
-			System.out.println("Hypertale version " + BuildConfig.HYPERTALE_VERSION);
+			System.out.println("Hypertale version " + BuildConfig.HYPERTALE_VERSION +
+					" (" + System.getProperty("hypertale.edition", "Unknown") + ")");
 			return;
 		} else if (args.length == 1 && "--download-libraries".equals(args[0])) {
+			if (MainPlus.forceOffline()) {
+				EarlyLogger.log("Cannot download libraries with the offline version of Hypertale!");
+				return;
+			}
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 				DependencyHelper.loadDependency(dependency);
 			}
+			return;
+		} else if (args.length == 2 && "--make-hypertale-offline-libraries".equals(args[0])) {
+			if (isNotOSS) {
+				System.out.println("This operation is not available in non-OSS builds of Hypertale!");
+				return;
+			}
+			ZipLibrariesMaker.makeZip(new File(args[1]));
 			return;
 		} else if (args.length == 1 && "--run-patcher".equals(args[0])) {
 			try {
@@ -93,6 +108,9 @@ public final class Main {
 				}
 				HypertaleConfig.load();
 				HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
+				for (DependencyHelper.Dependency dependency : modGatherer.getLocalDependencies()) {
+					DependencyHelper.loadLocalDependencyPack(dependency);
+				}
 				for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 					DependencyHelper.loadDependency(dependency);
 				}
@@ -153,6 +171,10 @@ public final class Main {
 			return;
 		} else if (args.length == 3 &&
 				((dev = "--run-patcher-dev".equals(args[0])) || "--run-patcher".equals(args[0]))) {
+			if (isNotOSS) {
+				System.out.println("Cannot set patch source/destination in non-OSS edition!");
+				return;
+			}
 			final File input = new File(args[1]);
 			DependencyHelper.addFileToClasspath(input);
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
@@ -199,6 +221,9 @@ public final class Main {
 			}
 		}
 		HypertaleModGatherer modGatherer = HypertaleModGatherer.gatherMods(args);
+		for (DependencyHelper.Dependency dependency : modGatherer.getLocalDependencies()) {
+			DependencyHelper.loadLocalDependencyPack(dependency);
+		}
 		HypertaleData actualData = new HypertaleData();
 		actualData.hypertaleJarSize = HypertalePaths.hypertaleJar.length();
 		actualData.originalJarSize = hytaleJar.length();
@@ -293,9 +318,10 @@ public final class Main {
 	}
 
 	static void startHytale(String... args) {
-		if (!EarlyLogger.isDirectLogging()) {
+		if (hytaleLaunched || !EarlyLogger.isDirectLogging()) {
 			throw new IllegalStateException("Game looks already launched!");
 		}
+		hytaleLaunched = true;
 		if (HypertalePaths.hypertaleCacheJust.isFile() &&
 				!HypertalePaths.hypertaleCacheJust.delete()) {
 			EarlyLogger.log("Failed to delete \".hypertale/.just\"");
@@ -317,7 +343,7 @@ public final class Main {
 	}
 
 	public static void execSelf(String arg) throws IOException, InterruptedException {
-		if (!EarlyLogger.isDirectLogging()) {
+		if (hytaleLaunched || !EarlyLogger.isDirectLogging()) {
 			throw new IllegalStateException("Invalid state!");
 		}
 		EarlyLogger.stop();

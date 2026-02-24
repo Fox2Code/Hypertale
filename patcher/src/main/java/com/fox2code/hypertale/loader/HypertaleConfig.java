@@ -40,13 +40,15 @@ public final class HypertaleConfig {
 	private static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	public static String hytaleBranch = "release";
 	public static String secondaryJarName = "Server.jar";
-	public static boolean optimizePluginOnlyAPIs = true;
-	public static boolean aggressivelyOptimizePluginOnlyAPIs = false;
-	public static boolean unsupportedDisablePluginServerVersionCheck = false;
-	public static boolean premiumHyperOptimizeClassPath = false;
-	public static boolean premiumCheckJarValidity = true;
-	public static int watchdogWarnLagAfter = 10;
-	public static int watchdogExitAfter = 30;
+	public static boolean allowDownloadLibraries = true; // Tell if Hypertale is allowed to download libraries
+	public static boolean optimizePluginOnlyAPIs = true; // Tell if plugin-only APIs should be optimized
+	public static boolean aggressivelyOptimizePluginOnlyAPIs = false; // Tell if APIs are allowed to change semantics
+	public static boolean unsupportedDisablePluginServerVersionCheck = false; // Disable plugin server version check
+	public static boolean premiumHyperOptimizeClassPath = false; // Optimize the entire classpath as a whole
+	public static boolean premiumCheckJarValidity = true; // Check if the patched jar bytecode is valid before starting
+	public static boolean premiumOfflineMode = false; // Disable the ability for plugins to connect to the internet
+	public static int watchdogWarnLagAfter = 10; // Time after which a stacktrace will be dumped
+	public static int watchdogExitAfter = 60; // Time after which hypertale assume the server crashed
 
 	private HypertaleConfig() {}
 
@@ -173,5 +175,9 @@ public final class HypertaleConfig {
 
 	public static boolean isUnsupportedConfiguration() {
 		return HypertaleConfig.unsupportedDisablePluginServerVersionCheck;
+	}
+
+	public static boolean isOfflineMode() {
+		return PREMIUM && HypertaleConfig.premiumOfflineMode;
 	}
 }

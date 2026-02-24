@@ -30,7 +30,9 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 
 /**
- * This class is overwritten by Hypertale Plus
+ * This class is overwritten by Hypertale Offline and Hypertale Plus
+ * <p>
+ * This class is loaded before any library is loaded
  */
 final class MainPlus {
 	static void setEditionProperties() {
@@ -60,6 +62,11 @@ final class MainPlus {
 	}
 
 	static boolean checkHaltLaunchGame(String[] args) {
+		return false;
+	}
+
+	static boolean forceOffline() {
+		// Hypertale Offline Edition overwrite this method
 		return false;
 	}
 }

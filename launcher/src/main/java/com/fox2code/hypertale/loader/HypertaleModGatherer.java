@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.loader;
 
+import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.EmptyArrays;
 import com.fox2code.hypertale.utils.HypertalePaths;
@@ -46,10 +47,12 @@ public final class HypertaleModGatherer {
 	private final List<ClassPathModCandidate> classPathManifests;
 	private final boolean usingMixins;
 	private final boolean hasHyxin;
+	private final Collection<DependencyHelper.Dependency> localDependencies;
 
 	private HypertaleModGatherer(List<File> hypertaleMods, List<File> mods, List<File> libraries,
 								 File modSyncBootstrap, int modHash, List<ClassPathModCandidate> classPathManifests,
-								 boolean usingMixins, boolean hasHyxin) {
+								 boolean usingMixins, boolean hasHyxin,
+								 Collection<DependencyHelper.Dependency> localDependencies) {
 		this.hypertaleMods = hypertaleMods;
 		this.mods = mods;
 		this.libraries = libraries;
@@ -58,6 +61,7 @@ public final class HypertaleModGatherer {
 		this.classPathManifests = classPathManifests;
 		this.usingMixins = usingMixins;
 		this.hasHyxin = hasHyxin;
+		this.localDependencies = localDependencies;
 	}
 
 	public List<File> getHypertaleMods() {
@@ -97,6 +101,10 @@ public final class HypertaleModGatherer {
 		return this.usingMixins || this.hasHyxin;
 	}
 
+	public Collection<DependencyHelper.Dependency> getLocalDependencies() {
+		return this.localDependencies;
+	}
+
 	public static HypertaleModGatherer gatherModsDev() {
 		return gatherMods(EmptyArrays.EMPTY_STRING_ARRAY);
 	}
@@ -107,13 +115,14 @@ public final class HypertaleModGatherer {
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
 		ArrayList<File> libraries = new ArrayList<>();
+		HashMap<String, DependencyHelper.Dependency> localDependencies = new HashMap<>();
 		File modSyncBootstrap = null;
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
 			modSyncBootstrap = appendEarlyLoaderMods(
-					hypertaleMods, mods, useMixins);
+					hypertaleMods, mods, useMixins, localDependencies);
 		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
-			appendMods(hypertaleMods, mods, libraries, useMixins);
+			appendMods(hypertaleMods, mods, libraries, useMixins, localDependencies);
 		}
 		long[] fileSizes = new long[mods.size()];
 		for (int i = 0; i < fileSizes.length; i++) {
@@ -124,7 +133,8 @@ public final class HypertaleModGatherer {
 				Collections.unmodifiableList(mods), Collections.unmodifiableList(libraries),
 				modSyncBootstrap, Arrays.hashCode(fileSizes),
 				Collections.unmodifiableList(gatherClassPathMods(useMixins)),
-				useMixins[0], useMixins[1]);
+				useMixins[0], useMixins[1],
+				Collections.unmodifiableCollection(localDependencies.values()));
 	}
 
 	private static List<ClassPathModCandidate> gatherClassPathMods(boolean[] useMixins) {
@@ -166,19 +176,14 @@ public final class HypertaleModGatherer {
 	}
 
 	private static File appendEarlyLoaderMods(
-			ArrayList<File> hypertaleMods, ArrayList<File> mods, boolean[] useMixins) {
+			ArrayList<File> hypertaleMods, ArrayList<File> mods, boolean[] useMixins,
+			HashMap<String, DependencyHelper.Dependency> localDependencies) {
 		File modSyncBootstrap = null;
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleEarlyPlugins.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar")) {
 				try(ZipFile zipFile = new ZipFile(file)) {
-					if (zipFile.getEntry(
-							"com/fox2code/hypertale/init/Main.class") != null) {
-						continue; // <- Do not consider HypertaleInit as a mod!
-					}
-					if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
-							zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
-						useMixins[1] = true;
-						continue; // <- We already implement Hyxin APIs
+					if (preprocessFile(localDependencies, useMixins, file, zipFile)) {
+						continue;
 					}
 					ZipEntry manifestEntry;
 					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
@@ -207,19 +212,14 @@ public final class HypertaleModGatherer {
 	}
 
 	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods,
-								   ArrayList<File> libraries, boolean[] useMixins) {
+								   ArrayList<File> libraries, boolean[] useMixins,
+								   HashMap<String, DependencyHelper.Dependency> localDependencies) {
 		for (File file : Objects.requireNonNull(HypertalePaths.hytaleMods.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar") &&
 					!file.getName().equals(HypertalePaths.hypertaleJar.getName())) {
 				try (ZipFile zipFile = new ZipFile(file)) {
-					if (zipFile.getEntry(
-							"com/fox2code/hypertale/init/Main.class") != null) {
-						continue; // <- Do not consider HypertaleInit as a mod!
-					}
-					if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
-							zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
-						useMixins[1] = true;
-						continue; // <- We already implement Hyxin APIs
+					if (preprocessFile(localDependencies, useMixins, file, zipFile)) {
+						continue;
 					}
 					ZipEntry manifestEntry;
 					if ((manifestEntry = zipFile.getEntry("manifest.json")) != null) {
@@ -254,6 +254,57 @@ public final class HypertaleModGatherer {
 				}
 			}
 		}
+	}
+
+	private static boolean preprocessFile(
+			HashMap<String, DependencyHelper.Dependency> localDependencies,
+			boolean[] useMixins, File file, ZipFile zipFile) {
+		if (zipFile.getEntry(
+				"com/fox2code/hypertale/init/Main.class") != null) {
+			return true; // <- Do not consider HypertaleInit as a mod!
+		}
+		if (zipFile.getEntry(HypertaleCompatibility.entryHyxinMixinService) != null ||
+				zipFile.getEntry(HypertaleCompatibility.entryHyxinTransformer) != null) {
+			useMixins[1] = true;
+			return true; // <- We already implement Hyxin APIs
+		}
+		ZipEntry hyperDependencies;
+		if ((hyperDependencies = zipFile.getEntry("META-INF/hypertale-dependencies.properties")) != null) {
+			Properties properties = new Properties();
+			try {
+				properties.load(zipFile.getInputStream(hyperDependencies));
+			} catch (IOException e) {
+				EarlyLogger.log("Failed to read hypertale-dependencies.properties in " + file.getName());
+			}
+			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+				String dependencyIdentifier = String.valueOf(entry.getKey()).replace('@', ':');
+				String dependencyAttributes = String.valueOf(entry.getValue());
+				String[] attributes = dependencyAttributes.split("\\s");
+				if (attributes.length != 3) {
+					continue;
+				}
+				String path = attributes[1];
+				if (path.startsWith("/") || zipFile.getEntry(path) == null) {
+					EarlyLogger.log("Failed to find dependency " + dependencyIdentifier + " in " + file.getName());
+					continue;
+				}
+				path = "jar:" + file.toURI() + "!/" + path;
+				DependencyHelper.Dependency newDependency =  new DependencyHelper.Dependency(
+						dependencyIdentifier, null, attributes[0], path, attributes[2]);
+				DependencyHelper.Dependency oldDependency = localDependencies.get(dependencyIdentifier);
+				if (oldDependency != null) {
+					newDependency = oldDependency.tryMerge(newDependency);
+					if (newDependency == null) {
+						EarlyLogger.log("Failed to merge dependency " + dependencyIdentifier + " from multiple jars!");
+						continue;
+					}
+				}
+
+				localDependencies.put(dependencyIdentifier, newDependency);
+			}
+		}
+
+		return false;
 	}
 
 	public static record ClassPathModCandidate(URL manifest, File file) {}

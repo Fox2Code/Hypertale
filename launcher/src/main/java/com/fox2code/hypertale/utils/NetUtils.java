@@ -23,10 +23,14 @@
  */
 package com.fox2code.hypertale.utils;
 
+import com.fox2code.hypertale.launcher.DependencyHelper;
+import com.fox2code.hypertale.loader.HypertaleConfig;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public final class NetUtils {
 	private static final String GRADLE_USER_AGENT;
@@ -87,6 +91,17 @@ public final class NetUtils {
 	}
 
 	private static Charset downloadToImpl(URL url, OutputStream outputStream, String postData, boolean findCharset) throws IOException {
+		Objects.requireNonNull(url, "URL must not be null");
+		Objects.requireNonNull(outputStream, "OutputStream must not be null");
+		String path;
+		if (DependencyHelper.OFFLINE_ONLY && // Don't take risk with unknown paths
+				((path = url.getPath()) == null || path.endsWith(".jar"))) {
+			if (HypertaleConfig.allowDownloadLibraries) {
+				throw new IOException("Cannot download jar files when in offline mode");
+			} else {
+				throw new IOException("Cannot download jar files when allowDownloadLibraries is false");
+			}
+		}
 		HttpURLConnection con = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
 		if (postData != null) {
 			con.setRequestMethod("POST");

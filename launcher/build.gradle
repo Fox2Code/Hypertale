@@ -34,6 +34,9 @@ final File hypertaleJavaPlugin = new File(classesFolder, "com" + File.separator 
         File.separator + "hypertale" + File.separator + "utils" + File.separator + "HypertaleBundled.class")
 final File metaInfHypertaleJavaPlugin = new File(classesFolder,
         "META-INF" + File.separator + "bundled" + File.separator + "#HypertaleBundled.class")
+// Hypertale: Libraries
+final File hypertaleLibraries = new File(layout.buildDirectory.asFile.get(), "libs" +
+        File.separator + "HypertaleLibraries-" + project['hypertale.library.version'] + ".jar")
 
 java {
     toolchain {
@@ -108,6 +111,7 @@ jar {
         attributes 'Can-Set-Native-Method-Prefix': 'true'
         attributes 'Can-Retransform-Classes': 'true'
         attributes 'Can-Redefine-Classes': 'true'
+        attributes 'Sealed': 'true'
     }
     from(hypertaleInitJar)
 }
@@ -119,6 +123,14 @@ tasks.register("runServer", JavaExec) {
     mainClass = "com.fox2code.hypertale.launcher.Main"
     standardInput = System.in
     args("--launch-dev")
+}
+
+tasks.register("makeLibraries", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.main.output +
+            project(":patcher").sourceSets.main.output
+    jvmArgs(configurations.javaAgent.collect { "-javaagent:" + it.path })
+    mainClass = "com.fox2code.hypertale.launcher.Main"
+    args("--make-hypertale-offline-libraries", hypertaleLibraries.getAbsolutePath())
 }
 
 compileJava {

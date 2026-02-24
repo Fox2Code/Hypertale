@@ -1,5 +1,3 @@
-import java.util.regex.Pattern
-
 buildscript {
     ext {
         spotlessVersion = (project['spotless.version'] as String)
@@ -94,6 +92,11 @@ subprojects {
                     warn("DefaultCharset")
                 }
             }
+        }
+
+        tasks.withType(AbstractArchiveTask).configureEach {
+            reproducibleFileOrder = true
+            preserveFileTimestamps = false
         }
 
         // Always apply spotless on compile
@@ -277,4 +280,10 @@ tasks.register("makeRelease", Copy) {
         include "hypertale/dev/hypertale.dev.gradle.plugin/${project['hypertale.version']}/*"
     }
     into mavenDestination
+}
+tasks.register("makeMajorRelease") {
+    group = "build"
+    description = "Make release for maven uploading with extra libraries!"
+    dependsOn("makeRelease")
+    dependsOn(":launcher:makeLibraries")
 }

@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.loader.HypertaleConfig;
 import com.fox2code.hypertale.utils.IOUtils;
 import com.fox2code.hypertale.utils.NetUtils;
 
@@ -31,18 +32,25 @@ import java.lang.instrument.Instrumentation;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 public final class DependencyHelper {
 	private static final boolean DEBUG = false;
+	public static final boolean OFFLINE_ONLY = // Always true on some edition
+			MainPlus.forceOffline() || HypertaleConfig.isOfflineMode() ||
+					!HypertaleConfig.allowDownloadLibraries;
 	private static final File librariesDir = new File(
 			System.getProperty("hypertale.librariesDir", "libraries")).getAbsoluteFile();
 	@SuppressWarnings("unchecked")
 	private static final Consumer<URL> initCLAddURL = Boolean.getBoolean("hypertale.useInitWrapper") ?
 			(Consumer<URL>) System.getProperties().get("hypertale.initCLAddURL") : null;
 	public static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2";
+	private static final HashMap<String, Dependency> hypertaleDependencies = new HashMap<>();
 
 	public static final Dependency[] patcherDependencies = new Dependency[]{
 			new Dependency("org.ow2.asm:asm:" + BuildConfig.ASM_VERSION, MAVEN_CENTRAL,
@@ -79,44 +87,90 @@ public final class DependencyHelper {
 					MAVEN_CENTRAL, "com.llamalad7.mixinextras.MixinExtrasBootstrap", null,
 					"30e7538eb27d8f7e78e4745dc0c56c857464a6f03fcacfd3101d2fce29cf8890")
 	};
+	private static final List<DependencyHelper.Dependency> patcherDependenciesCopy = List.of(patcherDependencies);
 
+	/**
+	 * Load a dependency into the Hypertale environment, if Hypertale cannot fulfill this request,
+	 * either by IO failure, either by the edition/configuration, an error will be thrown.
+	 *
+	 * @param dependency The dependency to load into the root class loader!
+	 */
 	public static void loadDependency(Dependency dependency) {
+		dependency = hypertaleDependencies.getOrDefault(dependency.name, dependency);
 		if (hasClass(dependency.classCheck)) return;
 		if (!librariesDir.isDirectory() && !librariesDir.mkdirs())
 			throw new IOError(new IOException("Failed to create libraries directory"));
 		String postURL = resolvePostURL(dependency.name);
 		File file = new File(librariesDir, fixUpPath(postURL));
 		if (!file.isAbsolute()) file = file.getAbsoluteFile();
-		boolean justDownloaded = false;
 		checkHashOrDelete(file, dependency, false);
-		if (!file.exists()) {
-			File parentFile = file.getParentFile();
-			if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
-				throw new RuntimeException("Cannot create dependency directory for " + dependency.name);
-			}
-			IOException fallBackIoe = null;
-			try (OutputStream os = Files.newOutputStream(file.toPath())) {
-				justDownloaded = true;
-				NetUtils.downloadTo(URI.create(dependency.repository.endsWith(".jar") ?
-						dependency.repository : dependency.repository + "/" + postURL).toURL(), os);
-			} catch (IOException ioe) {
-				if (dependency.fallbackUrl != null) {
-					fallBackIoe = ioe;
-				} else {
-					if (file.exists() && !file.delete()) file.deleteOnExit();
-					throw new RuntimeException("Cannot download " + dependency.name, ioe);
+		if (file.exists()) {
+			// Return early if the local file is already fine!
+			addDependencyToClassLoaderWithSha256Verification(file, dependency, true);
+			return;
+		}
+		File parentFile = file.getParentFile();
+		if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
+			throw new RuntimeException("Cannot create dependency directory for " + dependency.name);
+		}
+		if (dependency.sha256Sum == null) {
+			// Do not allow download without checksums as they are a potential security risk.
+			throw new RuntimeException("Download is forbidden for libraries without a checksum " + dependency.name);
+		} else if (OFFLINE_ONLY) {
+			// Extra safe path so reviewers are sure Hypertale will not connect to the internet.
+			int index;
+			if (dependency.fallbackUrl != null && !file.exists() &&
+					dependency.fallbackUrl.startsWith("jar:file:/") &&
+					(index = dependency.fallbackUrl.indexOf("!/")) != -1) {
+				File libraryContainer = new File(URI.create(dependency.fallbackUrl.substring(4, index)));
+				String entry = dependency.fallbackUrl.substring(index + 2);
+				if (libraryContainer.isFile()) {
+					try (JarFile jarFile = new JarFile(libraryContainer)) {
+						ZipEntry libraryEntry;
+						if ((libraryEntry = jarFile.getEntry(entry)) != null) {
+							IOUtils.copy(jarFile.getInputStream(libraryEntry),
+									Files.newOutputStream(file.toPath()));
+							addDependencyToClassLoaderWithSha256Verification(
+									file, dependency, true);
+							return;
+						}
+					} catch (IOException e) {
+						throw new RuntimeException("Failed to load jar file", e);
+					}
 				}
 			}
-			if (fallBackIoe != null) {
-				try (OutputStream os = Files.newOutputStream(file.toPath())) {
-					justDownloaded = true;
-					NetUtils.downloadTo(URI.create(dependency.fallbackUrl).toURL(), os);
-				} catch (IOException ioe) {
-					if (file.exists() && !file.delete()) file.deleteOnExit();
-					throw new RuntimeException("Cannot download " + dependency.name, fallBackIoe);
-				}
+
+			// Do not allow download in offline mode.
+			throw new RuntimeException("Missing Hypertale Library Pack! Failed to find: " + dependency.name);
+		}
+		boolean justDownloaded = false;
+		IOException fallBackIoe = null;
+		try (OutputStream os = Files.newOutputStream(file.toPath())) {
+			justDownloaded = true;
+			NetUtils.downloadTo(URI.create(dependency.repository.endsWith(".jar") ?
+					dependency.repository : dependency.repository + "/" + postURL).toURL(), os);
+		} catch (IOException ioe) {
+			if (dependency.fallbackUrl != null) {
+				fallBackIoe = ioe;
+			} else {
+				if (file.exists() && !file.delete()) file.deleteOnExit();
+				throw new RuntimeException("Cannot download " + dependency.name, ioe);
 			}
 		}
+		if (fallBackIoe != null) {
+			try (OutputStream os = Files.newOutputStream(file.toPath())) {
+				justDownloaded = true;
+				NetUtils.downloadTo(URI.create(dependency.fallbackUrl).toURL(), os);
+			} catch (IOException ioe) {
+				if (file.exists() && !file.delete()) file.deleteOnExit();
+				throw new RuntimeException("Cannot download " + dependency.name, fallBackIoe);
+			}
+		}
+		addDependencyToClassLoaderWithSha256Verification(file, dependency, justDownloaded);
+	}
+
+	private static void addDependencyToClassLoaderWithSha256Verification(
+			File file, Dependency dependency, boolean justDownloaded) {
 		checkHashOrDelete(file, dependency, true);
 		try {
 			addFileToClasspath(file);
@@ -128,9 +182,12 @@ public final class DependencyHelper {
 			} else {
 				if (!justDownloaded) {
 					// Assume the file is corrupted if the load failed.
-					if (file.exists() && !file.delete()) file.deleteOnExit();
-					loadDependency(dependency);
-					return;
+					if (file.exists() && !file.delete()) {
+						file.deleteOnExit();
+					} else {
+						loadDependency(dependency);
+						return;
+					}
 				}
 				throw new RuntimeException("Failed to load " +
 						dependency.name + " -> " + file.getPath());
@@ -169,7 +226,7 @@ public final class DependencyHelper {
 		}
 	}
 
-	private static String resolvePostURL(String string) {
+	static String resolvePostURL(String string) {
 		String[] depKeys = string.split(":");
 		// "org.joml:rrrr:${jomlVersion}"      => ${repo}/org/joml/rrrr/1.9.12/rrrr-1.9.12.jar
 		// "org.joml:rrrr:${jomlVersion}:rrrr" => ${repo}/org/joml/rrrr/1.9.12/rrrr-1.9.12-rrrr.jar
@@ -202,6 +259,29 @@ public final class DependencyHelper {
 		}
 	}
 
+	static void loadLocalDependencyPack(Dependency dependency) {
+		if (dependency.repository != null ||
+				!dependency.fallbackUrl.startsWith("jar:file:")) {
+			EarlyLogger.log("Failed to load local dependency " + dependency.name + " -> " + dependency.fallbackUrl);
+			return;
+		}
+		if (hypertaleDependencies.isEmpty()) {
+			for (Dependency dep : patcherDependenciesCopy) {
+				hypertaleDependencies.put(dep.name, dep);
+			}
+		}
+		Dependency existingDependency = hypertaleDependencies.get(dependency.name);
+		if (existingDependency != null) {
+			Dependency mergedDep = existingDependency.tryMerge(dependency);
+			if (mergedDep != null) {
+				hypertaleDependencies.put(mergedDep.name, mergedDep);
+			}
+		} else {
+			EarlyLogger.log("Loaded local dependency " + dependency.name + " -> " + dependency.fallbackUrl);
+			hypertaleDependencies.put(dependency.name, dependency);
+		}
+	}
+
 	public record Dependency(String name, String repository, String classCheck, String fallbackUrl, String sha256Sum) {
 		public Dependency(String name, String repository, String classCheck) {
 			this(name, repository, classCheck, null, null);
@@ -209,6 +289,17 @@ public final class DependencyHelper {
 
 		public Dependency(String name, String repository, String classCheck, String fallbackUrl) {
 			this(name, repository, classCheck, fallbackUrl, null);
+		}
+
+		public Dependency tryMerge(Dependency other) {
+			// Assume "this" is more trusted than "other"
+			// Cannot merge dependencies with different name or checksums
+			if (!this.name.equals(other.name) || !this.classCheck.equals(other.classCheck) ||
+					(this.sha256Sum != null && other.sha256Sum != null && !this.sha256Sum.equals(other.sha256Sum))) {
+				return null;
+			}
+			String newFallback = this.fallbackUrl == null ? other.fallbackUrl : this.fallbackUrl;
+			return new Dependency(this.name, this.repository, this.classCheck, newFallback, this.sha256Sum);
 		}
 	}
 }

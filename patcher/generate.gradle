@@ -18,6 +18,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
     buildConfigSrc.getParentFile().mkdirs()
     // Read property before trying to write file
     final String HYPERTALE_VERSION = project['hypertale.version']
+    final String HYPERTALE_LIBRARIES_VERSION = project['hypertale.library.version']
     final String ERRORPRONE_VERSION = project['errorprone.version']
     final String ASM_VERSION = project['asm.version']
     final String FASTUTIL_VERSION = project['fastutil.version']
@@ -38,6 +39,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
         printStream.println("    private BuildConfig() {}")
         printStream.println("    private static String deInline(String str) { return str; }")
         appendField(printStream, 'HYPERTALE_VERSION', HYPERTALE_VERSION)
+        appendField(printStream, 'HYPERTALE_LIBRARIES_VERSION', HYPERTALE_LIBRARIES_VERSION)
         appendField(printStream, 'ERRORPRONE_VERSION', ERRORPRONE_VERSION)
         appendField(printStream, 'ASM_VERSION', ASM_VERSION)
         appendField(printStream, 'FASTUTIL_VERSION', FASTUTIL_VERSION)

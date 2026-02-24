@@ -174,7 +174,8 @@ public final class HypertaleModLoader {
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
 		if (pluginManifest == null) return null;
-		if (HypertaleConfig.unsupportedDisablePluginServerVersionCheck) {
+		if (HypertaleConfig.unsupportedDisablePluginServerVersionCheck ||
+				"*".equals(pluginManifest.getServerVersion())) {
 			pluginManifest.setServerVersion(HytaleVersion.HYTALE_VERSION);
 		} else {
 			String serverVersionPatch = versionServerSupportOverride.get(

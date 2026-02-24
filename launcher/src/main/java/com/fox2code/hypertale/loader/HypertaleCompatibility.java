@@ -28,4 +28,6 @@ public final class HypertaleCompatibility {
 	public static final String classModSyncBootstrap = "de.onyxmoon.modsync.bootstrap.ModSyncBootstrap";
 	public static final String entryHyxinMixinService = "com/build_9/hyxin/mixin/MixinService.class";
 	public static final String entryHyxinTransformer = "com/build_9/hyxin/mixin/HyxinTransformer.class";
+	// Use 16, 256, and true color ANSI codes for color, if it is not supported, it is usually ignored!
+	public static final String ANSI_MAGENTA = "\u001B[35;95m\u001B[38;5;201m\u001B[38;2;255;0;255m";
 }
