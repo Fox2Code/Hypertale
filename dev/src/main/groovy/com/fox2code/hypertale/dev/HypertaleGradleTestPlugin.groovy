@@ -27,6 +27,16 @@ import org.gradle.api.Project
 
 class HypertaleGradleTestPlugin extends HypertaleGradlePlugin {
     @Override
+    void apply(Project project) {
+        project.pluginManager.apply('eclipse')
+        project.pluginManager.apply('java-library')
+        project.repositories {
+            mavenLocal()
+        }
+        super.apply(project)
+    }
+
+    @Override
     File getHypertaleGradleDirectory(Project project) {
         return new File(project.rootDir, "hypertale")
     }

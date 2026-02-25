@@ -39,10 +39,6 @@ java {
     withJavadocJar()
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(files(hytaleServer))
     // We manage the HytaleServer.jar from this gradle script

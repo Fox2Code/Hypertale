@@ -50,6 +50,7 @@ public final class DependencyHelper {
 	private static final Consumer<URL> initCLAddURL = Boolean.getBoolean("hypertale.useInitWrapper") ?
 			(Consumer<URL>) System.getProperties().get("hypertale.initCLAddURL") : null;
 	public static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2";
+	public static final String FOX2CODE = "https://cdn.fox2code.com/maven";
 	private static final HashMap<String, Dependency> hypertaleDependencies = new HashMap<>();
 
 	public static final Dependency[] patcherDependencies = new Dependency[]{

@@ -10,10 +10,6 @@ java {
     withJavadocJar()
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     compileOnly(project(":patcher"))
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"

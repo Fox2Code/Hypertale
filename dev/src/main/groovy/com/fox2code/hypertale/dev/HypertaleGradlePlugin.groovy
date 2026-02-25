@@ -78,8 +78,10 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 }
             }
             maven {
+                name = 'Fox2Code Maven'
                 url = 'https://cdn.fox2code.com/maven'
                 content {
+                    includeGroup 'com.github.bawnorton.mixinsquared'
                     includeGroup 'com.fox2code.Hypertale'
                     includeGroup 'com.fox2code'
                 }

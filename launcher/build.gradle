@@ -53,10 +53,6 @@ configurations {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation(files(workInProgress))
     final String ASM_VERSION = project['asm.version']
