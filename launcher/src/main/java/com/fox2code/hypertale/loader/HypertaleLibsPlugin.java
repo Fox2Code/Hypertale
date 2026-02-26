@@ -38,7 +38,9 @@ public final class HypertaleLibsPlugin extends JavaPlugin {
 	@Override
 	protected void start() {
 		// Do not crash if loaded later
-		if (PluginManager.get().hasPlugin(new PluginIdentifier("Hypertale", "Hypertale"), SemverRange.WILDCARD)) {
+		if (!PluginManager.get().hasPlugin(new PluginIdentifier("Hypertale", "Hypertale"), SemverRange.WILDCARD)) {
+			this.getLogger().atWarning().log("Offline Hypertale: Libraries can only be used with Hypertale!");
+		} else if (HypertaleLibsPlugin.class.getClassLoader() == JavaPlugin.class.getClassLoader()) {
 			this.hypertale().setLoggerName(HypertaleCompatibility.ANSI_MAGENTA + "HypertaleLibraries");
 			this.getLogger().atInfo().log("Offline Hypertale: Libraries extracted successfully by Hypertale!");
 			this.getLogger().atInfo().log("You can now safely delete it as its content has been extracted! :3");
