@@ -29,7 +29,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a method as safe to be called from any thread, including the thread attached to this method.
+ * Marks a method as safe to be called from any thread, including the thread attached to this method
+ * but that this method may be calling another thread.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})

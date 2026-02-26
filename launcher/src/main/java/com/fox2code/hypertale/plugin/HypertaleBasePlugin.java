@@ -50,10 +50,20 @@ public final class HypertaleBasePlugin {
 		}
 	}
 
+	/**
+	 * Checks if the plugin is loaded into the same classloader as Hytale.
+	 *
+	 * @return true if the plugin is preloaded, false otherwise.
+	 */
 	public boolean isPreLoaded() {
 		return this.preLoaded;
 	}
 
+	/**
+	 * Checks if the plugin uses any Mixin.
+	 *
+	 * @return true if the plugin has any Mixin, false otherwise.
+	 */
 	public boolean hasMixin() {
 		return this.hasMixin;
 	}

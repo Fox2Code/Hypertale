@@ -31,6 +31,10 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.UUID;
 
+/**
+ * HypertalePlayerAuthentication is a class that extends PlayerAuthentication and provides additional
+ * identifying elements for Hypertale players to be used by Hypertale plugins.
+ */
 public final class HypertalePlayerAuthentication extends PlayerAuthentication {
 	private final JWTValidator.IdentityTokenClaims identityTokenClaims;
 

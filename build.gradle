@@ -202,6 +202,7 @@ tasks.register("aggregateJavadocs", Javadoc) {
         }
     })
 
+    exclude("com/build_9/hyxin/*")
     exclude("com/fox2code/hypertale/commands/*")
     exclude("com/fox2code/hypertale/dashboard/*")
     exclude("com/fox2code/hypertale/patcher/mixin/*")

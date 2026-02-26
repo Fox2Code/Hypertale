@@ -45,6 +45,11 @@ public final class HypertaleAgent {
 		}
 	}
 
+	/**
+	 * Return an instrumentation object if present.
+	 *
+	 * @return the current instrumentation if present
+	 */
 	@Nullable public static Instrumentation getInstrumentation() {
 		return instrumentation;
 	}

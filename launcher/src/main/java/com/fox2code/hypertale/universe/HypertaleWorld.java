@@ -65,6 +65,15 @@ public final class HypertaleWorld {
 		}
 	}
 
+	/**
+	 * This method returns a read-only list of all players currently in the world.
+	 * <br/>
+	 * It is faster than the old {@code World#getPlayers()} method!
+	 * <br/>
+	 * It is also thread-safe and can be used in any thread without causing issues.
+	 *
+	 * @return the current player list!
+	 */
 	@AsyncSafe
 	public List<Player> getPlayers() {
 		WeakReference<List<Player>> playersReference = this.playersReference;

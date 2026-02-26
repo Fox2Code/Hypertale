@@ -65,8 +65,16 @@ public final class HypertalePlayerRef {
 		}
 	}
 
-	@AsyncSafe
+	/**
+	 * This method retrieves the world in which the player is located
+	 * but may return null if the player is not in any world.
+	 *
+	 * @return the world in which the player is located
+	 */
 	public @Nullable World getWorld() {
+		if (!this.playerRef.isValid()) {
+			return null;
+		}
 		WeakReference<Player> playerWeakReference = this.player;
 		Player player;
 		Ref<EntityStore> entityStoreRef;
@@ -83,6 +91,9 @@ public final class HypertalePlayerRef {
 
 	@AsyncSafe
 	public @Nullable Player getPlayer() {
+		if (!this.playerRef.isValid()) {
+			return null;
+		}
 		WeakReference<Player> playerWeakReference = this.player;
 		Player player = null;
 		Ref<EntityStore> entityStoreRef;

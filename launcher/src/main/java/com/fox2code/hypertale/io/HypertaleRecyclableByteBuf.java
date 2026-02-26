@@ -155,7 +155,7 @@ public final class HypertaleRecyclableByteBuf extends WrappedByteBuf implements 
 			int index = Collections.binarySearch(recyclableByteBufCache, hypertaleRecyclableByteBuf, SIZE_COMPARATOR);
 			if (index < 0)
 				index = -1 - index;
-			else // Increase set index if found to make the latest used buffer rest a bit!
+			else // Increase the set index if found to make the latest used buffer rest a bit!
 				index++;
 			recyclableByteBufCache.add(index, hypertaleRecyclableByteBuf);
 			// Release smaller buffers if bigger buffers are needed!
@@ -168,6 +168,7 @@ public final class HypertaleRecyclableByteBuf extends WrappedByteBuf implements 
 	}
 
 	static {
+		// Preallocate buffers we know we will need for our first player
 		addRecyclableToList(new HypertaleRecyclableByteBuf());
 		addRecyclableToList(new HypertaleRecyclableByteBuf());
 	}

@@ -35,12 +35,12 @@ import java.util.zip.ZipOutputStream;
 
 final class ZipLibrariesMaker {
 	static void makeZip(File destination) throws IOException {
-		if (!destination.getParentFile().isDirectory()){
+		if (!destination.getParentFile().isDirectory()) {
 			System.out.println("Parent directory of destination not found!");
 			return;
 		}
 		ArrayList<PendingDependency> pendingDependencies = new ArrayList<>(
-				DependencyHelper.patcherDependencies.length);
+				DependencyHelper.patcherDependencies.size());
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
 			try {

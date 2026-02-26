@@ -52,8 +52,17 @@ public final class HypertalePlayer {
 		return this.player;
 	}
 
+	/**
+	 * Return the {@link PlayerRef} attached to this Player, might call another thread if needed!
+	 *
+	 * @return the player reference, or null if the player is no longer valid
+	 */
 	@AsyncSafe
 	@Nullable public PlayerRef getPlayerRef() {
+		Ref<EntityStore> ref = this.player.getReference();
+		if (ref == null || !ref.isValid()) {
+			return null;
+		}
 		WeakReference<PlayerRef> playerRefWeakReference = this.playerRefWeakReference;
 		PlayerRef playerRef;
 		if (playerRefWeakReference != null && (playerRef = playerRefWeakReference.get()) != null &&
@@ -61,7 +70,7 @@ public final class HypertalePlayer {
 			return playerRef;
 		}
 		synchronized (this.playerRefLock) {
-			Ref<EntityStore> ref = this.player.getReference();
+			ref = this.player.getReference();
 			World playerWorld = player.getWorld();
 			if (playerWorld == null || ref == null || !ref.isValid()) {
 				return null;

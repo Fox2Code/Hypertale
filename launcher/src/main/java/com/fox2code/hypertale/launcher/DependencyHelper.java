@@ -27,6 +27,8 @@ import com.fox2code.hypertale.loader.HypertaleConfig;
 import com.fox2code.hypertale.utils.IOUtils;
 import com.fox2code.hypertale.utils.NetUtils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.net.URI;
@@ -39,6 +41,9 @@ import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+/**
+ * Hypertale Dependency Manager class, used for download or extracting dependencies when needed.
+ */
 public final class DependencyHelper {
 	private static final boolean DEBUG = false;
 	public static final boolean OFFLINE_ONLY = // Always true on some edition
@@ -53,7 +58,7 @@ public final class DependencyHelper {
 	public static final String FOX2CODE = "https://cdn.fox2code.com/maven";
 	private static final HashMap<String, Dependency> hypertaleDependencies = new HashMap<>();
 
-	public static final Dependency[] patcherDependencies = new Dependency[]{
+	private static final Dependency[] patcherDependenciesDirect = new Dependency[]{
 			new Dependency("org.ow2.asm:asm:" + BuildConfig.ASM_VERSION, MAVEN_CENTRAL,
 					"org.objectweb.asm.ClassVisitor", null,
 					"6f3828a215c920059a5efa2fb55c233d6c54ec5cadca99ce1b1bdd10077c7ddd"),
@@ -91,7 +96,11 @@ public final class DependencyHelper {
 					FOX2CODE, "com.bawnorton.mixinsquared.MixinSquaredBootstrap", null,
 					"5ae421a724f2cc9b06ade3da79fb3224e8073fdeac9a35df6f16ae59147a1abb")
 	};
-	private static final List<DependencyHelper.Dependency> patcherDependenciesCopy = List.of(patcherDependencies);
+
+	/**
+	 * List of all Hypertale Dependencies.
+	 */
+	public static final List<DependencyHelper.Dependency> patcherDependencies = List.of(patcherDependenciesDirect);
 
 	/**
 	 * Load a dependency into the Hypertale environment, if Hypertale cannot fulfill this request,
@@ -117,7 +126,9 @@ public final class DependencyHelper {
 		if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
 			throw new RuntimeException("Cannot create dependency directory for " + dependency.name);
 		}
-		if (dependency.sha256Sum == null) {
+		if (dependency.repository == null && dependency.fallbackUrl == null) {
+			throw new RuntimeException("Cannot download a library without a source for " + dependency.name);
+		} else if (dependency.sha256Sum == null) {
 			// Do not allow download without checksums as they are a potential security risk.
 			throw new RuntimeException("Download is forbidden for libraries without a checksum " + dependency.name);
 		} else if (OFFLINE_ONLY) {
@@ -149,19 +160,21 @@ public final class DependencyHelper {
 		}
 		boolean justDownloaded = false;
 		IOException fallBackIoe = null;
-		try (OutputStream os = Files.newOutputStream(file.toPath())) {
-			justDownloaded = true;
-			NetUtils.downloadTo(URI.create(dependency.repository.endsWith(".jar") ?
-					dependency.repository : dependency.repository + "/" + postURL).toURL(), os);
-		} catch (IOException ioe) {
-			if (dependency.fallbackUrl != null) {
-				fallBackIoe = ioe;
-			} else {
-				if (file.exists() && !file.delete()) file.deleteOnExit();
-				throw new RuntimeException("Cannot download " + dependency.name, ioe);
+		if (dependency.repository != null) {
+			try (OutputStream os = Files.newOutputStream(file.toPath())) {
+				justDownloaded = true;
+				NetUtils.downloadTo(URI.create(dependency.repository.endsWith(".jar") ?
+						dependency.repository : dependency.repository + "/" + postURL).toURL(), os);
+			} catch (IOException ioe) {
+				if (dependency.fallbackUrl != null) {
+					fallBackIoe = ioe;
+				} else {
+					if (file.exists() && !file.delete()) file.deleteOnExit();
+					throw new RuntimeException("Cannot download " + dependency.name, ioe);
+				}
 			}
 		}
-		if (fallBackIoe != null) {
+		if (fallBackIoe != null || dependency.repository == null) {
 			try (OutputStream os = Files.newOutputStream(file.toPath())) {
 				justDownloaded = true;
 				NetUtils.downloadTo(URI.create(dependency.fallbackUrl).toURL(), os);
@@ -264,13 +277,13 @@ public final class DependencyHelper {
 	}
 
 	static void loadLocalDependencyPack(Dependency dependency) {
-		if (dependency.repository != null ||
+		if (dependency.repository != null || dependency.fallbackUrl == null ||
 				!dependency.fallbackUrl.startsWith("jar:file:")) {
 			EarlyLogger.log("Failed to load local dependency " + dependency.name + " -> " + dependency.fallbackUrl);
 			return;
 		}
 		if (hypertaleDependencies.isEmpty()) {
-			for (Dependency dep : patcherDependenciesCopy) {
+			for (Dependency dep : patcherDependenciesDirect) {
 				hypertaleDependencies.put(dep.name, dep);
 			}
 		}
@@ -286,7 +299,22 @@ public final class DependencyHelper {
 		}
 	}
 
-	public record Dependency(String name, String repository, String classCheck, String fallbackUrl, String sha256Sum) {
+	/**
+	 * Dependency record, used to store information about a dependency.
+	 *
+	 * @param name the full name of the dependency as used in Gradle
+	 * @param repository the repository to download the dependency from
+	 * @param classCheck the class to check for in the dependency
+	 * @param fallbackUrl the fallback URL to download the dependency from
+	 * @param sha256Sum the SHA-256 checksum of the dependency
+	 */
+	public record Dependency(@Nonnull String name, @Nullable String repository,@Nonnull String classCheck,
+							 @Nullable String fallbackUrl,@Nullable String sha256Sum) {
+		public Dependency {
+			Objects.requireNonNull(name, "name must not be null");
+			Objects.requireNonNull(classCheck, "classCheck must not be null");
+		}
+
 		public Dependency(String name, String repository, String classCheck) {
 			this(name, repository, classCheck, null, null);
 		}

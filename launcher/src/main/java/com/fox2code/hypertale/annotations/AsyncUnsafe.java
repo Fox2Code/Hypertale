@@ -29,7 +29,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a method as unsafe to be called from any thread, and that it must be called from a specific thread.
+ * Marks a method as unsafe to be called from any thread, and that it must be called from a specific thread,
+ * and that failure to do some might result in the method throwing an exception or refusing to return a value.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.METHOD})
