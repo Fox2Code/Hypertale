@@ -26,6 +26,7 @@ package com.fox2code.hypertale.loader;
 import com.fox2code.hypertale.commands.HypertaleCommand;
 import com.fox2code.hypertale.event.AntiCheatEvent;
 import com.fox2code.hypertale.launcher.BuildConfig;
+import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.HypertalePlatform;
@@ -48,7 +49,7 @@ import java.nio.file.Files;
 import java.util.Objects;
 
 public final class HypertalePlugin extends JavaPlugin {
-	public static final String EDITION = System.getProperty("hypertale.edition", "OSS");
+	public static final String EDITION = System.getProperty("hypertale.edition", "Unknown");
 	public static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	private static final boolean INVALID_INSTALLATION =
 			HypertalePlugin.class.getClassLoader() != JavaPlugin.class.getClassLoader();
@@ -95,6 +96,7 @@ public final class HypertalePlugin extends JavaPlugin {
 		this.getEventRegistry().registerGlobal(
 				EventPriority.LAST, AntiCheatEvent.class,
 				this::onUnhandledAntiCheatEvent);
+		HypertalePluginPlus.onSetup(this);
 	}
 
 	@Override
@@ -105,6 +107,12 @@ public final class HypertalePlugin extends JavaPlugin {
 		if (PREMIUM) {
 			this.getLogger().atInfo().log("Thank you for supporting Hypertale!");
 		}
+		HypertalePluginPlus.onStart(this);
+	}
+
+	@Override
+	protected void shutdown() {
+		HypertalePluginPlus.onShutdown(this);
 	}
 
 	private void onUnhandledAntiCheatEvent(AntiCheatEvent event) {
@@ -184,6 +192,10 @@ public final class HypertalePlugin extends JavaPlugin {
 			}
 			this.getLogger().atInfo().log("Hypertale installed successfully!");
 			this.getLogger().atInfo().log("The server will be stopped and Hypertale will be active on restart!");
+			if (!DependencyHelper.OFFLINE_ONLY) {
+				this.getLogger().atWarning().log("Libraries are not allowed to be downloaded!");
+				this.getLogger().atWarning().log("You may need to download the Hypertale: Libraries mod.");
+			}
 		} else {
 			this.getLogger().atInfo().log("Previous Hypertale installation was not appropriate for your server host!");
 			File earlyPluginFolder = HypertalePaths.hytaleEarlyPlugins;
@@ -206,6 +218,11 @@ public final class HypertalePlugin extends JavaPlugin {
 			this.getLogger().atInfo().log("Hypertale installed successfully using late entry point!");
 			this.getLogger().atInfo().log("Please note that some hypertale features may not work properly in this mode!");
 			this.getLogger().atInfo().log("The server will be stopped and Hypertale will be active on restart!");
+			HypertaleConfig.load();
+			if (DependencyHelper.OFFLINE_ONLY) {
+				this.getLogger().atWarning().log("Libraries are not allowed to be downloaded!");
+				this.getLogger().atWarning().log("You may need to download the Hypertale: Libraries mod.");
+			}
 		}
 	}
 }

@@ -198,7 +198,8 @@ public final class Main {
 			return;
 		}
 		EarlyLogger.start(false);
-		EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION);
+		EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION +
+				" (" + System.getProperty("hypertale.edition", "Unknown") + ")");
 		File hytaleJar = HypertalePaths.getHytaleJar();
 		if (!hytaleJar.isFile()) {
 			EarlyLogger.log("Cannot find original HytaleServer.jar");
