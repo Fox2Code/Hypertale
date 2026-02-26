@@ -86,7 +86,10 @@ public final class DependencyHelper {
 					"e7889fcd185e4199052dcbcf0fe2128581cbf8630aea7feb37429667b1ba49a9"),
 			new Dependency("io.github.llamalad7:mixinextras-common:" + BuildConfig.MIXIN_EXTRAS_VERSION,
 					MAVEN_CENTRAL, "com.llamalad7.mixinextras.MixinExtrasBootstrap", null,
-					"30e7538eb27d8f7e78e4745dc0c56c857464a6f03fcacfd3101d2fce29cf8890")
+					"30e7538eb27d8f7e78e4745dc0c56c857464a6f03fcacfd3101d2fce29cf8890"),
+			new Dependency("com.github.bawnorton.mixinsquared:mixinsquared-common:" + BuildConfig.MIXIN_SQUARED_VERSION,
+					FOX2CODE, "com.bawnorton.mixinsquared.MixinSquaredBootstrap", null,
+					"5ae421a724f2cc9b06ade3da79fb3224e8073fdeac9a35df6f16ae59147a1abb")
 	};
 	private static final List<DependencyHelper.Dependency> patcherDependenciesCopy = List.of(patcherDependencies);
 

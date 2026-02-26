@@ -27,6 +27,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
     final String GUAVA_FAILURE_ACCESS_VERSION = project['guava-failureaccess.version']
     final String FABRIC_MIXIN_VERSION = project['fabric-mixin.version']
     final String MIXIN_EXTRAS_VERSION = project['mixin-extras.version']
+    final String MIXIN_SQUARED_VERSION = project['mixin-squared.version']
     final String VINEFLOWER_VERSION = project['vineflower.version']
     // Only write file if we got all the properties to not write a corrupted BuildConfig
     FileOutputStream fileOutputStream = new FileOutputStream(buildConfigSrc)
@@ -48,6 +49,7 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
         appendField(printStream, 'GUAVA_FAILURE_ACCESS_VERSION', GUAVA_FAILURE_ACCESS_VERSION)
         appendField(printStream, 'FABRIC_MIXIN_VERSION', FABRIC_MIXIN_VERSION)
         appendField(printStream, 'MIXIN_EXTRAS_VERSION', MIXIN_EXTRAS_VERSION)
+        appendField(printStream, 'MIXIN_SQUARED_VERSION', MIXIN_SQUARED_VERSION)
         appendField(printStream, 'VINEFLOWER_VERSION', VINEFLOWER_VERSION)
         printStream.println("}")
     } finally {

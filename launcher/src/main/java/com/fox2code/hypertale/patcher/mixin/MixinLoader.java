@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.patcher.mixin;
 
+import com.bawnorton.mixinsquared.MixinSquaredBootstrap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -85,6 +86,7 @@ public final class MixinLoader {
 				(IMixinTransformer) MixinEnvironment.getCurrentEnvironment().getActiveTransformer();
 		com.build_9.hyxin.mixin.MixinService.transformer = mixinTransformer; // Hyxin support
 		MixinExtrasBootstrap.init();
+		MixinSquaredBootstrap.init();
 		preInitialized = true;
 	}
 

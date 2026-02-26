@@ -64,6 +64,7 @@ dependencies {
     api "com.google.guava:failureaccess:${project['guava-failureaccess.version']}"
     api "net.fabricmc:sponge-mixin:${project['fabric-mixin.version']}"
     api "io.github.llamalad7:mixinextras-common:${project['mixin-extras.version']}"
+    api "com.github.bawnorton.mixinsquared:mixinsquared-common:${project['mixin-squared.version']}"
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
     include(project(":patcher"))
     // We may not have init at runtime!
