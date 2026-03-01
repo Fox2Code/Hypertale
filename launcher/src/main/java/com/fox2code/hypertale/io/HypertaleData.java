@@ -29,7 +29,7 @@ import java.util.Objects;
 public final class HypertaleData {
 	// Note: We don't need backward compatibility for the format version,
 	// since if the format version is different, other fields would be different too.
-	private static final int HYPERTALE_CACHE_FORMAT_VERSION = 1;
+	private static final int HYPERTALE_CACHE_FORMAT_VERSION = 2;
 	private final int hypertaleCacheFormatVersion;
 	public long hypertaleJarSize;
 	public long originalJarSize;
@@ -37,6 +37,7 @@ public final class HypertaleData {
 	public int patchConfigFlags;
 	public int modHash;
 	public long prePatcherSize;
+	public int hypertalePlus;
 
 	public HypertaleData(File file) throws IOException {
 		try (DataInputStream dataInputStream = new DataInputStream(
@@ -53,6 +54,7 @@ public final class HypertaleData {
 				this.patchConfigFlags = dataInputStream.readInt();
 				this.modHash = dataInputStream.readInt();
 				this.prePatcherSize = dataInputStream.readLong();
+				this.hypertalePlus = dataInputStream.readInt();
 			}
 		}
 	}
@@ -64,6 +66,7 @@ public final class HypertaleData {
 		this.modifiedJarSize = 0;
 		this.patchConfigFlags = 0;
 		this.modHash = 0;
+		this.hypertalePlus = 0;
 	}
 
 	public void writeTo(File file) throws IOException {
@@ -79,6 +82,7 @@ public final class HypertaleData {
 			dataOutputStream.writeInt(this.patchConfigFlags);
 			dataOutputStream.writeInt(this.modHash);
 			dataOutputStream.writeLong(this.prePatcherSize);
+			dataOutputStream.writeInt(this.hypertalePlus);
 		}
 	}
 
@@ -91,7 +95,8 @@ public final class HypertaleData {
 				this.modifiedJarSize == hypertaleData.modifiedJarSize &&
 				this.patchConfigFlags == hypertaleData.patchConfigFlags &&
 				this.modHash == hypertaleData.modHash &&
-				this.prePatcherSize == hypertaleData.prePatcherSize;
+				this.prePatcherSize == hypertaleData.prePatcherSize &&
+				this.hypertalePlus == hypertaleData.hypertalePlus;
 	}
 
 	@Override
@@ -99,6 +104,6 @@ public final class HypertaleData {
 		return Objects.hash(this.hypertaleCacheFormatVersion,
 				this.hypertaleJarSize, this.originalJarSize,
 				this.modifiedJarSize, this.patchConfigFlags, this.modHash,
-				this.prePatcherSize);
+				this.prePatcherSize, this.hypertalePlus);
 	}
 }

@@ -233,6 +233,7 @@ public final class Main {
 		actualData.modHash = modGatherer.getModHash();
 		actualData.prePatcherSize = HypertalePaths.hypertalePrePatcher.isFile() ?
 				HypertalePaths.hypertalePrePatcher.length() : 0;
+		actualData.hypertalePlus = MainPlus.hypertalePlusValue();
 		if (args.length == 1 && "--dry".equals(args[0])) {
 			return;
 		}

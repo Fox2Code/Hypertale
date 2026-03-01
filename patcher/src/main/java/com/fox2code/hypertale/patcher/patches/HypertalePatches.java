@@ -32,7 +32,12 @@ public final class HypertalePatches {
 	private static final ArrayList<HypertalePatch> noPatches = new ArrayList<>();
 	private static final ArrayList<HypertalePatch> globalHypertalePatches = new ArrayList<>();
 	private static final HashMap<String, ArrayList<HypertalePatch>> hypertaleClassPatches = new HashMap<>();
+	private static final boolean loaded;
+
 	static void addPatch(HypertalePatch hypertalePatch) {
+		if (loaded) {
+			throw new IllegalStateException("Cannot add patch after HypertalePatches has been loaded");
+		}
 		if (hypertalePatch.targets == null) {
 			globalHypertalePatches.add(hypertalePatch);
 		} else {
@@ -45,6 +50,16 @@ public final class HypertalePatches {
 	}
 
 	static {
+		// Hypertale premium register its patches on its own.
+		if (!Boolean.getBoolean("hypertale.premium")) {
+			autoRegisterPatches();
+		}
+		HypertalePatchesPlus.registerPatches();
+		loaded = true;
+	}
+
+	// Callback to allow Hypertale plus to register default patches
+	static void autoRegisterPatches() {
 		addPatch(new PatchMat4f());
 		addPatch(new PatchPluginClassLoader());
 		addPatch(new PatchWorld());
@@ -57,11 +72,10 @@ public final class HypertalePatches {
 		addPatch(new PatchPlugins());
 		addPatch(new PatchExtraAuthenticationData());
 		addPatch(new PatchHytaleLogFormatter());
-		addPatch(new PatchUniverse());
 		addPatch(new PatchInventory());
 		addPatch(new PatchRedirectToOptimisedGetPlayers());
 		addPatch(new PatchRedirectToOptimisedGetChunkIfInMemory());
-		HypertalePatchesPlus.registerPatches();
+
 	}
 
 	public static ClassNode patchClassNode(ClassNode classNode) {

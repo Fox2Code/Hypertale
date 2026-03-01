@@ -69,4 +69,8 @@ final class MainPlus {
 		// Hypertale Offline Edition overwrite this method
 		return false;
 	}
+
+	public static int hypertalePlusValue() {
+		return 0;
+	}
 }

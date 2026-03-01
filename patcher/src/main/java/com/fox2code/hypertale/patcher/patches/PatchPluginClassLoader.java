@@ -52,6 +52,15 @@ final class PatchPluginClassLoader extends HypertalePatch {
 				injection.add(new JumpInsnNode(Opcodes.IFEQ, skip));
 				injection.add(new InsnNode(Opcodes.ICONST_1));
 				injection.add(new InsnNode(Opcodes.IRETURN));
+				injection.add(new VarInsnNode(Opcodes.ALOAD, varInsnNode.var));
+				injection.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,
+						StackTraceElement, "getMethodName", "()L" + ASMString + ";", false));
+				injection.add(new LdcInsnNode("hypertale"));
+				injection.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,
+						ASMString, "startsWith", "(L" + ASMString + ";)Z", false));
+				injection.add(new JumpInsnNode(Opcodes.IFEQ, skip));
+				injection.add(new InsnNode(Opcodes.ICONST_1));
+				injection.add(new InsnNode(Opcodes.IRETURN));
 				injection.add(skip);
 				isFromThirdPartyPlugin.instructions.insertBefore(ldcInsnNode, injection);
 				break;

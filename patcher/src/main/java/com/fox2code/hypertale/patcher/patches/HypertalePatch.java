@@ -33,6 +33,7 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 	static final Void ALL_CLASSES = null;
 	final String[] targets;
 
+	@SuppressWarnings("VoidUsed")
 	HypertalePatch(Void ignored) {
 		this.targets = null;
 		this.checkAccess();

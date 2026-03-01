@@ -75,6 +75,7 @@ public interface HypertaleASMConstants {
 	String FloodLightCalculation = "com/hypixel/hytale/server/core/universe/world/lighting/FloodLightCalculation";
 	String FullBrightLightCalculation = "com/hypixel/hytale/server/core/universe/world/lighting/FullBrightLightCalculation";
 	String ChunkStore = "com/hypixel/hytale/server/core/universe/world/storage/ChunkStore";
+	String EntityStore$UUIDSystem = "com/hypixel/hytale/server/core/universe/world/storage/EntityStore$UUIDSystem";
 	String IndexedStorageChunkStorageProvider = "com/hypixel/hytale/server/core/universe/world/storage/provider/IndexedStorageChunkStorageProvider";
 	String IndexedStorageChunkSaver = "com/hypixel/hytale/server/core/universe/world/storage/provider/IndexedStorageChunkStorageProvider$IndexedStorageChunkSaver";
 	String WorldMapManager = "com/hypixel/hytale/server/core/universe/world/worldmap/WorldMapManager";

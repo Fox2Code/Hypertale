@@ -48,6 +48,7 @@ public final class HypertaleConfig {
 	public static boolean premiumHyperOptimizeClassPath = false; // Optimize the entire classpath as a whole
 	public static boolean premiumCheckJarValidity = true; // Check if the patched jar bytecode is valid before starting
 	public static boolean premiumOfflineMode = false; // Disable the ability for plugins to connect to the internet
+	public static boolean proAutoInhibitFix = true; // Make Hypertale query online for resources
 	public static int watchdogWarnLagAfter = 10; // Time after which a stacktrace will be dumped
 	public static int watchdogExitAfter = 60; // Time after which hypertale assume the server crashed
 
@@ -180,5 +181,9 @@ public final class HypertaleConfig {
 
 	public static boolean isOfflineMode() {
 		return PREMIUM && HypertaleConfig.premiumOfflineMode;
+	}
+
+	public static boolean isInhibitFix() {
+		return PREMIUM && HypertaleConfig.proAutoInhibitFix;
 	}
 }

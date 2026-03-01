@@ -23,13 +23,40 @@
  */
 package com.fox2code.hypertale.patcher.patches;
 
-/**
- * This class is overwritten by Hypertale Plus
- */
-final class HypertalePatchesPlus {
-	static boolean autoRegisterPatches() {
-		return true;
+import com.fox2code.hypertale.utils.HytaleVersion;
+import org.objectweb.asm.tree.ClassNode;
+
+abstract class HypertalePatchHotfix extends HypertalePatch {
+	private final String forHypertaleVersion;
+
+	@SuppressWarnings("VoidUsed")
+	HypertalePatchHotfix(String forHypertaleVersion, Void ignored) {
+		super(ignored);
+		this.forHypertaleVersion = forHypertaleVersion;
 	}
 
-	static void registerPatches() {}
+	HypertalePatchHotfix(String forHypertaleVersion, String target) {
+		super(target);
+		this.forHypertaleVersion = forHypertaleVersion;
+	}
+
+	HypertalePatchHotfix(String forHypertaleVersion, String[] targets) {
+		super(targets);
+		this.forHypertaleVersion = forHypertaleVersion;
+	}
+
+	HypertalePatchHotfix(String forHypertaleVersion, String target, String... targets) {
+		super(target, targets);
+		this.forHypertaleVersion = forHypertaleVersion;
+	}
+
+	@Override
+	public final ClassNode transform(ClassNode classNode) {
+		if (HytaleVersion.HYTALE_VERSION.equals(this.forHypertaleVersion)) {
+			return this.transformHotfix(classNode);
+		}
+		return classNode;
+	}
+
+	public abstract ClassNode transformHotfix(ClassNode classNode);
 }
