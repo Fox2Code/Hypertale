@@ -41,6 +41,7 @@ public final class HypertaleConfig {
 	public static String hytaleBranch = "release";
 	public static String secondaryJarName = "Server.jar";
 	public static boolean allowDownloadLibraries = true; // Tell if Hypertale is allowed to download libraries
+	public static boolean disableFox2CodeIcons = false; // Tell if Fox2Code icons should be disabled.
 	public static boolean optimizePluginOnlyAPIs = true; // Tell if plugin-only APIs should be optimized
 	public static boolean aggressivelyOptimizePluginOnlyAPIs = false; // Tell if APIs are allowed to change semantics
 	public static boolean unsupportedDisablePluginServerVersionCheck = false; // Disable plugin server version check

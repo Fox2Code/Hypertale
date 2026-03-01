@@ -24,6 +24,8 @@
 package com.fox2code.hypertale.dashboard;
 
 import com.fox2code.hypertale.launcher.BuildConfig;
+import com.fox2code.hypertale.loader.HypertaleConfig;
+import com.fox2code.hypertale.loader.HypertaleIcons;
 import com.fox2code.hypertale.utils.HypertaleTextUtil;
 import com.fox2code.hypertale.utils.HypertaleUptimeManager;
 import com.fox2code.hypertale.utils.HypertaleUptimeReceiver;
@@ -79,13 +81,14 @@ public final class HypertaleDashboard extends CustomUIPage implements HypertaleU
 		commandBuilder.set("#Description.Text", "Hypertale " + BuildConfig.HYPERTALE_VERSION + "\n" +
 				"Running Hytale " + HytaleVersion.HYTALE_VERSION);
 		long uptime = Instant.now().getEpochSecond() - HytaleServer.get().getBoot().getEpochSecond();
-		buildUpdate(commandBuilder, uptime, HypertaleTextUtil.makeUptimeString(uptime));
+		buildUpdate(commandBuilder, uptime, HypertaleTextUtil.makeUptimeString(uptime), true);
 		HypertaleUptimeManager.addUptimeListener(this);
 		eventBuilder.addEventBinding(CustomUIEventBindingType.Activating,
 				"#CloseButton", new EventData());
 	}
 
-	public static void buildUpdate(@NonNull UICommandBuilder commandBuilder, long uptime, @NonNull String uptimeText) {
+	public static void buildUpdate(@NonNull UICommandBuilder commandBuilder, long uptime,
+								   @NonNull String uptimeText, boolean building) {
 		commandBuilder.set("#StatPlayers.Text", String.valueOf(Universe.get().getPlayerCount()));
 		commandBuilder.set("#StatUptime.Text", uptimeText);
 		commandBuilder.set("#StatUptime.Style", uptime >= TIME_48_HOURS ? labelSevere :
@@ -108,6 +111,53 @@ public final class HypertaleDashboard extends CustomUIPage implements HypertaleU
 				(ramUsagePercent > 95.0D || freeMemory < MEM_128MB) ? labelSevere :
 						(ramUsagePercent > 90.0 || freeMemory < MEM_512MB) ? labelSerious :
 								(ramUsagePercent > 80.0 || freeMemory < MEM_1536MB) ? labelWarn : labelFine);
+		if (building) {
+			if (HypertaleConfig.disableFox2CodeIcons) {
+				commandBuilder.set("#Fox2CodeIndicator.Visible", false);
+				return;
+			}
+			if (uptime < TIME_1_MINUTE) {
+				commandBuilder.set("#Fox2CodeIndicator.Background", HypertaleIcons.FOX2WOW_ICON);
+				return;
+			}
+			// For the warning level icon, the level are calculated slightly differently.
+			int[] condition = new int[4]; // {warn, serious, severe, verySevere}
+			addCond(condition, uptime >= TIME_48_HOURS ? 2 :
+					uptime >= TIME_24_HOURS ? 1 : 0);
+			addCond(condition, cpuLoad >= 0.95D ? 4 : cpuLoad >= 0.9D ? 3 :
+					cpuLoad >= 0.75D ? 2 : cpuLoad >= 0.5D ? 1 : 0);
+			addCond(condition, (ramUsagePercent > 95.0D || freeMemory < MEM_128MB) ? 4 :
+					(ramUsagePercent > 90.0 || freeMemory < MEM_512MB) ? 3 :
+							(ramUsagePercent > 80.0 || freeMemory < MEM_1536MB) ? 1 : 0);
+			int warningLevel = condition.length - 1;
+			while (warningLevel-->0) {
+				if (condition[warningLevel] > 2 || condition[warningLevel + 1] != 0) {
+					break;
+				}
+			}
+			warningLevel++;
+			if (warningLevel == 0 && condition[0] != 0) {
+				// The heart icon is only for when everything is fine!
+				warningLevel = 1;
+			}
+			commandBuilder.set("#Fox2CodeIndicator.Background", switch (warningLevel) {
+				case 3 -> HypertaleIcons.FOX2XX_ICON;
+				case 2 -> HypertaleIcons.FOX2PANIC_ICON;
+				case 1 -> HypertaleIcons.FOX2PRR2_ICON;
+				case 0 -> HypertaleIcons.FOX2HEART2_ICON;
+				default -> HypertaleIcons.FOX2WOW_ICON;
+			});
+		}
+	}
+
+	private static void addCond(int[] condition, int conditionType) {
+		switch (conditionType) {
+			case 4: condition[3]++; // fall through
+			case 3: condition[2]++; // fall through
+			case 2: condition[1]++; // fall through
+			case 1: condition[0]++; // fall through
+			case 0: break;
+		}
 	}
 
 	@Override
@@ -119,7 +169,7 @@ public final class HypertaleDashboard extends CustomUIPage implements HypertaleU
 	@Override
 	public void onReceiveUptime(long uptime, String uptimeText) {
 		UICommandBuilder commandBuilder = new UICommandBuilder();
-		buildUpdate(commandBuilder, uptime, uptimeText);
+		buildUpdate(commandBuilder, uptime, uptimeText, false);
 		// This works exactly like sendUpdate except it supports async calling
 		this.cachedPageManager.updateCustomPage(new CustomPage(
 				this.getClass().getName(), false, false,

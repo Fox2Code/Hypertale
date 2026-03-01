@@ -2,7 +2,7 @@ $C = "../Common.ui";
 $Theme = "HypertaleTheme.ui";
 
 Group {
-  Anchor: (Width: 600, Height: 400);
+  Anchor: (Width: 800, Height: 500);
   LayoutMode: Left;
 
   Group #LeftPanel {
@@ -55,7 +55,7 @@ Group {
     FlexWeight: 1;
     Background: #141c26(0.98);
     LayoutMode: Top;
-    Padding: (Full: 20);
+    Padding: (Top: 20, Bottom: 0, Left: 20, Right: 20);
 
     Label #PanelTitle {
       Text: "Overview";
@@ -157,13 +157,28 @@ Group {
     Group { FlexWeight: 1; }
 
     Group {
-      LayoutMode: Right;
-      Anchor: (Height: 40);
+      Anchor: (Height: 100);
 
-      TextButton #CloseButton {
-        Text: "CLOSE";
-        Anchor: (Width: 100, Height: 36);
-        Style: $Theme.@CloseButtonStyle;
+      Group {
+        LayoutMode: Left;
+        Anchor: (Height: 100);
+
+        Group #Fox2CodeIndicator {
+          Anchor: (Height: 100, Width: 100);
+          Background: #777777;
+        }
+      }
+
+      Group {
+        LayoutMode: Right;
+        Anchor: (Height: 40);
+        Padding: (Top: 40, Bottom: 20);
+
+        TextButton #CloseButton {
+          Text: "CLOSE";
+          Anchor: (Width: 100, Height: 36);
+          Style: $Theme.@CloseButtonStyle;
+        }
       }
     }
   }
