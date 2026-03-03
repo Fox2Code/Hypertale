@@ -301,3 +301,6 @@ tasks.register("makeMajorRelease") {
     dependsOn("makeRelease")
     dependsOn(":launcher:makeLibraries")
 }
+build {
+    dependsOn(":launcher:clean")
+}
