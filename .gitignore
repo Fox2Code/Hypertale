@@ -22,3 +22,4 @@ HytaleServer.jar
 run/
 run
 /server
+/local.properties

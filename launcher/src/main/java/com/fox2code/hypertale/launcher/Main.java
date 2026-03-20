@@ -175,13 +175,13 @@ public final class Main {
 				System.out.println("Cannot set patch source/destination in non-OSS edition!");
 				return;
 			}
-			final File input = new File(args[1]);
+			final File input = new File(args[1]).getAbsoluteFile();
 			DependencyHelper.addFileToClasspath(input);
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 				DependencyHelper.loadDependency(dependency);
 			}
 			PatcherMain.devMode = dev;
-			PatcherMain.patch(input, new File(args[2]), true, true);
+			PatcherMain.patch(input, new File(args[2]).getAbsoluteFile(), true, true);
 			return;
 		} else if (args.length == 1 && "--launch-dev".equals(args[0])) {
 			EarlyLogger.start(false);
@@ -208,6 +208,7 @@ public final class Main {
 		}
 		HypertaleConfig.load();
 		if (HypertaleConfig.isUnsupportedConfiguration()) {
+			// Allow users to run with an unsupported configuration but warns them
 			EarlyLogger.log("You are using an unsupported configuration!");
 			EarlyLogger.log("Check \"unsupported\" prefixed configuration keys in:");
 			EarlyLogger.log("- \".hypertale/hypertale.ini\"");
@@ -370,5 +371,9 @@ public final class Main {
 	private static boolean isRunningFromTerminal() {
 		Console console = System.console();
 		return console != null && console.isTerminal();
+	}
+
+	public static boolean isHytaleLaunched() {
+		return hytaleLaunched;
 	}
 }

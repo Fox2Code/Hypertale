@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets
+
 sourceSets {
     main {
         java {
@@ -9,12 +11,20 @@ sourceSets {
 final Project projectCst = project
 final File buildConfigSrc = layout.buildDirectory.file(
         "generated/sources/hypertale/com/fox2code/hypertale/launcher/BuildConfig.java").get().asFile
+final File localPropertiesFile = new File(projectCst.rootProject.rootDir, "local.properties")
+final Properties localProperties = new Properties()
+
+if (localPropertiesFile.isFile()) {
+    try (FileInputStream fileInputStream = new FileInputStream(localPropertiesFile)) {
+        localProperties.load(new BufferedInputStream(fileInputStream))
+    }
+}
 
 static void appendField(PrintStream printStream, String key, String value) {
     printStream.println("    public static final String " + key + " = deInline(\"" + value + "\");")
 }
 
-static void generateBuildConfig0(File buildConfigSrc, Project project) {
+static void generateBuildConfig0(File buildConfigSrc, Project project, Properties localProperties) {
     buildConfigSrc.getParentFile().mkdirs()
     // Read property before trying to write file
     final String HYPERTALE_VERSION = project['hypertale.version']
@@ -51,6 +61,9 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
         appendField(printStream, 'MIXIN_EXTRAS_VERSION', MIXIN_EXTRAS_VERSION)
         appendField(printStream, 'MIXIN_SQUARED_VERSION', MIXIN_SQUARED_VERSION)
         appendField(printStream, 'VINEFLOWER_VERSION', VINEFLOWER_VERSION)
+        printStream.println("    // Official builds only fields")
+        appendField(printStream, 'BSTATS_UUID_BASE64', Base64.encoder.encodeToString(
+                localProperties.getProperty("hstats.uuid", "").getBytes(StandardCharsets.UTF_8)))
         printStream.println("}")
     } finally {
         fileOutputStream.close()
@@ -59,12 +72,12 @@ static void generateBuildConfig0(File buildConfigSrc, Project project) {
 
 tasks.register('generateBuildConfig') {
     doLast {
-        generateBuildConfig0(buildConfigSrc, projectCst)
+        generateBuildConfig0(buildConfigSrc, projectCst, localProperties)
     }
 }
 
 if (!buildConfigSrc.exists()) {
-    generateBuildConfig0(buildConfigSrc, projectCst)
+    generateBuildConfig0(buildConfigSrc, projectCst, localProperties)
 }
 
 compileJava.dependsOn('generateBuildConfig')

@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -145,5 +146,14 @@ public final class IOUtils {
 			sb.append(String.format("%02x", b));
 		}
 		return sb.toString();
+	}
+
+	public static String toUtf8Base64(String data) {
+		return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
+	}
+
+	public static String fromUtf8Base64(String data) {
+		if (data.isEmpty()) return "";
+		return new String(Base64.getDecoder().decode(data), StandardCharsets.UTF_8);
 	}
 }

@@ -40,6 +40,7 @@ public final class HypertaleConfig {
 	private static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	public static String hytaleBranch = "release";
 	public static String secondaryJarName = "Server.jar";
+	public static boolean analyticsHypertaleHStatsEnabled = true; // Report analytics usage of Hypertale to HStats
 	public static boolean allowDownloadLibraries = true; // Tell if Hypertale is allowed to download libraries
 	public static boolean disableFox2CodeIcons = false; // Tell if Fox2Code icons should be disabled.
 	public static boolean optimizePluginOnlyAPIs = true; // Tell if plugin-only APIs should be optimized

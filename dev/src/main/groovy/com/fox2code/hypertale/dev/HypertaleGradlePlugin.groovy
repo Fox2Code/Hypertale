@@ -251,7 +251,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                                 "NonApiType", "MutablePublicArray",
                                 "StringSplitter", "FloggerFormatString",
                                 "FloggerLogString", "FloggerStringConcatenation",
-                                "AssignmentExpression")
+                                "AssignmentExpression", "FutureReturnValueIgnored")
                 }
             }
             if (config.getUseSpotless()) {

@@ -82,11 +82,11 @@ if (!Boolean.getBoolean("idea.sync.active")) {
     processResources {
         filesMatching("manifest.json") {
             String serverVersion = null
-            if (workInProgress.isFile()) {
+            if (workInProgress.isFile() && workInProgress.length() > 2048) {
                 try (JarFile wipJarFile = new JarFile(workInProgress)) {
                     serverVersion = wipJarFile.getManifest().getMainAttributes()
                             .getValue("Implementation-Version")
-                }
+                } catch (IOException ignored) {}
             }
             if (serverVersion != null) {
                 expand(version: project['hypertale.version'], serverVersion: serverVersion)

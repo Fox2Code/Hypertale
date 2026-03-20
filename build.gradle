@@ -101,7 +101,7 @@ subprojects {
                     allErrorsAsWarnings.set(true)
                     disable("EmptyCatch", "ThreadPriorityCheck", "NonApiType", "MutablePublicArray",
                             "StringSplitter", "FloggerFormatString", "FloggerLogString", "FloggerStringConcatenation",
-                            "AssignmentExpression")
+                            "AssignmentExpression", "FutureReturnValueIgnored")
                     warn("DefaultCharset")
                 }
             }

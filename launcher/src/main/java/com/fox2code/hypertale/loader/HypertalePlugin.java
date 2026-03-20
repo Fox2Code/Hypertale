@@ -28,10 +28,8 @@ import com.fox2code.hypertale.event.AntiCheatEvent;
 import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
-import com.fox2code.hypertale.utils.HypertalePaths;
-import com.fox2code.hypertale.utils.HypertalePlatform;
-import com.fox2code.hypertale.utils.HypertaleSystemInfo;
-import com.fox2code.hypertale.utils.SourceUtil;
+import com.fox2code.hypertale.utils.*;
+import com.fox2code.hypertale.utils.analytics.HStats;
 import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.server.core.Constants;
 import com.hypixel.hytale.server.core.HytaleServer;
@@ -91,6 +89,9 @@ public final class HypertalePlugin extends JavaPlugin {
 
 	@Override
 	protected void setup() {
+		if (HypertaleConfig.analyticsHypertaleHStatsEnabled && !BuildConfig.BSTATS_UUID_BASE64.isEmpty()) {
+			new HStats(IOUtils.fromUtf8Base64(BuildConfig.BSTATS_UUID_BASE64), BuildConfig.HYPERTALE_VERSION);
+		}
 		if (INVALID_INSTALLATION) return;
 		this.getCommandRegistry().registerCommand(new HypertaleCommand());
 		this.getEventRegistry().registerGlobal(
