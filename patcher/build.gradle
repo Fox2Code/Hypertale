@@ -4,8 +4,16 @@ plugins {
 
 final File hypertaleGradleDirectory = new File(project.gradle.gradleUserHomeDir, "hypertale")
 final File workInProgress = new File(hypertaleGradleDirectory, "HytaleServerWIP.jar")
+final File localPropertiesFile = new File(rootProject.rootDir, "local.properties")
+final Properties localProperties = new Properties()
 
-final File getHytaleServerFile() {
+if (localPropertiesFile.isFile()) {
+    try (FileInputStream fileInputStream = new FileInputStream(localPropertiesFile)) {
+        localProperties.load(new BufferedInputStream(fileInputStream))
+    }
+}
+
+final File getHytaleServerFile(String patchLine) {
     final File hytaleServerRoot = new File(project.rootDir, "HytaleServer.jar")
     if (hytaleServerRoot.exists()) {
         return hytaleServerRoot
@@ -13,23 +21,23 @@ final File getHytaleServerFile() {
     String name = System.getProperty("os.name").toLowerCase(Locale.ROOT);
     if (name.startsWith("win")) {
         return new File(System.getenv("APPDATA") +
-                "\\Hytale\\install\\release\\package\\game\\Server\\HytaleServer.jar")
+                "\\Hytale\\install\\" + patchLine + "\\package\\game\\Server\\HytaleServer.jar")
     } else if (name.startsWith("mac") ||
             name.startsWith("darwin")) {
         return new File(System.getProperty("user.home") +
-                "/Application Support/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+                "/Application Support/Hytale/install/" + patchLine + "/package/game/latest/Server/HytaleServer.jar")
     } else if (name.contains("nix") || name.contains("nux") || name.contains("aix")) {
         File flatpakPath = new File(System.getProperty("user.home") +
-                "/.var/app/com.hypixel.HytaleLauncher/data/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+                "/.var/app/com.hypixel.HytaleLauncher/data/Hytale/install/" + patchLine + "/package/game/latest/Server/HytaleServer.jar")
         File fallbackPath = new File(System.getProperty("user.home") +
-                "/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+                "/Hytale/install/" + patchLine + "/package/game/latest/Server/HytaleServer.jar")
         return flatpakPath.exists() || !fallbackPath.exists() ? flatpakPath : fallbackPath;
     } else {
         throw new Error("Unsupported system")
     }
 }
 
-final File hytaleServer = getHytaleServerFile()
+final File hytaleServer = getHytaleServerFile(localProperties.getProperty("build.patchline", "release"))
 
 java {
     toolchain {
@@ -93,6 +101,7 @@ tasks.register("checkPatchHytale", JavaExec) {
     mainClass = "com.fox2code.hypertale.patcher.PatcherMain"
     args = ["--check-patch", hytaleServer.getAbsolutePath(), workInProgress.getAbsolutePath()]
     mustRunAfter(tasks.patchHytale)
+    inputs.file(hytaleServer)
 }
 tasks.clean.configure {
     delete(workInProgress)

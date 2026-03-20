@@ -83,8 +83,8 @@ final class HookClassLoader extends URLClassLoader {
 		}
 		final String packageName = name.lastIndexOf('.') == -1 ?
 				"" : name.substring(0, name.lastIndexOf('.'));
-		if (getDefinedPackage(packageName) == null) {
-			definePackage(packageName,
+		if (this.getDefinedPackage(packageName) == null) {
+			this.definePackage(packageName,
 					this.hytaleExamplePackage.getSpecificationTitle(),
 					this.hytaleExamplePackage.getSpecificationVersion(),
 					this.hytaleExamplePackage.getSpecificationVendor(),
@@ -102,6 +102,9 @@ final class HookClassLoader extends URLClassLoader {
 					this.firstHytaleClass.getProtectionDomain());
 		} catch (IOException e) {
 			throw new ClassNotFoundException(name, e);
+		} catch (LinkageError e) {
+			e.printStackTrace(System.err);
+			throw e;
 		}
 	}
 

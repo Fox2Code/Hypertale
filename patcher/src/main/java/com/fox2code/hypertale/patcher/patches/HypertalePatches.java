@@ -60,7 +60,6 @@ public final class HypertalePatches {
 
 	// Callback to allow Hypertale plus to register default patches
 	static void autoRegisterPatches() {
-		addPatch(new PatchMat4f());
 		addPatch(new PatchPluginClassLoader());
 		addPatch(new PatchWorld());
 		addPatch(new PatchChunkStore());

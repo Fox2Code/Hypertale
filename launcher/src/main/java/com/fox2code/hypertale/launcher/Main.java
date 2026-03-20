@@ -32,6 +32,7 @@ import com.fox2code.hypertale.patcher.PatcherMain;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.fox2code.hypertale.utils.*;
 import com.hypixel.hytale.LateMain;
+import com.hypixel.hytale.common.util.java.ManifestUtil;
 import com.hypixel.hytale.logger.backend.HytaleConsole;
 
 import java.io.*;
@@ -272,17 +273,6 @@ public final class Main {
 		} else {
 			EarlyLogger.log("No Mixin usage detected! (Mixin system will be disabled)");
 		}
-		if (args.length == 0) {
-			if (HypertalePaths.hytaleAssets.exists()) {
-				args = new String[]{"--assets", "Assets.zip"};
-			} else {
-				File vanillaAssets = new File(
-						HypertalePlatform.getPlatform().getLatestFolder(HypertaleConfig.hytaleBranch), "Assets.zip");
-				if (vanillaAssets.exists()) {
-					args = new String[]{"--assets", vanillaAssets.getAbsolutePath()};
-				}
-			}
-		}
 		if (HypertalePaths.hypertaleCacheJar.isFile()) {
 			if (!MainPlus.checkHytaleJarFile(HypertalePaths.hypertaleCacheJar)) {
 				EarlyLogger.log("Patched jar is invalid, or corrupted!");
@@ -294,6 +284,24 @@ public final class Main {
 		}
 		for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 			DependencyHelper.loadDependency(dependency);
+		}
+		if (args.length == 0) {
+			if (HypertalePaths.hytaleAssets.exists()) {
+				args = new String[]{"--assets", "Assets.zip"};
+			} else {
+				String hytaleBranch = HypertaleConfig.hytaleBranch;
+				if (dev && !"pre-release".equals(hytaleBranch)) {
+					hytaleBranch = ManifestUtil.getPatchline();
+					if (hytaleBranch == null) {
+						hytaleBranch = HypertaleConfig.hytaleBranch;
+					}
+				}
+				File vanillaAssets = new File(HypertalePlatform.getPlatform()
+						.getLatestFolder(hytaleBranch), "Assets.zip");
+				if (vanillaAssets.exists()) {
+					args = new String[]{"--assets", vanillaAssets.getAbsolutePath()};
+				}
+			}
 		}
 		if (MainPlus.checkHaltLaunchGame(args)) {
 			return;

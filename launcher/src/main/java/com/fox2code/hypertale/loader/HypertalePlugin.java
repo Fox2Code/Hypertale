@@ -29,6 +29,7 @@ import com.fox2code.hypertale.launcher.BuildConfig;
 import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.*;
+import com.fox2code.hypertale.utils.adapter.HypertaleMSAdapter;
 import com.fox2code.hypertale.utils.analytics.HStats;
 import com.hypixel.hytale.event.EventPriority;
 import com.hypixel.hytale.server.core.Constants;
@@ -37,6 +38,7 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.ShutdownReason;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
+import com.hypixel.hytale.server.core.io.PacketHandler;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import org.jspecify.annotations.NonNull;
@@ -47,6 +49,8 @@ import java.nio.file.Files;
 import java.util.Objects;
 
 public final class HypertalePlugin extends JavaPlugin {
+	private static final HypertaleMSAdapter<PacketHandler> DISCONNECT =
+			new HypertaleMSAdapter<>(PacketHandler.class, "disconnect");
 	public static final String EDITION = System.getProperty("hypertale.edition", "Unknown");
 	public static final boolean PREMIUM = Boolean.getBoolean("hypertale.premium");
 	private static final boolean INVALID_INSTALLATION =
@@ -127,7 +131,7 @@ public final class HypertalePlugin extends JavaPlugin {
 				CommandManager.get().handleCommand(ConsoleSender.INSTANCE,
 						"ban " + event.getPlayerRef().getUsername() + " Hypertale: Unhandled anti-cheat event!").join();
 			} else {
-				event.getPlayerRef().getPacketHandler().disconnect("Hypertale: Unhandled anti-cheat event!");
+				DISCONNECT.call(event.getPlayerRef().getPacketHandler(), "Hypertale: Unhandled anti-cheat event!");
 			}
 		}
 	}
