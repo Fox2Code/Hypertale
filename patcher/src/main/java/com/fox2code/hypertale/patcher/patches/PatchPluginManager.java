@@ -64,6 +64,11 @@ final class PatchPluginManager extends HypertalePatch {
 						"(L" + PluginManifest + ";)L" + PluginManifest + ";"));
 			}
 		}
+		// Patch loadPluginsInClasspath: override server version
+		// NOTE: We use passPluginManifest here (never returns null) instead of filterClasspathPlugin,
+		// because loadPluginsInClasspath does "return" (not "continue") when it sees a null manifest,
+		// which would abort loading ALL remaining classpath plugins (including bundled ones like CameraPlugin).
+		// The isPreloadedPlugin check in loadPendingPlugin already prevents duplicate loading.
 		MethodNode loadPluginsInClasspath = TransformerUtils.getMethod(classNode, "loadPluginsInClasspath");
 		for (AbstractInsnNode abstractInsnNode : loadPluginsInClasspath.instructions) {
 			if (abstractInsnNode.getOpcode() == Opcodes.CHECKCAST &&
