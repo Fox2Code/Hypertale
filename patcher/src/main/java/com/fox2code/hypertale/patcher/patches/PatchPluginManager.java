@@ -35,29 +35,31 @@ final class PatchPluginManager extends HypertalePatch {
 	@Override
 	public ClassNode transform(ClassNode classNode) {
 		classNode.access |= TransformerUtils.ACC_COMPUTE_FRAMES;
-		MethodNode methodNode = TransformerUtils.getMethod(classNode, "loadPendingPlugin");
+		// Patch loadPendingPlugin: skip preloaded plugins at the VERY BEGINNING,
+		// before duplicate detection (which happens before the first NEW instruction).
+		MethodNode loadPendingPlugin = TransformerUtils.getMethod(classNode, "loadPendingPlugin");
 		InsnList injection = new InsnList();
+		LabelNode allowModLoad = new LabelNode();
+		injection.add(new VarInsnNode(ALOAD, 1));
+		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PendingLoadPlugin,
+				"isInServerClassPath", "()Z"));
+		injection.add(new JumpInsnNode(IFEQ, allowModLoad));
 		injection.add(new VarInsnNode(ALOAD, 1));
 		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PendingLoadPlugin,
 				"getIdentifier", "()L" + PluginIdentifier + ";"));
 		injection.add(new MethodInsnNode(INVOKESTATIC, HypertaleModLoader,
 				"isPreloadedPlugin", "(L" + PluginIdentifier + ";)Z"));
-		LabelNode labelNode = new LabelNode();
-		injection.add(new JumpInsnNode(IFEQ, labelNode));
+		injection.add(new JumpInsnNode(IFEQ, allowModLoad));
 		injection.add(new InsnNode(RETURN));
-		injection.add(labelNode);
-		for (AbstractInsnNode abstractInsnNode : methodNode.instructions) {
-			if (abstractInsnNode.getOpcode() == Opcodes.NEW) {
-				methodNode.instructions.insertBefore(abstractInsnNode, injection);
-				break;
-			}
-		}
+		injection.add(allowModLoad);
+		loadPendingPlugin.instructions.insert(injection);
+		// Patch loadPendingJavaPlugin: override server version
 		MethodNode loadPendingJavaPlugin = TransformerUtils.getMethod(classNode, "loadPendingJavaPlugin");
 		for (AbstractInsnNode abstractInsnNode : loadPendingJavaPlugin.instructions) {
 			if (abstractInsnNode.getOpcode() == Opcodes.CHECKCAST &&
 					abstractInsnNode instanceof TypeInsnNode typeInsnNode &&
 					typeInsnNode.desc.equals(PluginManifest)) {
-				methodNode.instructions.insert(typeInsnNode, new MethodInsnNode(
+				loadPendingJavaPlugin.instructions.insert(typeInsnNode, new MethodInsnNode(
 						INVOKESTATIC, HypertaleModLoader, "passPluginManifest",
 						"(L" + PluginManifest + ";)L" + PluginManifest + ";"));
 			}
@@ -67,7 +69,7 @@ final class PatchPluginManager extends HypertalePatch {
 			if (abstractInsnNode.getOpcode() == Opcodes.CHECKCAST &&
 					abstractInsnNode instanceof TypeInsnNode typeInsnNode &&
 					typeInsnNode.desc.equals(PluginManifest)) {
-				methodNode.instructions.insert(typeInsnNode, new MethodInsnNode(
+				loadPluginsInClasspath.instructions.insert(typeInsnNode, new MethodInsnNode(
 						INVOKESTATIC, HypertaleModLoader, "passPluginManifest",
 						"(L" + PluginManifest + ";)L" + PluginManifest + ";"));
 			}

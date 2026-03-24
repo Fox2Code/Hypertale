@@ -36,11 +36,11 @@ import java.util.function.Consumer;
 
 public final class HookClassTransformer implements ClassTransformer {
 	private static final boolean isPatcherProcess = Boolean.getBoolean("hypertale.patcherProcess");
-	private static final HypertaleInfo hypertaleInfo = isPatcherProcess ? null :
-			HypertaleInfo.findHypertaleSingleplayer();
+	private static final HypertaleInfo hypertaleInfo;
 
 	static {
 		if (!isPatcherProcess) {
+			hypertaleInfo = HypertaleInfo.findHypertaleSingleplayer();
 			if (Boolean.getBoolean("hypertale.useInitWrapper")) {
 				throw new IllegalStateException("HypertaleInit already loaded with loaded with: " +
 						System.getProperty("hypertale.initMethod", "unknown"));
@@ -71,6 +71,8 @@ public final class HookClassTransformer implements ClassTransformer {
 				Thread.setDefaultUncaughtExceptionHandler((_, _) -> {});
 				sneakyThrow(new Throwable("You should not be able to see this!"));
 			});
+		} else {
+			hypertaleInfo = null;
 		}
 	}
 

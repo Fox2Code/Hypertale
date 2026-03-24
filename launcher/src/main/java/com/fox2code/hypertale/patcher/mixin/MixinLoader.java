@@ -48,6 +48,7 @@ public final class MixinLoader {
 	private static final HashSet<String> modWithMixins = new HashSet<>();
 	private static boolean preInitialized = false, initialized = false, postInitialized = false;
 	private static IMixinTransformer mixinTransformer;
+	private static final ThreadLocal<Boolean> transforming = new ThreadLocal<>();
 	private static final HashSet<String> mixinExclusions = new HashSet<>();
 
 	static {
@@ -170,7 +171,16 @@ public final class MixinLoader {
 
 	public static byte[] transformClass(String name, byte[] bytes) {
 		if (isMixinExcluded(name)) return bytes;
-		return mixinTransformer.transformClass(MixinEnvironment.getDefaultEnvironment(), name, bytes);
+		// Guard against re-entrance: if we're already inside a Mixin transformation
+		// (e.g. logger initialization triggering class loads), skip Mixin for the
+		// nested class to avoid ReEntrantTransformerError.
+		if (transforming.get() != null) return bytes;
+		transforming.set(Boolean.TRUE);
+		try {
+			return mixinTransformer.transformClass(MixinEnvironment.getDefaultEnvironment(), name, bytes);
+		} finally {
+			transforming.remove();
+		}
 	}
 
 	public static boolean isPostInitialized() {

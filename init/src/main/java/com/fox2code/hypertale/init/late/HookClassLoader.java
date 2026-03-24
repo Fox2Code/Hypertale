@@ -68,6 +68,10 @@ final class HookClassLoader extends URLClassLoader {
 				(resource = getResource(name.replace('.', '/') + ".class")) == null) {
 			return super.findClass(name);
 		}
+		Class<?> loadedClass = findLoadedClass(name);
+		if (loadedClass != null) {
+			return loadedClass;
+		}
 		synchronized (this.packageMakeLock) {
 			if (this.firstHytaleClass == null) {
 				Class<?> hytaleClass = null;
@@ -103,7 +107,15 @@ final class HookClassLoader extends URLClassLoader {
 		} catch (IOException e) {
 			throw new ClassNotFoundException(name, e);
 		} catch (LinkageError e) {
-			e.printStackTrace(System.err);
+			if (e.getMessage() != null && e.getMessage().contains("duplicate class definition")) {
+				// Re-entrant class load (e.g. Mixin transformation triggering
+				// a nested load of the same class) already defined this class.
+				Class<?> loaded = findLoadedClass(name);
+				if (loaded != null) return loaded;
+			}
+			if (!(e instanceof NoClassDefFoundError)) {
+				e.printStackTrace(System.err);
+			}
 			throw e;
 		}
 	}
