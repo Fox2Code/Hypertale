@@ -40,4 +40,8 @@ final class HypertalePluginPlus {
 	}
 
 	static void onShutdown(HypertalePlugin hypertalePlugin) {}
+
+	public static boolean ignoreInvalidInstallation() {
+		return false;
+	}
 }

@@ -74,4 +74,14 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 		hypertale.instructions.add(new InsnNode(Opcodes.ARETURN));
 		classNode.methods.add(hypertale);
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj != null && this.getClass() == obj.getClass();
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getClass().getName().hashCode();
+	}
 }

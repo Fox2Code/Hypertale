@@ -27,16 +27,21 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 
 public final class HypertalePatches {
 	private static final ArrayList<HypertalePatch> noPatches = new ArrayList<>();
 	private static final ArrayList<HypertalePatch> globalHypertalePatches = new ArrayList<>();
 	private static final HashMap<String, ArrayList<HypertalePatch>> hypertaleClassPatches = new HashMap<>();
+	static final LinkedHashSet<HypertalePatch> allPatches = new LinkedHashSet<>();
 	private static final boolean loaded;
 
 	static void addPatch(HypertalePatch hypertalePatch) {
 		if (loaded) {
 			throw new IllegalStateException("Cannot add patch after HypertalePatches has been loaded");
+		}
+		if (!allPatches.add(hypertalePatch)) {
+			throw new IllegalStateException("Duplicate patch detected!");
 		}
 		if (hypertalePatch.targets == null) {
 			globalHypertalePatches.add(hypertalePatch);
@@ -56,6 +61,14 @@ public final class HypertalePatches {
 		}
 		HypertalePatchesPlus.registerPatches();
 		loaded = true;
+		allPatches.clear();
+	}
+
+	// Callback to allow Hypertale plus to reset patches to register them later
+	static void resetPatches() {
+		hypertaleClassPatches.clear();
+		globalHypertalePatches.clear();
+		allPatches.clear();
 	}
 
 	// Callback to allow Hypertale plus to register default patches

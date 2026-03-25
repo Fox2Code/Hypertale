@@ -67,16 +67,16 @@ public final class HypertalePlugin extends JavaPlugin {
 	public HypertalePlugin(@NonNull JavaPluginInit init) {
 		if (instance != null) throw new IllegalStateException("HypertalePlugin is already loaded!");
 		super(init);
+		if (inHypertalePatcherProcess) {
+			throw new Error("HypertalePlugin should not be loaded inside the patcher process!");
+		}
 		instance = this;
 		if (!INVALID_INSTALLATION) {
-			if (inHypertalePatcherProcess) {
-				throw new Error("HypertalePlugin should not be loaded inside the patcher process!");
-			}
 			this.hypertale().setLoggerName(HypertaleCompatibility.ANSI_MAGENTA + "Hypertale");
 		}
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);
-		if (INVALID_INSTALLATION) {
+		if (INVALID_INSTALLATION && !HypertalePluginPlus.ignoreInvalidInstallation()) {
 			try {
 				this.tryInstallHypertaleFromModFolder();
 			} catch (Exception e) {
@@ -117,6 +117,7 @@ public final class HypertalePlugin extends JavaPlugin {
 
 	@Override
 	protected void shutdown() {
+		if (INVALID_INSTALLATION) return;
 		HypertalePluginPlus.onShutdown(this);
 	}
 
