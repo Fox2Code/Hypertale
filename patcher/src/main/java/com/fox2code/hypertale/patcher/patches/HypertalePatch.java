@@ -76,6 +76,7 @@ abstract class HypertalePatch implements Opcodes, HypertaleASMConstants {
 	}
 
 	@Override
+	@SuppressWarnings("EqualsGetClass")
 	public boolean equals(Object obj) {
 		return obj != null && this.getClass() == obj.getClass();
 	}

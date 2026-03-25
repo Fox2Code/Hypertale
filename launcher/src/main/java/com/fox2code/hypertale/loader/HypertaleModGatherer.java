@@ -26,6 +26,7 @@ package com.fox2code.hypertale.loader;
 import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.utils.EmptyArrays;
+import com.fox2code.hypertale.utils.HypertaleCLIHelper;
 import com.fox2code.hypertale.utils.HypertalePaths;
 import com.fox2code.hypertale.utils.IOUtils;
 
@@ -110,7 +111,6 @@ public final class HypertaleModGatherer {
 	}
 
 	public static HypertaleModGatherer gatherMods(String[] args) {
-		// TODO: Process launch arguments
 		boolean[] useMixins = new boolean[]{false, false};
 		ArrayList<File> mods = new ArrayList<>();
 		ArrayList<File> hypertaleMods = new ArrayList<>();
@@ -119,10 +119,22 @@ public final class HypertaleModGatherer {
 		File modSyncBootstrap = null;
 		if (HypertalePaths.hytaleEarlyPlugins.isDirectory()) {
 			modSyncBootstrap = appendEarlyLoaderMods(
+					HypertalePaths.hytaleEarlyPlugins,
 					hypertaleMods, mods, useMixins, localDependencies);
 		}
+		for (File earlyModFolder : HypertaleCLIHelper.getEarlyPluginPaths(args)) {
+			if (earlyModFolder.isDirectory()) {
+				modSyncBootstrap = appendEarlyLoaderMods(
+						earlyModFolder, hypertaleMods, mods, useMixins, localDependencies);
+			}
+		}
 		if (HypertalePaths.hytaleMods.isDirectory()) {
-			appendMods(hypertaleMods, mods, libraries, useMixins, localDependencies);
+			appendMods(HypertalePaths.hytaleMods, hypertaleMods, mods, libraries, useMixins, localDependencies);
+		}
+		for (File modFolder : HypertaleCLIHelper.getModsPaths(args)) {
+			if (modFolder.isDirectory()) {
+				appendMods(modFolder, hypertaleMods, mods, libraries, useMixins, localDependencies);
+			}
 		}
 		long[] fileSizes = new long[mods.size()];
 		for (int i = 0; i < fileSizes.length; i++) {
@@ -176,10 +188,10 @@ public final class HypertaleModGatherer {
 	}
 
 	private static File appendEarlyLoaderMods(
-			ArrayList<File> hypertaleMods, ArrayList<File> mods, boolean[] useMixins,
+			File earlyModFolder, ArrayList<File> hypertaleMods, ArrayList<File> mods, boolean[] useMixins,
 			HashMap<String, DependencyHelper.Dependency> localDependencies) {
 		File modSyncBootstrap = null;
-		for (File file : Objects.requireNonNull(HypertalePaths.hytaleEarlyPlugins.listFiles())) {
+		for (File file : Objects.requireNonNull(earlyModFolder.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar")) {
 				try(ZipFile zipFile = new ZipFile(file)) {
 					if (preprocessFile(localDependencies, useMixins, file, zipFile)) {
@@ -211,10 +223,10 @@ public final class HypertaleModGatherer {
 		return modSyncBootstrap;
 	}
 
-	private static void appendMods(ArrayList<File> hypertaleMods, ArrayList<File> mods,
+	private static void appendMods(File modsFolder, ArrayList<File> hypertaleMods, ArrayList<File> mods,
 								   ArrayList<File> libraries, boolean[] useMixins,
 								   HashMap<String, DependencyHelper.Dependency> localDependencies) {
-		for (File file : Objects.requireNonNull(HypertalePaths.hytaleMods.listFiles())) {
+		for (File file : Objects.requireNonNull(modsFolder.listFiles())) {
 			if (file.isFile() && file.getName().endsWith(".jar") &&
 					!file.getName().equals(HypertalePaths.hypertaleJar.getName())) {
 				try (ZipFile zipFile = new ZipFile(file)) {
