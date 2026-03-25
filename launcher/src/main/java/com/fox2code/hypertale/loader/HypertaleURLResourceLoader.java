@@ -29,6 +29,10 @@ import java.net.URLClassLoader;
 public final class HypertaleURLResourceLoader extends URLClassLoader {
 	public static final HypertaleURLResourceLoader EARLY_PLUGINS = new HypertaleURLResourceLoader();
 
+	static {
+		EARLY_PLUGINS.addURL(HypertalePlugin.class.getProtectionDomain().getCodeSource().getLocation());
+	}
+
 	private HypertaleURLResourceLoader() {
 		super("HypertaleURLResourceLoader", new URL[0], HypertaleURLResourceLoader.class.getClassLoader());
 	}

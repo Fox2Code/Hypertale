@@ -29,7 +29,6 @@ import com.fox2code.hypertale.launcher.HypertaleAgent;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
 import com.fox2code.hypertale.utils.HytaleVersion;
 import com.fox2code.hypertale.utils.JsonPropertyHelper;
-import com.fox2code.hypertale.utils.SourceUtil;
 import com.google.gson.*;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.common.plugin.PluginManifest;
@@ -37,13 +36,9 @@ import com.hypixel.hytale.server.core.plugin.PluginManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -62,21 +57,6 @@ public final class HypertaleModLoader {
 	}
 
 	public static void loadHypertaleMods(HypertaleModGatherer modGatherer) throws IOException {
-		// Hypertale's own JAR is excluded from mod gathering, extract its assets explicitly.
-		// Use SourceUtil directly to get the actual JAR file containing this class,
-		// since HypertalePaths.hypertaleJar may point to a stale/renamed path.
-		File hypertaleSource = SourceUtil.getSourceFile(HypertaleModLoader.class);
-		EarlyLogger.log("Hypertale source JAR: " + hypertaleSource.getAbsolutePath() +
-				" (exists=" + hypertaleSource.exists() + ", isFile=" + hypertaleSource.isFile() + ")");
-		if (hypertaleSource.isFile()) {
-			extractAssetPack(hypertaleSource, "Hypertale:Hypertale");
-			// Register working directory for resource discovery (Custom UI, etc.)
-			// via LaunchEnvironment.findLoaderFor() -> EARLY_PLUGINS chain.
-			// We add the directory (not the JAR) to avoid exposing manifest.json
-			// to PluginManager's classpath scan, which would cause a duplicate.
-			HypertaleURLResourceLoader.EARLY_PLUGINS.loaderAddURL(
-					new File(".").getAbsoluteFile().toURI().toURL());
-		}
 		LinkedHashMap<File, JsonObject> loadedModsEarly = new LinkedHashMap<>();
 		// Load class path mods, allow dev mode to load the mod in development
 		for (HypertaleModGatherer.ClassPathModCandidate candidate : modGatherer.getClassPathManifests()) {
@@ -153,9 +133,6 @@ public final class HypertaleModLoader {
 			JsonObject jsonObject = entry.getValue();
 			String modIdentifier = JsonPropertyHelper.getString(jsonObject, "Group") +
 					":" + JsonPropertyHelper.getString(jsonObject, "Name");
-			if (JsonPropertyHelper.getBoolean(jsonObject, "IncludesAssetPack")) {
-				extractAssetPack(entry.getKey(), modIdentifier);
-			}
 			String javaAgent = JsonPropertyHelper.getString(jsonObject, "HypertaleJavaAgent");
 			if (javaAgent != null && instrumentation != null) {
 				try {
@@ -192,32 +169,7 @@ public final class HypertaleModLoader {
 	}
 
 	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
-		// Use remove() instead of contains(): loadPluginsInClasspath runs BEFORE
-		// loadPluginsFromDirectory in PluginManager.setup(). The first call (classpath scan)
-		// returns true and removes the entry, preventing the classpath duplicate.
-		// The second call (directory scan) returns false, allowing normal plugin loading.
-		return preloadedPlugins.remove(pluginIdentifier.toString());
-	}
-
-	private static void extractAssetPack(File jarFile, String modIdentifier) {
-		try (JarFile jar = new JarFile(jarFile)) {
-			Enumeration<JarEntry> entries = jar.entries();
-			while (entries.hasMoreElements()) {
-				JarEntry jarEntry = entries.nextElement();
-				String name = jarEntry.getName();
-				if (name.startsWith("Common/") && !jarEntry.isDirectory()) {
-					File dest = new File(name);
-					dest.getParentFile().mkdirs();
-					try (InputStream is = jar.getInputStream(jarEntry)) {
-						Files.copy(is, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					}
-				}
-			}
-			EarlyLogger.log("Extracted asset pack from " + modIdentifier);
-		} catch (IOException e) {
-			EarlyLogger.log("Failed to extract asset pack from " +
-					jarFile.getName() + ": " + e.getMessage());
-		}
+		return preloadedPlugins.contains(pluginIdentifier.toString());
 	}
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
