@@ -21,18 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.patcher.patches;
+package com.fox2code.hypertale.annotations;
 
-import com.fox2code.hypertale.annotations.HypertaleHook;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * This class is overwritten by Hypertale Plus
+ * Marks a class as a Hypertale hook overwritten by other editions of Hypertale
  */
-@HypertaleHook
-final class HypertalePatchesPlus {
-	static boolean autoRegisterPatches() {
-		return true;
-	}
-
-	static void registerPatches() {}
-}
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.TYPE)
+public @interface HypertaleHook {}

@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.annotations.HypertaleHook;
 import com.fox2code.hypertale.loader.HypertaleConfig;
 
 import java.io.File;
@@ -34,6 +35,7 @@ import java.lang.instrument.Instrumentation;
  * <p>
  * This class is loaded before any library is loaded
  */
+@HypertaleHook
 final class MainPlus {
 	static void setEditionProperties() {
 		System.setProperty("hypertale.edition", "OSS");

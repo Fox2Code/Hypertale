@@ -23,11 +23,14 @@
  */
 package com.fox2code.hypertale.loader;
 
+import com.fox2code.hypertale.annotations.HypertaleHook;
+
 /**
  * This class is overwritten by Hypertale Offline and Hypertale Plus
  * <p>
  * This class allows the other editions of Hypertale to register plugin-specific callbacks
  */
+@HypertaleHook
 final class HypertalePluginPlus {
 	static void onSetup(HypertalePlugin hypertalePlugin) {}
 
