@@ -23,6 +23,8 @@
  */
 package com.fox2code.hypertale.init;
 
+import com.fox2code.hypertale.utils.HypertalePlatform;
+
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,16 +53,9 @@ public record HypertaleInfo(File hypertale, int hypertaleInitVer, String mainCla
 		HypertaleInfo hypertaleInfo = findHypertale(mods);
 		// Used for singleplayer support
 		if (hypertaleInfo == null) {
-			File hytaleServer = HypertaleInfo.getSourceFile(HypertaleInfo.class).getAbsoluteFile();
-			File client = new File(hytaleServer.getParentFile().getParentFile(), "Client");
-			if (client.exists()) {
-				int dirCut = 6;
-				File data = hytaleServer;
-				while (dirCut-->0) {
-					data = data.getParentFile();
-				}
-				hypertaleInfo = findHypertale(new File(data, "UserData" + File.separator + "Mods"));
-			}
+			hypertaleInfo = findHypertale(new File(
+					HypertalePlatform.getPlatform().getHytaleHome(),
+					"UserData" + File.separator + "Mods"));
 		}
 		if (hypertaleInfo == null) {
 			hypertaleInfo = findHypertale(new File(hypertaleInit.getParentFile().getParentFile(), "Mods"));

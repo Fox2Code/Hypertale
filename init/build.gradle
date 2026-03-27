@@ -12,6 +12,7 @@ java {
 
 dependencies {
     compileOnly(project(":patcher"))
+    testRuntimeOnly(project(":patcher"))
     errorprone "com.google.errorprone:error_prone_core:${project['errorprone.version']}"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
@@ -29,6 +30,10 @@ jar {
         attributes 'Can-Set-Native-Method-Prefix': 'true'
         attributes 'Can-Retransform-Classes': 'true'
         attributes 'Can-Redefine-Classes': 'true'
+    }
+
+    from(zipTree(project(":patcher").tasks.jar.archiveFile.get().asFile)) {
+        include("com/fox2code/hypertale/utils/HypertalePlatform*")
     }
 }
 
