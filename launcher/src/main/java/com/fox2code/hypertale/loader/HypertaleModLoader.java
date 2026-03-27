@@ -32,7 +32,6 @@ import com.fox2code.hypertale.utils.JsonPropertyHelper;
 import com.google.gson.*;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.common.plugin.PluginManifest;
-import com.hypixel.hytale.common.semver.Semver;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
 
 import java.io.File;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,7 +50,6 @@ public final class HypertaleModLoader {
 	private static final LinkedHashMap<File, JsonObject> loadedModsLate = new LinkedHashMap<>();
 	private static final LinkedHashMap<String, String> versionServerSupportOverride = new LinkedHashMap<>();
 	private static final HashSet<String> preloadedPlugins = new HashSet<>();
-	private static final HashMap<String, Semver> preloadModVersions = new HashMap<>();
 
 	static {
 		versionServerSupportOverride.put("Hypertale:Hypertale", HytaleVersion.HYTALE_VERSION);
@@ -173,14 +170,6 @@ public final class HypertaleModLoader {
 
 	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
 		return preloadedPlugins.contains(pluginIdentifier.toString());
-	}
-
-	// Avoid errors due to duplicate mods
-	public static boolean shouldBlockModLoading(PluginManifest pluginManifest, boolean classpathEntry) {
-		String idStr = pluginManifest.toString();
-		Semver version = pluginManifest.getVersion();
-		return preloadedPlugins.contains(idStr) && (classpathEntry ||
-				version.equals(preloadModVersions.putIfAbsent(idStr, version)));
 	}
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
