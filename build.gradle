@@ -33,6 +33,15 @@ final File javaDocSourceRoot = new File(rootDir, "dev" + File.separator +
 final File javadocExtraCSS = new File(javaDocSourceRoot,
         "resource-files" + File.separator + "hypertale-javadoc.css")
 
+final File localPropertiesFile = new File(rootProject.rootDir, "local.properties")
+final Properties localProperties = new Properties()
+if (localPropertiesFile.isFile()) {
+    try (FileInputStream fileInputStream = new FileInputStream(localPropertiesFile)) {
+        localProperties.load(new BufferedInputStream(fileInputStream))
+    }
+}
+boolean nonRelease = "release" != localProperties.getOrDefault("build.patchline", "release")
+
 tasks.register('publishToMavenLocal', Task).configure {
     shouldRunAfter("build")
 }
@@ -217,6 +226,12 @@ tasks.register("aggregateJavadocs", Javadoc) {
     options.windowTitle = "Hypertale ${project['hypertale.version']} API"
     options.memberLevel = JavadocMemberLevel.PUBLIC
     options.links += "https://asm.ow2.io/javadoc/"
+
+    doFirst {
+        if (nonRelease) {
+            throw new RuntimeException("Cannot make a release while targetting a non-release hytale branch")
+        }
+    }
 
     doLast {
         copy {
