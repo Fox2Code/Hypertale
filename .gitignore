@@ -3,6 +3,9 @@
 /launcher/out
 /patcher/out
 
+/.ai
+/.agent-work
+/.agentbridge
 .gradle/
 build/
 bin/
