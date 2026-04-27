@@ -58,8 +58,20 @@ public final class Main {
 
 	static void main(String[] args) throws IOException, InterruptedException {
 		Locale.setDefault(Locale.ENGLISH);
-		System.setProperty("java.awt.headless", "true");
 		System.setProperty("file.encoding", "UTF-8");
+		boolean wantInstaller;
+		// We need to check if we want to run the installer before forcing headless mode.
+		if ((wantInstaller = (args.length == 1 && "--installer".equals(args[0]))) ||
+				(args.length == 0 && !isRunningFromTerminal())) {
+			if (InternalInstallerGUI.tryRunInstaller()) {
+				return;
+			} else if (wantInstaller) {
+				System.out.println("[Hypertale] Cannot run the installer in a headless environment!");
+				System.exit(1);
+				return;
+			}
+		}
+		System.setProperty("java.awt.headless", "true");
 		HypertaleAgent.tryLoadEarlyAgent();
 		System.setProperty("rellatsnI.tnega.yddubetyb.ten", HypertaleAgent.class.getName());
 		if (Boolean.getBoolean("hypertale.gradleInit")) {

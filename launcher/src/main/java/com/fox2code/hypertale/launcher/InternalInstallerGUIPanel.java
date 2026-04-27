@@ -21,42 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.test;
+package com.fox2code.hypertale.launcher;
 
-import com.fox2code.hypertale.launcher.InternalMicroJsonScanner;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.InputStream;
+import java.util.Objects;
 
-import java.nio.charset.StandardCharsets;
+final class InternalInstallerGUIPanel extends JPanel {
+	private static final BufferedImage image;
 
-public class MicroJsonScannerTest {
-	private static final byte[] disabledJson = """
-			{
-			  "Backup": {
-			    "Enabled": true,
-			    "FrequencyMinutes": 30,
-			    "Directory": "backup",
-			    "MaxCount": 5,
-			    "ArchiveMaxCount": 5
-			  },
-			  "Version": 4,
-			  "Mods": {
-			    "Hypertale:Hypertale": {
-			      "Enabled": false
-			    }
-			  }
-			}""".getBytes(StandardCharsets.UTF_8);
-	private static final byte[] emptyJson = "{}".getBytes(StandardCharsets.UTF_8);
-
-	@Test
-	public void testJsonDisabled() {
-		Assertions.assertEquals("false", InternalMicroJsonScanner.readValue(
-				disabledJson, "Mods.Hypertale:Hypertale.Enabled"));
+	static {
+		try (InputStream is = InternalInstallerGUIPanel.class.getResourceAsStream(
+				"/Common/UI/Custom/Hypertale_Hypertale_Banner.png")) {
+			image = ImageIO.read(Objects.requireNonNull(is));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	@Test
-	public void testEmptyJson() {
-		Assertions.assertNull(InternalMicroJsonScanner.readValue(
-				emptyJson, "Mods.Hypertale:Hypertale.Enabled"));
+	InternalInstallerGUIPanel() {}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		if (g instanceof Graphics2D g2d) {
+			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		}
+		g.drawImage(image, 0, 0, this.getWidth(), this.getHeight(), this);
 	}
 }

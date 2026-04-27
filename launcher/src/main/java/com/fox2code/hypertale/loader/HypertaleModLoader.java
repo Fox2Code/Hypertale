@@ -32,6 +32,7 @@ import com.fox2code.hypertale.utils.JsonPropertyHelper;
 import com.google.gson.*;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.common.plugin.PluginManifest;
+import com.hypixel.hytale.common.semver.SemverRange;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
 
 import java.io.File;
@@ -185,6 +186,11 @@ public final class HypertaleModLoader {
 							pluginManifest.getServerVersion())) {
 				pluginManifest.setServerVersion(serverVersionPatch);
 			}
+		}
+		if ("Hytale".equals(pluginManifest.getGroup())) {
+			// Hytale has been patched; therefore, it requires Hypertale to funcion
+			pluginManifest.injectDependency(new PluginIdentifier(
+					"Hypertale", "Hypertale"), SemverRange.WILDCARD);
 		}
 		return pluginManifest;
 	}

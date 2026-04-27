@@ -52,7 +52,7 @@ public enum HypertalePlatform {
 	LINUX("xdg-open") {
 		@Override
 		public File getHytaleHome() {
-			// Hytale official documentation isn't accurate, but let use it as a fallback!
+			// Hytale official documentation isn't accurate, but let's use it as a fallback!
 			File flatpakPath = new File(System.getProperty("user.home") +
 					"/.var/app/com.hypixel.HytaleLauncher/data/Hytale");
 			File fallbackPath = new File(System.getProperty("user.home") + "/Hytale");
