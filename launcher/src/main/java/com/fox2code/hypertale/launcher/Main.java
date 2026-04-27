@@ -38,6 +38,7 @@ import com.hypixel.hytale.logger.backend.HytaleConsole;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -64,8 +65,21 @@ public final class Main {
 		if (Boolean.getBoolean("hypertale.gradleInit")) {
 			System.setProperty("mixin.hotSwap", "true");
 			System.setProperty("hypertale.initMethod", "gradle");
-		} else if (!Boolean.getBoolean("hypertale.useInitWrapper")) {
-			System.setProperty("hypertale.initMethod", "direct");
+		} else {
+			if (!Boolean.getBoolean("hypertale.useInitWrapper")) {
+				System.setProperty("hypertale.initMethod", "direct");
+			}
+			// Allow Hypertale to be disabled.
+			if ("false".equals(InternalMicroJsonScanner.readValue(
+					new File("config.json"), "Mods.Hypertale:Hypertale.Enabled"))) {
+				File input = HypertalePaths.getHytaleJar();
+				if (input != null && input.isFile()) {
+					VClassLoader classLoader = new VClassLoader(input);
+					Thread.currentThread().setContextClassLoader(classLoader);
+					classLoader.runHytale(args);
+				}
+				return;
+			}
 		}
 		MainPlus.setEditionProperties();
 		if (args.length == 0 && !isRunningFromTerminal()) {
@@ -339,7 +353,7 @@ public final class Main {
 		}
 		EarlyLogger.log("Launching Hytale...");
 		EarlyLogger.stop();
-		// We load Hytale is the same classloader! So we can do that!
+		// We load Hytale in the same classloader! So we can do that!
 		if (HypertalePlatform.getPlatform() != HypertalePlatform.WINDOWS && isRunningFromTerminal()) {
 			HytaleConsole.INSTANCE.setTerminal("ansi");
 		}
@@ -383,5 +397,35 @@ public final class Main {
 
 	public static boolean isHytaleLaunched() {
 		return hytaleLaunched;
+	}
+
+	private static class VClassLoader extends URLClassLoader {
+		static {
+			ClassLoader.registerAsParallelCapable();
+		}
+
+		VClassLoader(File hytale) throws MalformedURLException {
+			super(new URL[] { hytale.toURI().toURL() }, VClassLoader.class.getClassLoader());
+		}
+
+		@Override
+		protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+			// Conceal Hypertale classes from Hytale itself if disabled.
+			if (name.startsWith("com.fox2code.hypertale.") &&
+					!"com.fox2code.hypertale.launcher.HypertaleAgent".equals(name)) {
+				throw new ClassNotFoundException(name);
+			}
+			return super.loadClass(name, resolve);
+		}
+
+		void runHytale(String[] args) {
+			try {
+				this.findClass("com.hypixel.hytale.Main")
+						.getDeclaredMethod("main", String[].class)
+						.invoke(null, new Object[]{args});
+			} catch (ReflectiveOperationException e) {
+				throw new RuntimeException("Failed to run Hytale Main class while Hypertale was disabled.", e);
+			}
+		}
 	}
 }

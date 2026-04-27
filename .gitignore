@@ -19,6 +19,8 @@ bin/
 Thumbs.db
 
 # Hytale Server JAR (used as compile-only reference)
+# Note: The build script will try to get the Hypertale.jar
+# from your local Hytale installation if it is missing!
 HytaleServer.jar
 
 # Test Server
