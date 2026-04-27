@@ -24,6 +24,7 @@
 package com.fox2code.hypertale.launcher;
 
 import com.fox2code.hypertale.loader.HypertaleConfig;
+import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.IOUtils;
 import com.fox2code.hypertale.utils.NetUtils;
 
@@ -49,8 +50,9 @@ public final class DependencyHelper {
 	public static final boolean OFFLINE_ONLY = // Always true on some edition
 			MainPlus.forceOffline() || HypertaleConfig.isOfflineMode() ||
 					!HypertaleConfig.allowDownloadLibraries;
-	private static final File librariesDir = new File(
-			System.getProperty("hypertale.librariesDir", "libraries")).getAbsoluteFile();
+	private static final File librariesDir = Main.singleplayer ?
+			new File(HypertalePlatform.getPlatform().getHytaleHome(), "HypertaleLibraries").getAbsoluteFile() :
+			new File(System.getProperty("hypertale.librariesDir", "libraries")).getAbsoluteFile();
 	@SuppressWarnings("unchecked")
 	private static final Consumer<URL> initCLAddURL = Boolean.getBoolean("hypertale.useInitWrapper") ?
 			(Consumer<URL>) System.getProperties().get("hypertale.initCLAddURL") : null;

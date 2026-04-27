@@ -42,6 +42,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -51,6 +52,7 @@ import java.util.zip.ZipEntry;
 public final class Main {
 	private static final boolean fakeNotOSS = Boolean.getBoolean("hypertale.fakeNotOSS");
 	private static boolean hytaleLaunched = false;
+	static boolean singleplayer;
 
 	public static void hypertaleInitV1Main(String[] args) throws Throwable {
 		main(args);
@@ -115,6 +117,7 @@ public final class Main {
 				EarlyLogger.log("Cannot download libraries with the offline version of Hypertale!");
 				return;
 			}
+			singleplayer = Boolean.getBoolean("hypertale.singleplayer");
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
 				DependencyHelper.loadDependency(dependency);
 			}
@@ -128,6 +131,7 @@ public final class Main {
 			return;
 		} else if (args.length == 1 && "--run-patcher".equals(args[0])) {
 			try {
+				singleplayer = Boolean.getBoolean("hypertale.singleplayer");
 				EarlyLogger.start(true);
 				if (!HypertalePaths.hypertaleCache.isDirectory() &&
 						!HypertalePaths.hypertaleCache.mkdirs()) {
@@ -202,6 +206,7 @@ public final class Main {
 				System.out.println("Cannot set patch source/destination in non-OSS edition!");
 				return;
 			}
+			singleplayer = Boolean.getBoolean("hypertale.singleplayer");
 			final File input = new File(args[1]).getAbsoluteFile();
 			DependencyHelper.addFileToClasspath(input);
 			for (DependencyHelper.Dependency dependency : DependencyHelper.patcherDependencies) {
@@ -227,6 +232,10 @@ public final class Main {
 		EarlyLogger.start(false);
 		EarlyLogger.log("Version " + BuildConfig.HYPERTALE_VERSION +
 				" (" + System.getProperty("hypertale.edition", "Unknown") + ")");
+		singleplayer = Arrays.asList(args).contains("--singleplayer");
+		if (singleplayer) {
+			System.setProperty("hypertale.singleplayer", "true");
+		}
 		File hytaleJar = HypertalePaths.getHytaleJar();
 		if (!hytaleJar.isFile()) {
 			EarlyLogger.log("Cannot find original HytaleServer.jar");
@@ -366,7 +375,7 @@ public final class Main {
 		EarlyLogger.log("Launching Hytale...");
 		EarlyLogger.stop();
 		// We load Hytale in the same classloader! So we can do that!
-		if (HypertalePlatform.getPlatform() != HypertalePlatform.WINDOWS && isRunningFromTerminal()) {
+		if (HypertalePlatform.getPlatform() != HypertalePlatform.WINDOWS && isRunningFromTerminal() && !singleplayer) {
 			HytaleConsole.INSTANCE.setTerminal("ansi");
 		}
 		LateMain.lateMain(args);
@@ -390,6 +399,9 @@ public final class Main {
 		} else {
 			command.add(new File(System.getProperty("java.home") + "/bin/java").getAbsolutePath());
 		}
+		if (singleplayer) {
+			command.add("-Dhypertale.singleplayer=true");
+		}
 		command.add("-jar");
 		command.add(HypertalePaths.getHypertaleExecJar().getAbsolutePath());
 		command.add(arg);
@@ -411,7 +423,7 @@ public final class Main {
 		return hytaleLaunched;
 	}
 
-	private static class VClassLoader extends URLClassLoader {
+	private static final class VClassLoader extends URLClassLoader {
 		static {
 			ClassLoader.registerAsParallelCapable();
 		}

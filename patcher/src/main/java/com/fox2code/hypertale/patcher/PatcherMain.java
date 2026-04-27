@@ -106,17 +106,21 @@ public final class PatcherMain {
 			}
 			if (logProgress) {
 				EarlyLogger.log("Patching at " + progress[0] + "/" + progress[1]);
+				EarlyLogger.notifyClientRaw("Hypertale: Patching Hytale Server", 1D);
 			}
 			zipOutputStream.finish();
 		}
 	}
 
 	private static void runLogProgress(final long[] progress) {
+		EarlyLogger.notifyClientRaw("Hypertale: Patching Hytale Server", 0D);
 		Thread logThread = new Thread(() -> {
 			try {
 				int loop = 0;
 				while (progress[0] != progress[1]) {
 					EarlyLogger.log("Patching at " + progress[0] + "/" + progress[1]);
+					EarlyLogger.notifyClientRaw(
+							"Hypertale: Patching Hytale Server", progress[0] / (double) progress[1]);
 					//noinspection BusyWait
 					Thread.sleep(loop++ > 4 ? 1000 : 500);
 				}

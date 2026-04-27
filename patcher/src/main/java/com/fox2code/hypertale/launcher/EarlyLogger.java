@@ -29,6 +29,7 @@ import java.io.*;
 import java.util.function.Consumer;
 
 public final class EarlyLogger {
+	private static final boolean singleplayer = Boolean.getBoolean("hypertale.singleplayer");
 	private static final Object logFileLock = new Object();
 	private static Consumer<String> loggerFunction;
 	private static PrintStream printStream = null;
@@ -94,6 +95,12 @@ public final class EarlyLogger {
 				stopLocked();
 				EarlyLogger.loggerFunction = loggerFunction;
 			}
+		}
+	}
+
+	public static void notifyClientRaw(String message, double progress) {
+		if (singleplayer && printStream != null) {
+			System.out.println("-=|" + message + "|" + (progress * 100D));
 		}
 	}
 
