@@ -88,3 +88,22 @@ Hypertale includes custom compatibility or official support for:
 
 ## License
 Hypertale is licensed under the [MIT License](LICENSE).
+
+---
+
+### Contributing
+
+I may offer monetary rewards for good quality PRs.
+
+If you think you can contribute significant work on Hypertale and
+want to contribute on the assumption that you will receive monetary rewards,
+please open an issue first.  
+This is so you can check how much I am willing to pay for
+the features you are planning to implement.
+
+I might offer monetary rewards for some good quality PRs that have not 
+been requested money depending on subjective criteria.
+
+Please note that issues also may have monetary rewards assigned for solving them.
+
+---
