@@ -34,6 +34,7 @@ import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.common.plugin.PluginManifest;
 import com.hypixel.hytale.common.semver.SemverRange;
 import com.hypixel.hytale.server.core.plugin.PluginManager;
+import com.hypixel.hytale.server.core.plugin.pending.PendingLoadPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -171,6 +172,12 @@ public final class HypertaleModLoader {
 
 	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
 		return preloadedPlugins.contains(pluginIdentifier.toString());
+	}
+
+	public static boolean allowDuplicateLoading(PendingLoadPlugin oldPending, PendingLoadPlugin newPending) {
+		return oldPending == null || (oldPending.isInServerClassPath() && !newPending.isInServerClassPath()) ||
+				(newPending.getIdentifier().toString().equals("Hypertale:Hypertale") && // Edge case handling
+						newPending.getManifest().getVersion().equals(oldPending.getManifest().getVersion()));
 	}
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {

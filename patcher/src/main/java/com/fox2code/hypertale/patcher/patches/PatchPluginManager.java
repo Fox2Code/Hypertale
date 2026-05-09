@@ -27,6 +27,8 @@ import com.fox2code.hypertale.patcher.TransformerUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
+import java.util.Objects;
+
 final class PatchPluginManager extends HypertalePatch {
 	PatchPluginManager() {
 		super(PluginManager);
@@ -35,24 +37,24 @@ final class PatchPluginManager extends HypertalePatch {
 	@Override
 	public ClassNode transform(ClassNode classNode) {
 		classNode.access |= TransformerUtils.ACC_COMPUTE_FRAMES;
-		// Patch loadPendingPlugin: skip preloaded plugins at the VERY BEGINNING,
-		// before duplicate detection (which happens before the first NEW instruction).
+		// Patch loadPendingPlugin: skip duplicate detection if needed.
 		MethodNode loadPendingPlugin = TransformerUtils.getMethod(classNode, "loadPendingPlugin");
-		InsnList injection = new InsnList();
-		LabelNode allowModLoad = new LabelNode();
-		injection.add(new VarInsnNode(ALOAD, 1));
-		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PendingLoadPlugin,
-				"isInServerClassPath", "()Z"));
-		injection.add(new JumpInsnNode(IFEQ, allowModLoad));
-		injection.add(new VarInsnNode(ALOAD, 1));
-		injection.add(new MethodInsnNode(INVOKEVIRTUAL, PendingLoadPlugin,
-				"getIdentifier", "()L" + PluginIdentifier + ";"));
-		injection.add(new MethodInsnNode(INVOKESTATIC, HypertaleModLoader,
-				"isPreloadedPlugin", "(L" + PluginIdentifier + ";)Z"));
-		injection.add(new JumpInsnNode(IFEQ, allowModLoad));
-		injection.add(new InsnNode(RETURN));
-		injection.add(allowModLoad);
-		loadPendingPlugin.instructions.insert(injection);
+		// New injection
+		JumpInsnNode ifNull = null;
+		for (AbstractInsnNode abstractInsnNode : loadPendingPlugin.instructions) {
+			if (abstractInsnNode.getOpcode() == Opcodes.IFNULL) {
+				ifNull = (JumpInsnNode) abstractInsnNode;
+				break;
+			}
+		}
+		Objects.requireNonNull(ifNull);
+		InsnList checkNullReplace = new InsnList();
+		checkNullReplace.add(new VarInsnNode(ALOAD, 1));
+		checkNullReplace.add(new MethodInsnNode(INVOKESTATIC, HypertaleModLoader,
+				"allowDuplicateLoading", "(L" + PendingLoadPlugin + ";L" + PendingLoadPlugin + ";)Z"));
+		checkNullReplace.add(new JumpInsnNode(IFNE, ifNull.label));
+		loadPendingPlugin.instructions.insert(ifNull, checkNullReplace);
+		loadPendingPlugin.instructions.remove(ifNull);
 		// Patch loadPendingJavaPlugin: override server version
 		MethodNode loadPendingJavaPlugin = TransformerUtils.getMethod(classNode, "loadPendingJavaPlugin");
 		for (AbstractInsnNode abstractInsnNode : loadPendingJavaPlugin.instructions) {
