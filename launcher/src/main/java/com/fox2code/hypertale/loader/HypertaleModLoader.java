@@ -100,8 +100,8 @@ public final class HypertaleModLoader {
 	private static void processJsonAsMod(LinkedHashMap<File, JsonObject> loadedModsEarly, File file,
 										 JsonObject jsonObject, boolean isLibrary, boolean isClassPath)
 			throws IOException {
-		String id = JsonPropertyHelper.getBoolean(jsonObject, "Group") + ":" +
-				JsonPropertyHelper.getBoolean(jsonObject, "Name");
+		String id = JsonPropertyHelper.getString(jsonObject, "Group") + ":" +
+				JsonPropertyHelper.getString(jsonObject, "Name");
 		String hypertaleServerVersion = JsonPropertyHelper.getString(jsonObject, "HypertaleServerVersion");
 		if (hypertaleServerVersion != null && !hypertaleServerVersion.isEmpty()) {
 			if ("*".equals(hypertaleServerVersion)) {
@@ -175,9 +175,10 @@ public final class HypertaleModLoader {
 	}
 
 	public static boolean allowDuplicateLoading(PendingLoadPlugin oldPending, PendingLoadPlugin newPending) {
-		return oldPending == null || (oldPending.isInServerClassPath() && !newPending.isInServerClassPath()) ||
-				(newPending.getIdentifier().toString().equals("Hypertale:Hypertale") && // Edge case handling
-						newPending.getManifest().getVersion().equals(oldPending.getManifest().getVersion()));
+		if (oldPending == null) {
+			return true;
+		}
+		return oldPending.isInServerClassPath() && !newPending.isInServerClassPath();
 	}
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {

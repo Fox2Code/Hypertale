@@ -49,9 +49,13 @@ final class PatchPluginManager extends HypertalePatch {
 		}
 		Objects.requireNonNull(ifNull);
 		InsnList checkNullReplace = new InsnList();
+		checkNullReplace.add(new TypeInsnNode(CHECKCAST, PendingLoadPlugin));
 		checkNullReplace.add(new VarInsnNode(ALOAD, 1));
-		checkNullReplace.add(new MethodInsnNode(INVOKESTATIC, HypertaleModLoader,
-				"allowDuplicateLoading", "(L" + PendingLoadPlugin + ";L" + PendingLoadPlugin + ";)Z"));
+		checkNullReplace.add(new MethodInsnNode(
+				INVOKESTATIC, HypertaleModLoader,
+				"allowDuplicateLoading",
+				"(L" + PendingLoadPlugin + ";L" + PendingLoadPlugin + ";)Z"
+		));
 		checkNullReplace.add(new JumpInsnNode(IFNE, ifNull.label));
 		loadPendingPlugin.instructions.insert(ifNull, checkNullReplace);
 		loadPendingPlugin.instructions.remove(ifNull);
