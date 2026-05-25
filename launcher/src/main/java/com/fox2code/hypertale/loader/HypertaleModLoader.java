@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -178,7 +179,13 @@ public final class HypertaleModLoader {
 		if (oldPending == null) {
 			return true;
 		}
-		return oldPending.isInServerClassPath() && !newPending.isInServerClassPath();
+		if (newPending.isInServerClassPath() && !oldPending.isInServerClassPath()) {
+			return false;
+		}
+		Path oldPendingPath, newPendingPath;
+		return (oldPendingPath = oldPending.getPath()) != null &&
+				(newPendingPath = newPending.getPath()) != null &&
+				oldPendingPath.equals(newPendingPath);
 	}
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
@@ -196,7 +203,7 @@ public final class HypertaleModLoader {
 			}
 		}
 		if ("Hytale".equals(pluginManifest.getGroup())) {
-			// Hytale has been patched; therefore, it requires Hypertale to funcion
+			// Hytale has been patched; therefore, it requires Hypertale to function
 			pluginManifest.injectDependency(new PluginIdentifier(
 					"Hypertale", "Hypertale"), SemverRange.WILDCARD);
 		}
