@@ -64,15 +64,22 @@ public final class InternalMicroJsonScanner {
 
 			// Track string boundaries so braces inside strings are ignored
 			if (inString) {
-				if (b == '\\') { i++; continue; } // skip escaped char
+				if (b == '\\') {
+					// Feed escape byte to KMP, then skip the escaped char
+					while (m > 0 && b != needle[m]) m = fail[m - 1];
+					if (b == needle[m]) m++;
+					i++;
+					continue;
+				}
 				if (b == '"') inString = false;
-				continue;
-			}
-			if (b == '"') { inString = true; }
+				// Fall through so the byte (including the closing quote) is fed to KMP
+			} else {
+				if (b == '"') { inString = true; }
 
-			// Track brace depth (only outside strings)
-			if (b == '{') { currentDepth++; continue; }
-			if (b == '}') { currentDepth--; m = 0; continue; } // leaving scope, reset KMP
+				// Track brace depth (only outside strings)
+				if (b == '{') { currentDepth++; continue; }
+				if (b == '}') { currentDepth--; m = 0; continue; } // leaving scope, reset KMP
+			}
 
 			// Only run KMP when we're at the depth we care about
 			if (currentDepth != targetDepth + 1) continue;

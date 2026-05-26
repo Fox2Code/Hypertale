@@ -33,6 +33,7 @@ jar {
     }
 
     from(zipTree(project(":patcher").tasks.jar.archiveFile.get().asFile)) {
+        include("com/fox2code/hypertale/launcher/InternalMicroJsonScanner*")
         include("com/fox2code/hypertale/utils/HypertalePlatform*")
     }
 

@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.init;
 
+import com.fox2code.hypertale.launcher.InternalMicroJsonScanner;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 
 import java.io.*;
@@ -50,6 +51,10 @@ public record HypertaleInfo(File hypertale, int hypertaleInitVer, String mainCla
 	}
 
 	public static HypertaleInfo findHypertaleSingleplayer() {
+		if ("false".equals(InternalMicroJsonScanner.readValue(
+				new File("config.json"), "Mods.Hypertale:Hypertale.Enabled"))) {
+			return null;
+		}
 		HypertaleInfo hypertaleInfo = findHypertale(mods);
 		// Used for singleplayer support
 		if (hypertaleInfo == null) {
