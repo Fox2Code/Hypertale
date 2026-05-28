@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.annotations.MakeJVMCompat;
 import com.fox2code.hypertale.io.HypertaleData;
 import com.fox2code.hypertale.loader.HypertaleCompatibility;
 import com.fox2code.hypertale.loader.HypertaleConfig;
@@ -55,9 +56,12 @@ public final class Main {
 	static boolean singleplayer;
 
 	public static void hypertaleInitV1Main(String[] args) throws Throwable {
-		main(args);
+		Locale.setDefault(Locale.ENGLISH);
+		System.setProperty("file.encoding", "UTF-8");
+		mainImpl(args);
 	}
 
+	@MakeJVMCompat
 	static void main(String[] args) throws IOException, InterruptedException {
 		Locale.setDefault(Locale.ENGLISH);
 		System.setProperty("file.encoding", "UTF-8");
@@ -73,6 +77,10 @@ public final class Main {
 				return;
 			}
 		}
+		mainImpl(args);
+	}
+
+	private static void mainImpl(String[] args) throws IOException, InterruptedException {
 		System.setProperty("java.awt.headless", "true");
 		HypertaleAgent.tryLoadEarlyAgent();
 		System.setProperty("rellatsnI.tnega.yddubetyb.ten", HypertaleAgent.class.getName());
@@ -428,6 +436,7 @@ public final class Main {
 			ClassLoader.registerAsParallelCapable();
 		}
 
+		@MakeJVMCompat
 		VClassLoader(File hytale) throws MalformedURLException {
 			super(new URL[] { hytale.toURI().toURL() }, VClassLoader.class.getClassLoader());
 		}

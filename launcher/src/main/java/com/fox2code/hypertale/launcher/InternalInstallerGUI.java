@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.annotations.MakeJVMCompat;
 import com.fox2code.hypertale.utils.HypertalePlatform;
 import com.fox2code.hypertale.utils.SourceUtil;
 
@@ -33,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
+@MakeJVMCompat
 final class InternalInstallerGUI {
 	static boolean tryRunInstaller() {
 		System.clearProperty("java.awt.headless");

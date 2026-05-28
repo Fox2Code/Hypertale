@@ -21,23 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.fox2code.hypertale.utils;
+package com.fox2code.hypertale.annotations;
 
-import com.fox2code.hypertale.annotations.MakeJVMCompat;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.security.CodeSource;
-
+/**
+ * Hypertale uses this annotation to ensure that annotated methods can be
+ * properly loaded and executed on older JVMs.
+ * <p>
+ * When applied to a class, it means that all methods and constructors
+ * within the class patched at compile time to ensure compatibility with Java 8.
+ */
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE})
+@Retention(RetentionPolicy.CLASS)
 @MakeJVMCompat
-public final class SourceUtil {
-	private SourceUtil() {}
-	public static File getSourceFile(Class<?> cls) {
-		CodeSource codeSource = cls.getProtectionDomain().getCodeSource();
-		try {
-			return new File(codeSource.getLocation().toURI().getPath()).getAbsoluteFile();
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
-	}
-}
+public @interface MakeJVMCompat {}

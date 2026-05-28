@@ -130,6 +130,17 @@ tasks.register("makeLibraries", JavaExec) {
     args("--make-hypertale-offline-libraries", hypertaleLibraries.getAbsolutePath())
 }
 
+tasks.register("runDevModPatcher", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath + project(":dev").sourceSets.main.output +
+            sourceSets.main.output + project(":patcher").sourceSets.main.output +
+            files(Project.class.protectionDomain.codeSource.location)
+    mainClass = "com.fox2code.hypertale.dev.HypertaleDevModPatcher"
+    args(jar.archiveFile.get().asFile.absolutePath)
+    dependsOn(":dev:jar")
+}
+
+assemble.dependsOn(runDevModPatcher)
+
 compileJava {
     dependsOn(":init:jar")
     dependsOn(":patcher:jar")

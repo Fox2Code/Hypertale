@@ -80,6 +80,7 @@ public interface HypertaleASMConstants {
 	String WorldMapManager = "com/hypixel/hytale/server/core/universe/world/worldmap/WorldMapManager";
 	String DumpUtil = "com/hypixel/hytale/server/core/util/DumpUtil";
 	// Hypertale ASM Constants
+	String MakeJVMCompat = "com/fox2code/hypertale/annotations/MakeJVMCompat";
 	String HypertalePlayerAuthentication = "com/fox2code/hypertale/auth/HypertalePlayerAuthentication";
 	String HypertaleRecyclableByteBuf = "com/fox2code/hypertale/io/HypertaleRecyclableByteBuf";
 	String HypertaleConfig = "com/fox2code/hypertale/loader/HypertaleConfig";
@@ -90,4 +91,7 @@ public interface HypertaleASMConstants {
 	String HypertaleWorld = "com/fox2code/hypertale/universe/HypertaleWorld";
 	String HypertaleBundled = "com/fox2code/hypertale/utils/HypertaleBundled";
 	String $HypertaleBundled = "META-INF/bundled/#HypertaleBundled";
+	// Hypertale JVM Compat Backports
+	String CompatStringConcatFactory = "com/fox2code/hypertale/utils/jvm/CompatStringConcatFactory";
+	String StringConcatFactory = "java/lang/invoke/StringConcatFactory";
 }

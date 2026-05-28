@@ -6,6 +6,7 @@
 /.ai
 /.agent-work
 /.agentbridge
+/.junie
 .gradle/
 build/
 bin/

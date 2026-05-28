@@ -141,7 +141,7 @@ class HypertaleGradlePlugin implements Plugin<Project> {
                 if (config.useBundling) {
                     project.tasks.compileJava {
                         doLast {
-                            HypertaleBundlerPatcher.patch(project)
+                            HypertaleDevModPatcher.patch(project)
                         }
                     }
                     project.tasks.jar {

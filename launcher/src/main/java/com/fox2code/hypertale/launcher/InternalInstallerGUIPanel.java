@@ -23,6 +23,8 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.annotations.MakeJVMCompat;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -30,6 +32,7 @@ import java.awt.image.*;
 import java.io.InputStream;
 import java.util.Objects;
 
+@MakeJVMCompat
 final class InternalInstallerGUIPanel extends JPanel {
 	private static final BufferedImage image;
 

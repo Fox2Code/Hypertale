@@ -23,6 +23,7 @@
  */
 package com.fox2code.hypertale.launcher;
 
+import com.fox2code.hypertale.annotations.MakeJVMCompat;
 import com.fox2code.hypertale.init.Agent;
 
 import javax.annotation.Nullable;
@@ -33,6 +34,7 @@ public final class HypertaleAgent {
 
 	private HypertaleAgent() {}
 
+	@MakeJVMCompat
 	public static void premain(final String agentArgs, final Instrumentation instrumentation) {
 		if (HypertaleAgent.instrumentation == null && instrumentation != null) {
 			HypertaleAgent.instrumentation = instrumentation;

@@ -23,34 +23,42 @@
  */
 package com.fox2code.hypertale.utils;
 
+import com.fox2code.hypertale.annotations.MakeJVMCompat;
+
 import java.io.File;
 import java.util.Locale;
 
+@MakeJVMCompat
 public enum HypertalePlatform {
 	WINDOWS("start") {
 		@Override
+		@MakeJVMCompat
 		public File getHytaleHome() {
 			return new File(System.getenv("APPDATA") + "\\Hytale");
 		}
 
 		@Override
+		@MakeJVMCompat
 		public File getLatestFolder(File hytaleHome, String branch) {
 			return new File(hytaleHome, "install\\" + branch + "\\package\\game\\latest");
 		}
 	},
 	MACOS("open") {
 		@Override
+		@MakeJVMCompat
 		public File getHytaleHome() {
 			return new File(System.getProperty("user.home") + "/Application Support/Hytale");
 		}
 
 		@Override
+		@MakeJVMCompat
 		public File getLatestFolder(File hytaleHome, String branch) {
 			return new File(hytaleHome, "install/" + branch + "/package/game/latest");
 		}
 	},
 	LINUX("xdg-open") {
 		@Override
+		@MakeJVMCompat
 		public File getHytaleHome() {
 			// Hytale official documentation isn't accurate, but let's use it as a fallback!
 			File flatpakPath = new File(System.getProperty("user.home") +
@@ -60,6 +68,7 @@ public enum HypertalePlatform {
 		}
 
 		@Override
+		@MakeJVMCompat
 		public File getLatestFolder(File hytaleHome, String branch) {
 			return new File(hytaleHome, "install/" + branch + "/package/game/latest");
 		}
