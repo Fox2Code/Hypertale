@@ -38,7 +38,7 @@ final class HookClassLoader extends URLClassLoader {
 	private volatile Class<?> firstHytaleClass = null;
 
 	public HookClassLoader(URL[] urls, Package hytaleExamplePackage) {
-		super(urls, ClassLoader.getSystemClassLoader().getParent());
+		super("hypertale", urls, ClassLoader.getSystemClassLoader().getParent());
 		this.hytaleExamplePackage = hytaleExamplePackage;
 		this.systemClassLoader = ClassLoader.getSystemClassLoader();
 	}

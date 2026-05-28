@@ -27,7 +27,6 @@ import com.fox2code.hypertale.launcher.DependencyHelper;
 import com.fox2code.hypertale.launcher.EarlyLogger;
 import com.fox2code.hypertale.launcher.HypertaleAgent;
 import com.fox2code.hypertale.patcher.mixin.MixinLoader;
-import com.fox2code.hypertale.utils.HytaleVersion;
 import com.fox2code.hypertale.utils.JsonPropertyHelper;
 import com.google.gson.*;
 import com.hypixel.hytale.common.plugin.PluginIdentifier;
@@ -55,7 +54,6 @@ public final class HypertaleModLoader {
 	private static final HashSet<String> preloadedPlugins = new HashSet<>();
 
 	static {
-		versionServerSupportOverride.put("Hypertale:Hypertale", HytaleVersion.HYTALE_VERSION);
 		preloadedPlugins.add("Hypertale:Hypertale");
 	}
 
@@ -104,10 +102,7 @@ public final class HypertaleModLoader {
 		String id = JsonPropertyHelper.getString(jsonObject, "Group") + ":" +
 				JsonPropertyHelper.getString(jsonObject, "Name");
 		String hypertaleServerVersion = JsonPropertyHelper.getString(jsonObject, "HypertaleServerVersion");
-		if (hypertaleServerVersion != null && !hypertaleServerVersion.isEmpty()) {
-			if ("*".equals(hypertaleServerVersion)) {
-				hypertaleServerVersion = HytaleVersion.HYTALE_VERSION;
-			}
+		if ("*".equals(hypertaleServerVersion)) {
 			versionServerSupportOverride.put(id, hypertaleServerVersion);
 		}
 		if (JsonPropertyHelper.getBoolean(jsonObject, "HypertalePreLoad", isLibrary)) {
@@ -172,15 +167,12 @@ public final class HypertaleModLoader {
 	}
 
 	public static boolean isPreloadedPlugin(PluginIdentifier pluginIdentifier) {
-		return preloadedPlugins.contains(pluginIdentifier.toString());
+		return pluginIdentifier != null && preloadedPlugins.contains(pluginIdentifier.toString());
 	}
 
 	public static boolean allowDuplicateLoading(PendingLoadPlugin oldPending, PendingLoadPlugin newPending) {
 		if (oldPending == null) {
 			return true;
-		}
-		if (newPending.isInServerClassPath() && !oldPending.isInServerClassPath()) {
-			return false;
 		}
 		Path oldPendingPath, newPendingPath;
 		return (oldPendingPath = oldPending.getPath()) != null &&
@@ -190,16 +182,14 @@ public final class HypertaleModLoader {
 
 	public static PluginManifest passPluginManifest(PluginManifest pluginManifest) {
 		if (pluginManifest == null) return null;
-		if (HypertaleConfig.unsupportedDisablePluginServerVersionCheck ||
-				"*".equals(pluginManifest.getServerVersion())) {
-			pluginManifest.setServerVersion(HytaleVersion.HYTALE_VERSION);
+		if (HypertaleConfig.unsupportedDisablePluginServerVersionCheck) {
+			pluginManifest.setServerVersion(SemverRange.WILDCARD);
 		} else {
+			// Backward compatibility
 			String serverVersionPatch = versionServerSupportOverride.get(
 					pluginManifest.getGroup() + ":" + pluginManifest.getName());
-			if (serverVersionPatch != null &&
-					!HytaleVersion.HYTALE_VERSION.equals(
-							pluginManifest.getServerVersion())) {
-				pluginManifest.setServerVersion(serverVersionPatch);
+			if ("*".equals(serverVersionPatch)) {
+				pluginManifest.setServerVersion(SemverRange.WILDCARD);
 			}
 		}
 		if ("Hytale".equals(pluginManifest.getGroup())) {

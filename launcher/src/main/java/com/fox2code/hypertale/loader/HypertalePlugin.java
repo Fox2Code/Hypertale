@@ -77,14 +77,18 @@ public final class HypertalePlugin extends JavaPlugin {
 		this.getLogger().atInfo().log("System information: " + HypertaleSystemInfo.SYSTEM);
 		EarlyLogger.installLoggerFunction(this.getLogger().atInfo()::log);
 		if (INVALID_INSTALLATION && !HypertalePluginPlus.ignoreInvalidInstallation()) {
+			String messageSP = USE_HYPERTALE_INIT ?
+					"HypertaleInit failed to load Hypertale properly" :
+					"Please reopen your world to join!";
 			try {
 				this.tryInstallHypertaleFromModFolder();
 			} catch (Exception e) {
 				this.getLogger().atSevere().withCause(e).log("Failed to setup Hypertale properly!");
+				messageSP = e.getClass().getSimpleName() + ": " + e.getMessage();
 			}
 			if (Constants.SINGLEPLAYER) {
 				HytaleServer.get().shutdownServer(ShutdownReason.UPDATE
-						.withMessage("Please reopen your world to join!"));
+						.withMessage(Message.raw(messageSP).bold(true)));
 			} else {
 				HytaleServer.get().shutdownServer(ShutdownReason.UPDATE);
 			}

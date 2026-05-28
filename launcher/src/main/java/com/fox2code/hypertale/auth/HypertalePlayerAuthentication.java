@@ -73,7 +73,7 @@ public final class HypertalePlayerAuthentication extends PlayerAuthentication {
 		return false;
 	}
 
-	public @Nonnull String getSkin() {
+	public @Nonnull String getSkinData() {
 		String skin = this.identityTokenClaims.skin;
 		return skin == null || skin.isEmpty() ? "{}" : skin;
 	}

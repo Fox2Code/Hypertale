@@ -351,6 +351,22 @@ public final class TransformerUtils {
 		return endingLabelNode;
 	}
 
+	public static LocalVariableNode injectLocalVariable(
+			MethodNode methodNode, String name, String desc, LabelNode start) {
+		int minVal = methodNode.maxLocals;
+		for (LocalVariableNode localVariableNode : methodNode.localVariables) {
+			minVal = Math.max(minVal, localVariableNode.index +
+					Type.getType(localVariableNode.desc).getSize());
+		}
+		// Should we check code too for minVal?
+		LabelNode end = TransformerUtils.getEndingLabelNode(methodNode);
+		LocalVariableNode localVariableNode = new LocalVariableNode(name, desc, null, start, end, minVal);
+		methodNode.localVariables.add(localVariableNode);
+		methodNode.maxLocals = Math.max(methodNode.maxLocals,
+				minVal + Type.getType(desc).getSize());
+		return localVariableNode;
+	}
+
 	public static void setParameterName(MethodNode methodNode, int index, String name) {
 		if (index == 0 && (methodNode.access & Opcodes.ACC_STATIC) == 0) {
 			throw new IllegalArgumentException("Cannot set arg index zero of a non-static method!");

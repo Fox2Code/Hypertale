@@ -27,6 +27,7 @@ import com.fox2code.hypertale.patcher.TransformerUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
+
 final class PatchPluginClassLoader extends HypertalePatch {
 	PatchPluginClassLoader() {
 		super(PluginClassLoader);
@@ -64,6 +65,36 @@ final class PatchPluginClassLoader extends HypertalePatch {
 				injection.add(skip);
 				isFromThirdPartyPlugin.instructions.insertBefore(ldcInsnNode, injection);
 				break;
+			}
+		}
+		MethodNode cst = TransformerUtils.findMethod(classNode,
+				"<init>", "(L" + PluginManager + ";L" + PluginIdentifier + ";ZZ[Ljava/net/URL;)V");
+		if (cst != null) {
+			LabelNode labelNode = new LabelNode();
+			int index = TransformerUtils.injectLocalVariable(cst, "hypertaleAllowDefault", "Z", labelNode).index;
+			InsnList injection = new InsnList();
+			injection.add(new VarInsnNode(Opcodes.ALOAD, 2));
+			injection.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HypertaleModLoader,
+					"isPreloadedPlugin", "(L" + PluginIdentifier + ";)Z"));
+			LabelNode isNil = new LabelNode();
+			injection.add(new JumpInsnNode(Opcodes.IFEQ, isNil));
+			injection.add(new InsnNode(Opcodes.ICONST_0));
+			LabelNode skip = new LabelNode();
+			injection.add(new JumpInsnNode(Opcodes.GOTO, skip));
+			injection.add(isNil);
+			injection.add(new InsnNode(Opcodes.ICONST_1));
+			injection.add(skip);
+			injection.add(new VarInsnNode(Opcodes.ISTORE, index));
+			TransformerUtils.insertToBeginningOfCode(cst, injection);
+			int patchIndex = 3;
+			for (AbstractInsnNode abstractInsnNode : cst.instructions) {
+				if (abstractInsnNode.getOpcode() == Opcodes.ILOAD &&
+						abstractInsnNode instanceof VarInsnNode varInsnNode &&
+						varInsnNode.var == patchIndex) {
+					cst.instructions.insert(abstractInsnNode, new InsnNode(Opcodes.IAND));
+					cst.instructions.insert(abstractInsnNode, new VarInsnNode(Opcodes.ILOAD, index));
+					patchIndex++;
+				}
 			}
 		}
 		return classNode;

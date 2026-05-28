@@ -61,7 +61,6 @@ Hypertale reads custom fields in your mod's manifest to enable advanced features
 | `HypertalePreLoad`       | `boolean` | If `true`, Hypertale will load your mod in the same ClassLoader as the Hytale server (bypasses isolation). |
 | `HypertaleJavaAgent`     | `string`  | Specify a class to be loaded as a Java Agent for instrumentation.                                          |
 | `HypertaleMixinConfig`   | `string`  | Path to a Mixin configuration file to be applied to the server.                                            |
-| `HypertaleServerVersion` | `string`  | Set a specific server version compatibility (supports `*` for any).                                        |
 
 ### API Extensions
 Hypertale adds the `.hypertale()` extension to core Hytale classes, providing access to optimized methods and new functionality:

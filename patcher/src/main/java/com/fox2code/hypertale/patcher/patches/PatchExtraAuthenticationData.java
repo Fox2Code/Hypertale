@@ -70,13 +70,16 @@ final class PatchExtraAuthenticationData extends HypertalePatch {
 			classNode.fields.add(identityTokenClaimsField);
 			MethodNode registered0 = TransformerUtils.getMethod(classNode, "registered0");
 			boolean didPatch = false;
+			FieldInsnNode putField = null;
 			int var = -1;
 			for (AbstractInsnNode abstractInsnNode : registered0.instructions) {
 				if (abstractInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL &&
 						abstractInsnNode instanceof MethodInsnNode methodInsnNode) {
 					if (methodInsnNode.desc.endsWith(")L" + IdentityTokenClaims + ";")) {
 						AbstractInsnNode next = TransformerUtils.nextCodeInsn(methodInsnNode);
-						if (next.getOpcode() == Opcodes.ASTORE) {
+						if (next.getOpcode() == Opcodes.PUTFIELD) {
+							putField = (FieldInsnNode) next;
+						} else if (next.getOpcode() == Opcodes.ASTORE) {
 							var = ((VarInsnNode) next).var;
 						} else {
 							throw new RuntimeException("What? " + next.getOpcode());
@@ -84,12 +87,19 @@ final class PatchExtraAuthenticationData extends HypertalePatch {
 					}
 					if (methodInsnNode.owner.equals(classNode.name) &&
 							methodInsnNode.name.equals("requestAuthGrant")) {
-						if (var == -1) {
+						System.out.println("Found requestAuthGrant!");
+						if (putField == null && var == -1) {
 							throw new RuntimeException("Failed to get var!");
 						}
 						InsnList injection = new InsnList();
 						injection.add(new VarInsnNode(Opcodes.ALOAD, 0));
-						injection.add(new VarInsnNode(Opcodes.ALOAD, var));
+						if (putField != null) {
+							injection.add(new VarInsnNode(Opcodes.ALOAD, 0));
+							injection.add(new FieldInsnNode(Opcodes.GETFIELD,
+									putField.owner, putField.name, putField.desc));
+						} else {
+							injection.add(new VarInsnNode(Opcodes.ALOAD, var));
+						}
 						injection.add(new FieldInsnNode(Opcodes.PUTFIELD, classNode.name,
 								identityTokenClaimsField.name, identityTokenClaimsField.desc));
 						registered0.instructions.insert(methodInsnNode, injection);
@@ -117,7 +127,6 @@ final class PatchExtraAuthenticationData extends HypertalePatch {
 					identityTokenClaimsField.name, identityTokenClaimsField.desc));
 			TransformerUtils.insertToEndOfCode(constructor, injection);
 		}
-		boolean didPatch = false;
 		for (MethodNode methodNode : classNode.methods) {
 			for (AbstractInsnNode abstractInsnNode : methodNode.instructions) {
 				if (abstractInsnNode.getOpcode() == Opcodes.NEW &&
@@ -136,14 +145,10 @@ final class PatchExtraAuthenticationData extends HypertalePatch {
 						injection.add(new FieldInsnNode(Opcodes.GETFIELD, classNode.name,
 								identityTokenClaimsField.name, identityTokenClaimsField.desc));
 						methodNode.instructions.insertBefore(methodInsnNode, injection);
-						didPatch = true;
 						break;
 					}
 				}
 			}
-		}
-		if (!didPatch) {
-			throw new RuntimeException("Failed patch!");
 		}
 		return classNode;
 	}
