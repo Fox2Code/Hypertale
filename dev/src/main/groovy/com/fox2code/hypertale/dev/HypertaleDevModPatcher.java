@@ -91,7 +91,7 @@ public final class HypertaleDevModPatcher implements HypertaleASMConstants {
 				for (String interfaceName : interfaces) {
 					doInjection |= classToInject.contains(interfaceName);
 				}
-				if (doInjection && !Arrays.asList(interfaces).contains($HypertaleBundled)) {
+				if (doInjection && !exclusive && !Arrays.asList(interfaces).contains($HypertaleBundled)) {
 					interfaces = Arrays.copyOf(interfaces, interfaces.length + 1);
 					interfaces[interfaces.length - 1] = $HypertaleBundled;
 				}
