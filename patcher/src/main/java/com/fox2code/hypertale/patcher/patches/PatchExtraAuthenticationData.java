@@ -87,7 +87,6 @@ final class PatchExtraAuthenticationData extends HypertalePatch {
 					}
 					if (methodInsnNode.owner.equals(classNode.name) &&
 							methodInsnNode.name.equals("requestAuthGrant")) {
-						System.out.println("Found requestAuthGrant!");
 						if (putField == null && var == -1) {
 							throw new RuntimeException("Failed to get var!");
 						}

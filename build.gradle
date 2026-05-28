@@ -43,6 +43,7 @@ if (localPropertiesFile.isFile()) {
 boolean nonRelease = "release" != localProperties.getOrDefault("build.patchline", "release")
 
 tasks.register('publishToMavenLocal', Task).configure {
+    shouldRunAfter(":launcher:runDevModPatcher")
     shouldRunAfter("build")
 }
 tasks.register('spotlessApply', Task)
@@ -155,6 +156,7 @@ subprojects {
 }
 
 tasks.build.dependsOn(":patcher:patchHytale")
+tasks.build.dependsOn(":launcher:runDevModPatcher")
 tasks.register("fastBuild").configure {
     group = "build"
     description = "Build this project skipping testing and patching"
