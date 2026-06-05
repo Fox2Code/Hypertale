@@ -319,5 +319,5 @@ public final class HypertaleModGatherer {
 		return false;
 	}
 
-	public static record ClassPathModCandidate(URL manifest, File file) {}
+	public record ClassPathModCandidate(URL manifest, File file) {}
 }

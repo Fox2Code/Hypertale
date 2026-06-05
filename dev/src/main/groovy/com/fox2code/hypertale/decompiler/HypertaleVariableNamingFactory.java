@@ -237,12 +237,14 @@ final class HypertaleVariableNamingFactory implements IVariableNamingFactory, Co
 								candidates.add(anyStructClass);
 								continue;
 							}
-							for (StructClass anySuperClasses : anyStructClass.getAllSuperClasses()) {
-								if (anySuperClasses == this.structClass) {
+							do {
+								anyStructClass = DecompilerContext.getStructContext()
+										.getClass(anyStructClass.superClass.getString());
+								if (anyStructClass == this.structClass) {
 									candidates.add(anyStructClass);
 									break;
 								}
-							}
+							} while (anyStructClass != null && anyStructClass.superClass != null);
 						}
 					}
 				}
