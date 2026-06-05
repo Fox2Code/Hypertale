@@ -1,3 +1,19 @@
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.commons.ClassRemapper
+import org.objectweb.asm.commons.Remapper
+
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+
+buildscript {
+    dependencies {
+        classpath "org.ow2.asm:asm-commons:${project['asm.version']}"
+    }
+}
+
 plugins {
     id 'net.ltgt.errorprone'
 }
@@ -30,6 +46,7 @@ jar {
         attributes 'Can-Set-Native-Method-Prefix': 'true'
         attributes 'Can-Retransform-Classes': 'true'
         attributes 'Can-Redefine-Classes': 'true'
+        attributes 'Sealed': 'true'
     }
 
     from(zipTree(project(":patcher").tasks.jar.archiveFile.get().asFile)) {
@@ -38,6 +55,64 @@ jar {
     }
 
     dependsOn(":patcher:jar")
+
+    doLast {
+        def jarFileAsFile = archiveFile.get().asFile
+        def tempJar = new File(jarFileAsFile.parentFile, jarFileAsFile.name + ".tmp")
+        def remapper = new Remapper(Opcodes.ASM9) {
+            @Override
+            String map(String typeName) {
+                if (typeName.startsWith("com/fox2code/hypertale/launcher/InternalMicroJsonScanner")) {
+                    return typeName.replaceFirst(
+                            "com/fox2code/hypertale/launcher/", "com/fox2code/hypertale/init/lib/")
+                }
+                if (typeName.startsWith("com/fox2code/hypertale/utils/HypertalePlatform")) {
+                    return typeName.replaceFirst(
+                            "com/fox2code/hypertale/utils/", "com/fox2code/hypertale/init/lib/")
+                }
+                return super.map(typeName)
+            }
+        }
+
+        def jf = new JarFile(jarFileAsFile)
+        def jos = new JarOutputStream(new FileOutputStream(tempJar))
+        def addedEntries = new HashSet<String>()
+
+        jf.entries().each { entry ->
+            if (entry.isDirectory()) return
+
+            def is = jf.getInputStream(entry)
+            def bytes = is.readAllBytes()
+            is.close()
+
+            def newName = entry.name
+
+            if (entry.name.endsWith(".class")) {
+                def cr = new ClassReader(bytes)
+                def cw = new ClassWriter(0)
+                def crMapper = new ClassRemapper(cw, remapper)
+                cr.accept(crMapper, 0)
+                bytes = cw.toByteArray()
+
+                newName = remapper.map(entry.name.replace(".class", "")) + ".class"
+            }
+
+            // Write to the new temporary JAR
+            if (addedEntries.add(newName)) {
+                def newEntry = new JarEntry(newName)
+                jos.putNextEntry(newEntry)
+                jos.write(bytes)
+                jos.closeEntry()
+            }
+        }
+
+        jos.finish()
+        jos.close()
+        jf.close()
+
+        jarFileAsFile.delete()
+        tempJar.renameTo(jarFileAsFile)
+    }
 }
 
 test {
